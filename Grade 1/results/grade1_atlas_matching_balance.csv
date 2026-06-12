@@ -1,0 +1,3 @@
+subject,treated_pre_mean,matched_control_pre_mean,mean_baseline_difference_after_matching,mean_absolute_baseline_distance
+ELA,1045.3958333333333,1045.3958333333333,0.0,0.20833333333333334
+Math,1052.125,1052.0208333333333,0.10416666666674246,0.2708333333333333
