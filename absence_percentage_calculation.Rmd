@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ## Purpose
 
-This notebook calculates absence percentages for the JMTES and JES At Risk Report files using **170 school days** as the denominator.
+This notebook calculates absence percentages for the JMTES and JES At Risk Report files using **170 school days** as the full-year denominator.
 
 Running this notebook creates two Excel workbooks in the project folder:
 
@@ -18,12 +18,19 @@ Running this notebook creates two Excel workbooks in the project folder:
 
 The Excel workbooks are generated outputs and are intentionally not committed to Git because `.xlsx` files are binary files that cannot be displayed in pull-request diffs. To make the calculated results reviewable in GitHub, this notebook also writes CSV copies of the updated `Page1` sheets, which are committed with this change.
 
+Because the **JMTES** report was pulled on **May 7, 2026**, before the May 22 end of the 170-day school year, its percentages are adjusted to a 170-day school-year rate using the 159 school days completed by the report date. In other words, JMTES absence counts are first annualized to the 170-day school year, then divided by 170. This is equivalent to dividing the May 7 absence counts by 159. The **JES** report was pulled after the school year ended, so it uses the full 170 days directly.
+
 The added fields are:
 
-- `Excused Absence %` = `Excused / 170 * 100`
-- `Unexcused Absence %` = `Unexcused / 170 * 100`
+- `Full School Year Days` = `170`
+- `Report School Days` = school days represented in the report (`159` for JMTES; `170` for JES)
+- `Excused Absences Adjusted to 170-Day Year` = `Excused / Report School Days * 170`
+- `Unexcused Absences Adjusted to 170-Day Year` = `Unexcused / Report School Days * 170`
+- `Excused Absence %` = `Excused Absences Adjusted to 170-Day Year / 170 * 100`
+- `Unexcused Absence %` = `Unexcused Absences Adjusted to 170-Day Year / 170 * 100`
 - `Total Absences` = `Excused + Unexcused`
-- `Total Absence %` = `(Excused + Unexcused) / 170 * 100`
+- `Total Absences Adjusted to 170-Day Year` = `Total Absences / Report School Days * 170`
+- `Total Absence %` = `Total Absences Adjusted to 170-Day Year / 170 * 100`
 
 ```{r libraries}
 # Install these packages first if needed:
@@ -35,7 +42,9 @@ library(dplyr)
 ```
 
 ```{r constants}
-school_days <- 170
+full_school_year_days <- 170
+jmtes_report_school_days <- 159
+jes_report_school_days <- 170
 
 jmtes_input <- "JMTES At Risk Report_Updated 5.7.26 (PW_ GROW2026).xlsx"
 jes_input <- "JES At Risk Report 25-26_Updated 5.28.26 (PW_ Titans2026) .xlsx"
@@ -48,15 +57,23 @@ jes_csv_output <- "JES At Risk Report with Absence Percentages.csv"
 ```
 
 ```{r helper-functions}
-add_absence_percentages <- function(input_file, output_file, school_days = 170) {
+add_absence_percentages <- function(input_file,
+                                    output_file,
+                                    report_school_days,
+                                    full_school_year_days = 170) {
   at_risk <- read_excel(input_file, sheet = "Page1", skip = 1) %>%
     mutate(
       Excused = as.numeric(Excused),
       Unexcused = as.numeric(Unexcused),
-      `Excused Absence %` = round(Excused / school_days * 100, 2),
-      `Unexcused Absence %` = round(Unexcused / school_days * 100, 2),
+      `Full School Year Days` = full_school_year_days,
+      `Report School Days` = report_school_days,
+      `Excused Absences Adjusted to 170-Day Year` = round(Excused / report_school_days * full_school_year_days, 2),
+      `Unexcused Absences Adjusted to 170-Day Year` = round(Unexcused / report_school_days * full_school_year_days, 2),
+      `Excused Absence %` = round(`Excused Absences Adjusted to 170-Day Year` / full_school_year_days * 100, 2),
+      `Unexcused Absence %` = round(`Unexcused Absences Adjusted to 170-Day Year` / full_school_year_days * 100, 2),
       `Total Absences` = Excused + Unexcused,
-      `Total Absence %` = round(`Total Absences` / school_days * 100, 2)
+      `Total Absences Adjusted to 170-Day Year` = round(`Total Absences` / report_school_days * full_school_year_days, 2),
+      `Total Absence %` = round(`Total Absences Adjusted to 170-Day Year` / full_school_year_days * 100, 2)
     )
 
   code_sheet <- read_excel(input_file, sheet = "Code", col_names = FALSE)
@@ -74,8 +91,19 @@ add_absence_percentages <- function(input_file, output_file, school_days = 170) 
 ```
 
 ```{r calculate-and-write-files}
-jmtes_absence <- add_absence_percentages(jmtes_input, jmtes_output, school_days)
-jes_absence <- add_absence_percentages(jes_input, jes_output, school_days)
+jmtes_absence <- add_absence_percentages(
+  jmtes_input,
+  jmtes_output,
+  report_school_days = jmtes_report_school_days,
+  full_school_year_days = full_school_year_days
+)
+
+jes_absence <- add_absence_percentages(
+  jes_input,
+  jes_output,
+  report_school_days = jes_report_school_days,
+  full_school_year_days = full_school_year_days
+)
 
 write.csv(jmtes_absence, jmtes_csv_output, row.names = FALSE)
 write.csv(jes_absence, jes_csv_output, row.names = FALSE)
