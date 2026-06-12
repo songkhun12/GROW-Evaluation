@@ -1,0 +1,130 @@
+---
+title: "Grade 5 JMTES Previous/Current Merge"
+author: "CSIC Evaluation Team"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Purpose
+
+This R Markdown file creates the Grade 5 JMTES merged dataset by matching previous-year and current-year records on `Student ID`.
+It uses a full outer join so students found in only one source sheet are retained.
+
+For Grade 5, the previous-year data are from the `24-25 4th grade` sheet and the current-year data are from the `25-26 5th grade` sheet in the JMTES ATLAS workbook.
+
+# Load packages
+
+```{r packages}
+library(readxl)
+library(dplyr)
+library(stringr)
+library(writexl)
+```
+
+# Paths and helper functions
+
+```{r helpers}
+grade_dir <- "."
+root_dir <- ".."
+source_file <- file.path(root_dir, "JMTES ATLAS Report_Updated 5.22.26 (PW_ ATLAS).xlsx")
+out_csv <- file.path(grade_dir, "JMTES Grade 5 Previous Current Merged.csv")
+out_xlsx <- file.path(grade_dir, "JMTES Grade 5 Previous Current Merged.xlsx")
+
+clean_id <- function(x) {
+  id <- str_trim(as.character(x))
+  id[id == ""] <- NA_character_
+  sci_or_decimal <- !is.na(id) & (str_detect(str_to_upper(id), "E") | str_detect(id, "\\.0$"))
+  id[sci_or_decimal] <- as.character(as.integer(as.numeric(id[sci_or_decimal])))
+  str_replace_all(id, "\\D", "")
+}
+
+clean_header <- function(x) {
+  x %>%
+    as.character() %>%
+    str_replace_all("\\n", " ") %>%
+    str_squish() %>%
+    str_replace("Student IDs", "Student ID")
+}
+
+make_headers <- function(raw, header_row_idx, prefix) {
+  subject_row <- if (header_row_idx > 1) raw[header_row_idx - 1, ] else raw[0, ]
+  header_row <- raw[header_row_idx, ]
+  active_subject <- ""
+
+  headers <- character(ncol(raw))
+  for (idx in seq_len(ncol(raw))) {
+    subject <- if (header_row_idx > 1) clean_header(subject_row[[idx]]) else ""
+    field <- clean_header(header_row[[idx]])
+    if (!is.na(subject) && subject != "") active_subject <- subject
+
+    headers[[idx]] <- dplyr::case_when(
+      is.na(field) | field == "" ~ "",
+      field %in% c("Grade", "Teacher", "Student ID") ~ field,
+      active_subject != "" ~ paste(prefix, active_subject, field),
+      TRUE ~ paste(prefix, field)
+    )
+  }
+  headers
+}
+
+extract_dataset <- function(sheet_name, prefix) {
+  raw <- read_excel(source_file, sheet = sheet_name, col_names = FALSE, col_types = "text")
+  header_row_idx <- which(apply(raw, 1, function(row) any(clean_header(row) == "Student ID")))[1]
+  if (is.na(header_row_idx)) stop("No Student ID header row found in ", sheet_name)
+
+  headers <- make_headers(raw, header_row_idx, prefix)
+  id_idx <- which(headers == "Student ID")
+  if (length(id_idx) != 1) stop("Could not identify one Student ID column in ", sheet_name)
+
+  data <- raw[(header_row_idx + 1):nrow(raw), , drop = FALSE]
+  names(data) <- make.unique(ifelse(headers == "", paste0("blank_", seq_along(headers)), headers))
+
+  out <- data %>%
+    mutate(`Student ID` = clean_id(.data[[names(data)[id_idx]]])) %>%
+    filter(!is.na(`Student ID`), `Student ID` != "") %>%
+    select(-starts_with("blank_")) %>%
+    rename_with(~ paste(prefix, .x), any_of(c("Grade", "Teacher")))
+
+  if (anyDuplicated(out$`Student ID`)) {
+    stop("Duplicate Student ID found in ", sheet_name)
+  }
+
+  out
+}
+```
+
+# Merge Grade 5 datasets
+
+```{r merge-grade-5}
+previous <- extract_dataset("24-25 4th grade", "Previous Year")
+current <- extract_dataset("25-26 5th grade", "Current Year")
+
+merged <- full_join(previous, current, by = "Student ID") %>%
+  mutate(
+    `Merge Status` = case_when(
+      !is.na(`Previous Year Grade`) & !is.na(`Current Year Grade`) ~ "Both years",
+      !is.na(`Previous Year Grade`) ~ "Previous year only",
+      TRUE ~ "Current year only"
+    ),
+    .before = 2
+  )
+
+write.csv(merged, out_csv, row.names = FALSE, na = "")
+write_xlsx(list("Merged Grade 5" = merged), out_xlsx)
+
+merged %>% count(`Merge Status`)
+```
+
+# Outputs
+
+```{r output-paths}
+out_csv
+out_xlsx
+```
