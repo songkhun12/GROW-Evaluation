@@ -16,7 +16,7 @@ Running this notebook creates two Excel workbooks in the project folder:
 - `JMTES At Risk Report with Absence Percentages.xlsx`
 - `JES At Risk Report with Absence Percentages.xlsx`
 
-Those generated workbooks are intentionally ignored by Git because `.xlsx` files are binary and cannot be displayed in pull-request diffs. This keeps the pull request reviewable while still letting you create the Excel files locally by knitting or running this notebook.
+The Excel workbooks are generated outputs and are intentionally not committed to Git because `.xlsx` files are binary files that cannot be displayed in pull-request diffs. To make the calculated results reviewable in GitHub, this notebook also writes CSV copies of the updated `Page1` sheets, which are committed with this change.
 
 The added fields are:
 
@@ -42,6 +42,9 @@ jes_input <- "JES At Risk Report 25-26_Updated 5.28.26 (PW_ Titans2026) .xlsx"
 
 jmtes_output <- "JMTES At Risk Report with Absence Percentages.xlsx"
 jes_output <- "JES At Risk Report with Absence Percentages.xlsx"
+
+jmtes_csv_output <- "JMTES At Risk Report with Absence Percentages.csv"
+jes_csv_output <- "JES At Risk Report with Absence Percentages.csv"
 ```
 
 ```{r helper-functions}
@@ -73,15 +76,23 @@ add_absence_percentages <- function(input_file, output_file, school_days = 170) 
 ```{r calculate-and-write-files}
 jmtes_absence <- add_absence_percentages(jmtes_input, jmtes_output, school_days)
 jes_absence <- add_absence_percentages(jes_input, jes_output, school_days)
+
+write.csv(jmtes_absence, jmtes_csv_output, row.names = FALSE)
+write.csv(jes_absence, jes_csv_output, row.names = FALSE)
 ```
 
 ```{r confirm-output-files}
 stopifnot(file.exists(jmtes_output))
 stopifnot(file.exists(jes_output))
+stopifnot(file.exists(jmtes_csv_output))
+stopifnot(file.exists(jes_csv_output))
 
 message("Created Excel files:")
 message("- ", jmtes_output)
 message("- ", jes_output)
+message("Created reviewable CSV copies:")
+message("- ", jmtes_csv_output)
+message("- ", jes_csv_output)
 ```
 
 ```{r preview-results}
