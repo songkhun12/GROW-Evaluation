@@ -8,17 +8,39 @@ The GROW program may affect academic performance by strengthening students' fina
 
 This preliminary analysis uses student-level Arkansas Teaching, Learning & Assessment System (ATLAS) records for Kindergarten through Grade 5. JMTES is the GROW school and JES is the comparison school. The outcome is the Summer 2026 summative ATLAS scale score. English Language Arts (ELA) and Mathematics are analyzed in Kindergarten through Grade 5; Science is analyzed in Grades 3 through 5, where science scores are available. ATLAS scale scores are treated as continuous outcomes, with higher values indicating stronger performance.
 
-Across grades, the analysis uses the strongest common pre-outcome baseline available for the same subject. For Grades 1, 2, 4, and 5, the primary baseline is the Summer 2025 prior-year ATLAS score. For Kindergarten, the primary baseline is Winter 2025 because a common JMTES Summer 2025 baseline is not available. For Grade 3 Science, the primary baseline is Winter 2025 because no common prior-year Science baseline is available. Students were included in a subject-level model when they had both the required baseline score and the Summer 2026 outcome score in that subject. In Kindergarten, values below 900 were excluded from the scale-score analysis because the JES Summer 2025 file includes values of 4 and 5 that appear to be screening/performance codes rather than comparable ATLAS scale scores.
+Across grades, the analysis uses all clean same-subject pre-program ATLAS score waves that are available for both schools in that grade-subject cell. For most grade-subject cells, the only common clean pre-program ATLAS score is the Summer 2025 prior-year summative score. Grade 5 ELA and Math are exceptions because both schools also have Summer 2024 scores, so those models should control for both Summer 2024 and Summer 2025. For Kindergarten ELA/Math and Grade 3 Science, no clean common pre-program ATLAS scale-score wave is available in the current files; those models use Winter 2025 as a pre-outcome achievement proxy and are interpreted more cautiously because Winter 2025 may occur after some program exposure. Students were included in a subject-level model when they had the required control score or scores and the Summer 2026 outcome score in that subject. In Kindergarten, values below 900 were excluded from the scale-score analysis because the JES Summer 2025 file includes values of 4 and 5 that appear to be screening/performance codes rather than comparable ATLAS scale scores.
 
 ## Primary analysis methodology
 
-The primary analysis is a baseline-adjusted regression, also known as ANCOVA. For each grade and subject, Summer 2026 ATLAS score is regressed on an indicator for attending JMTES and the student's own baseline ATLAS score in the same subject:
+The primary analysis is a baseline-adjusted regression, also known as ANCOVA. For each grade and subject, Summer 2026 ATLAS score is regressed on an indicator for attending JMTES and the student's own available same-subject pre-program ATLAS score or scores:
 
-`Summer 2026 score = intercept + beta_1(JMTES) + beta_2(baseline score) + error`
+`Summer 2026 score = intercept + beta_1(JMTES) + beta_2(pre-program score wave 1) + ... + beta_k(pre-program score wave k) + error`
 
-The coefficient on the JMTES indicator is the preliminary treatment-effect estimate. It represents the adjusted difference in Summer 2026 scores between JMTES and JES students who started at the same baseline achievement level.
+The coefficient on the JMTES indicator is the preliminary treatment-effect estimate. It represents the adjusted difference in Summer 2026 scores between JMTES and JES students with the same observed pre-program achievement history included in that model.
 
-ANCOVA was selected as the primary analysis for three reasons. First, GROW was not randomly assigned, and JMTES and JES often differed at baseline. Adjusting for each student's own pre-outcome score is therefore essential for a fair comparison. Second, the available data generally include only one common pre-treatment baseline suitable for each subject, so the parallel-trends assumption required for a stronger difference-in-differences design cannot be evaluated. Third, ANCOVA is usually more statistically efficient than a simple gain-score comparison when baseline and outcome scores are correlated, because it adjusts for baseline achievement without forcing the outcome to be expressed only as raw change.
+### Pre-program score waves checked and used
+
+The table below lists the common same-subject pre-program ATLAS scale-score waves found in the current files for each grade and subject. A wave is listed as a primary ANCOVA control only if it is available for both JMTES and JES in the same grade-subject cell. This check corrects the earlier Grade 5 omission: Grade 5 ELA and Math have both Summer 2024 and Summer 2025 available for both schools, so both waves should be included as controls.
+
+| Grade | Subject | Common clean pre-program ATLAS score waves available in both schools | Primary ANCOVA control score waves | Notes |
+|---|---|---|---|---|
+| Kindergarten | ELA | None | Winter 2025 proxy | JMTES does not have a common Summer 2025 scale-score baseline; Winter 2025 is pre-outcome but may not be fully pre-program. |
+| Kindergarten | Math | None | Winter 2025 proxy | JMTES does not have a common Summer 2025 scale-score baseline; Winter 2025 is pre-outcome but may not be fully pre-program. |
+| Grade 1 | ELA | Summer 2025 | Summer 2025 | 2025 screener fields are not ATLAS scale scores and are not used as controls. |
+| Grade 1 | Math | Summer 2025 | Summer 2025 | 2025 screener fields are not ATLAS scale scores and are not used as controls. |
+| Grade 2 | ELA | Summer 2025 | Summer 2025 | 2025 screener fields are not ATLAS scale scores and are not used as controls. |
+| Grade 2 | Math | Summer 2025 | Summer 2025 | 2025 screener fields are not ATLAS scale scores and are not used as controls. |
+| Grade 3 | ELA | Summer 2025 | Summer 2025 | Fall/Winter 2025 are current-year pre-outcome waves and are not treated as clean pre-program controls. |
+| Grade 3 | Math | Summer 2025 | Summer 2025 | Fall/Winter 2025 are current-year pre-outcome waves and are not treated as clean pre-program controls. |
+| Grade 3 | Science | None | Winter 2025 proxy | No common prior-year Science scale score is available in both schools. |
+| Grade 4 | ELA | Summer 2025 | Summer 2025 | JMTES has Fall/Winter 2024, but JES Grade 4 files do not, so those waves cannot be common controls. |
+| Grade 4 | Math | Summer 2025 | Summer 2025 | JMTES has Fall/Winter 2024, but JES Grade 4 files do not, so those waves cannot be common controls. |
+| Grade 4 | Science | Summer 2025 | Summer 2025 | JMTES has Fall/Winter 2024, but JES Grade 4 files do not, so those waves cannot be common controls. |
+| Grade 5 | ELA | Summer 2024; Summer 2025 | Summer 2024; Summer 2025 | This is the clearest multi-baseline case and should control for both pre-program waves. |
+| Grade 5 | Math | Summer 2024; Summer 2025 | Summer 2024; Summer 2025 | This is the clearest multi-baseline case and should control for both pre-program waves. |
+| Grade 5 | Science | Summer 2025 | Summer 2025 | JMTES has Summer/Fall/Winter 2024 Science, but JES Grade 5 files do not include Summer 2024 Science. |
+
+ANCOVA was selected as the primary analysis for three reasons. First, GROW was not randomly assigned, and JMTES and JES often differed at baseline. Adjusting for each student's own pre-outcome score is therefore essential for a fair comparison. Second, most grade-subject cells have only one common clean pre-program baseline, and even where Grade 5 ELA/Math have two pre-program controls, the files still do not provide enough repeated common pre-program waves across all grades and subjects to evaluate the stronger parallel-trends assumption required for a difference-in-differences design. Third, ANCOVA is usually more statistically efficient than a simple gain-score comparison when baseline and outcome scores are correlated, because it adjusts for baseline achievement without forcing the outcome to be expressed only as raw change.
 
 The analysis remains preliminary. It compares one treatment school with one comparison school, so school-level factors cannot be separated from the GROW program as cleanly as they could be in a randomized or multi-school quasi-experimental design. Results should be interpreted as evidence about whether the data are consistent with an academic benefit, not as definitive causal proof.
 
@@ -65,11 +87,11 @@ The following plots show changes in average ATLAS scores over time for JMTES stu
 | Grade 4 | ELA | 6.14 | <0.001 | [2.97, 9.32] | Statistically significant positive effect |
 | Grade 4 | Math | 8.20 | <0.001 | [5.06, 11.35] | Statistically significant positive effect |
 | Grade 4 | Science | 3.62 | 0.030 | [0.36, 6.89] | Statistically significant positive effect |
-| Grade 5 | ELA | -1.56 | 0.391 | [-5.13, 2.01] | Not statistically significant |
-| Grade 5 | Math | -1.05 | 0.572 | [-4.68, 2.58] | Not statistically significant |
+| Grade 5 | ELA | 0.16 | 0.924 | [-3.21, 3.54] | Not statistically significant after controlling for Summer 2024 and Summer 2025 |
+| Grade 5 | Math | -0.90 | 0.613 | [-4.36, 2.57] | Not statistically significant after controlling for Summer 2024 and Summer 2025 |
 | Grade 5 | Science | 4.23 | 0.030 | [0.40, 8.06] | Statistically significant positive effect, but less robust |
 
-The clearest positive academic evidence appears in Grades 3 and 4. Grade 3 shows statistically significant adjusted positive effects in ELA and Math, while Grade 4 shows statistically significant adjusted positive effects in ELA, Math, and Science. The lower grades are generally directionally positive in several subjects but not statistically significant in the primary analysis. Grade 5 ELA and Math do not show evidence of a positive adjusted impact; Grade 5 Science is positive in ANCOVA but should be interpreted cautiously because several robustness checks are weaker.
+The clearest positive academic evidence appears in Grades 3 and 4. Grade 3 shows statistically significant adjusted positive effects in ELA and Math, while Grade 4 shows statistically significant adjusted positive effects in ELA, Math, and Science. The lower grades are generally directionally positive in several subjects but not statistically significant in the primary analysis. Grade 5 ELA and Math do not show evidence of a positive adjusted impact after adding the omitted Summer 2024 controls; Grade 5 Science is positive in ANCOVA but should be interpreted cautiously because several robustness checks are weaker.
 
 ## Robustness findings by grade
 
@@ -95,7 +117,7 @@ Grade 4 provides the most consistently positive evidence. The primary ANCOVA est
 
 ### Grade 5
 
-Grade 5 results are mixed and mostly not supportive for ELA or Math. The primary ANCOVA estimates for ELA and Math are negative and not statistically significant after accounting for JMTES's higher Summer 2025 baseline. Several ELA and Math gain-style checks are negative, indicating that raw growth from the higher baseline was weaker at JMTES than at JES. Science is positive and statistically significant in ANCOVA, but DiD-style, gain, matching, and IPW checks are not statistically significant. Overall, Grade 5 Science is promising but not robust enough to treat as definitive, while Grade 5 ELA and Math do not show a positive GROW impact.
+Grade 5 results are mixed and mostly not supportive for ELA or Math. The corrected primary ANCOVA estimates for ELA and Math include both Summer 2024 and Summer 2025 controls because both schools have those pre-program waves. ELA is essentially zero and not statistically significant, and Math remains negative and not statistically significant. Several ELA and Math gain-style checks are negative, indicating that raw growth from the higher baseline was weaker at JMTES than at JES. Science is positive and statistically significant in the original Summer 2025-adjusted ANCOVA, but DiD-style, gain, matching, and IPW checks are not statistically significant. Overall, Grade 5 Science is promising but not robust enough to treat as definitive, while Grade 5 ELA and Math do not show a positive GROW impact.
 
 ## Overall preliminary interpretation
 
