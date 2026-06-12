@@ -52,10 +52,32 @@ The DiD-style model uses Winter 2025 as the pre-period and Summer 2026 as the po
 | Math | Wilcoxon rank-sum test on gains | — | — | 0.020 | — | JMTES gains are significantly higher by rank test |
 | Math | Winsorized gain-score model | 3.06 | 1.52 | 0.044 | [0.08, 6.05] | Positive and statistically significant |
 
+## Additional impact-analysis methods added to the R Markdown
+
+Matching can be used here as a sensitivity analysis because both schools have student-level Winter 2025 baseline scores. The R Markdown now uses the preferred matching method for the current files: exact-by-subject, calipered nearest-neighbor matching on Winter 2025 baseline score with replacement. The 0.20 pooled-SD caliper prevents poor baseline-score matches, while replacement improves match quality when the control pool is limited. Matching is not the primary analysis because it can only adjust for observed baseline-score differences and cannot address unobserved student, classroom, or school differences.
+
+| Subject | Matched / treated | Caliper | Mean baseline distance | Matching estimate | SE | Approx. p-value | 95% CI | Interpretation |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| ELA | 52 / 52 | 3.83 | 0.25 | 2.37 | 1.55 | 0.126 | [-0.67, 5.40] | Positive but not statistically significant |
+| Math | 52 / 52 | 3.27 | 0.19 | 3.50 | 1.91 | 0.066 | [-0.24, 7.24] | Positive and marginal, but not conventionally significant |
+
+The R Markdown also now includes inverse probability weighting (IPW), permutation tests for the ANCOVA coefficient, and bootstrap confidence intervals for the ANCOVA coefficient. These are useful sensitivity checks, but they remain exploratory because the study has only one treatment school and one control school.
+
+| Subject | Method | Estimate | Approx. p-value / interval | Interpretation |
+|---|---|---:|---:|---|
+| ELA | IPW treatment effect | -1.72 | p = 0.425 | Not statistically significant |
+| Math | IPW treatment effect | 2.22 | p = 0.431 | Not statistically significant |
+| ELA | ANCOVA permutation test | -1.59 | p = 0.451 | Not statistically significant |
+| Math | ANCOVA permutation test | 2.51 | p = 0.165 | Not statistically significant |
+| ELA | ANCOVA bootstrap CI | -1.59 | [-4.97, 1.78] | Not statistically significant |
+| Math | ANCOVA bootstrap CI | 2.51 | [-0.68, 5.74] | Not statistically significant |
+
+The R Markdown also lists methods that are not recommended as primary analyses with the current files: full causal DiD/event study, student fixed effects, school fixed effects with clustered standard errors, regression discontinuity, instrumental variables, and synthetic control. Those approaches would require additional pre-treatment waves, more schools, a valid cutoff, a valid instrument, or a larger control pool.
+
 ## Interpretation
 
 The Kindergarten results are mixed by subject. For ELA, the primary ANCOVA estimate is negative and not statistically significant. This means that, after controlling for Winter 2025 baseline ELA scores, JMTES did not have higher Summer 2026 ELA scores than JES. The DiD-style and gain-score checks also do not provide positive evidence for ELA.
 
 For Math, the primary ANCOVA estimate is positive, suggesting JMTES scored about 2.51 points higher than JES in Summer 2026 after adjusting for Winter 2025 Math scores, but this estimate is not statistically significant. Some gain-based robustness checks are positive and statistically significant, so the Math results are directionally promising but should be interpreted as suggestive rather than conclusive.
 
-Overall, ANCOVA is the better primary analysis for this two-wave Kindergarten dataset. The evidence does not show a clear G.R.O.W impact in ELA. Math findings are more encouraging, but the primary adjusted estimate is not statistically significant, so additional years, additional comparison schools, richer student-level covariates, and evidence supporting pre-program comparability would be needed for stronger causal claims.
+Overall, ANCOVA is the better primary analysis for this two-wave Kindergarten dataset. Matching, IPW, permutation tests, bootstrap intervals, DiD-style comparisons, and gain-score models are useful sensitivity checks. The evidence does not show a clear G.R.O.W impact in ELA. Math findings are more encouraging across several sensitivity checks, but the primary adjusted estimate is not statistically significant, so additional years, additional comparison schools, richer student-level covariates, and evidence supporting pre-program comparability would be needed for stronger causal claims.
