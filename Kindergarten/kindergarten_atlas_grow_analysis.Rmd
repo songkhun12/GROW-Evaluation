@@ -1,0 +1,500 @@
+---
+title: "Kindergarten ATLAS Assessment Analysis: G.R.O.W Impact at JMTES"
+author: "CSIC Evaluation Team"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 9,
+  fig.height = 5.5
+)
+```
+
+# Purpose
+
+This notebook analyzes Kindergarten ATLAS assessment scores for the G.R.O.W evaluation.
+
+- **Treatment school:** JMTES / Murrell Taylor Elementary, which received G.R.O.W.
+- **Control school:** JES, which did not receive G.R.O.W.
+- **Primary outcome:** ATLAS assessment scale scores.
+- **Subjects:** ELA and Math.
+- **Primary analytic question:** Did Kindergarten ATLAS assessment scores improve more at the treatment school than at the control school after G.R.O.W implementation?
+
+The strongest common pre/post comparison available in the two Kindergarten workbooks is:
+
+- **Pre period:** Winter 2025
+- **Post period:** Summer 2026
+
+JES also includes Summer 2025 scores, but the JMTES Kindergarten workbook does not include Summer 2025. Therefore, the impact analysis focuses on the two waves available for both schools.
+
+# Load packages
+
+```{r packages}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(broom)
+library(knitr)
+library(sandwich)
+library(lmtest)
+```
+
+# File paths and helper functions
+
+```{r paths-and-helpers}
+jmtes_file <- "JMTES Atlas Report - Kindergarten.xlsx"
+jes_file   <- "JES Atlas Report - Kindergarten.xlsx"
+
+clean_score <- function(x) {
+  score <- suppressWarnings(as.numeric(x))
+  # ATLAS scale scores in these files are in the 1000s. Values below 900,
+  # such as 4/5 in JES Summer 2025, are screening/performance codes rather
+  # than comparable ATLAS scale scores and are excluded from score analysis.
+  ifelse(score < 900, NA_real_, score)
+}
+
+wave_order <- c("Summer 2025", "Winter 2025", "Summer 2026")
+subject_order <- c("ELA", "Math")
+```
+
+# Import and reshape ATLAS data
+
+The two school files use slightly different column names. This section standardizes the data into one long-format file with one row per student, school, subject, and wave.
+
+```{r import-data}
+# JMTES treatment school. Row 1 in this workbook is a title row, so data headers begin on row 2.
+jmtes_raw <- read_excel(jmtes_file, skip = 1, col_types = "text")
+
+jmtes_long <- jmtes_raw %>%
+  rename(
+    student_id = `Student ID`,
+    grade = Grade,
+    teacher = Teacher
+  ) %>%
+  mutate(
+    school = "JMTES",
+    treatment = 1L
+  ) %>%
+  pivot_longer(
+    cols = matches("^(ELA|Math)"),
+    names_to = "assessment",
+    values_to = "score"
+  ) %>%
+  mutate(
+    score = clean_score(score),
+    subject = case_when(
+      str_detect(assessment, "^ELA") ~ "ELA",
+      str_detect(assessment, "^Math") ~ "Math",
+      TRUE ~ NA_character_
+    ),
+    wave = case_when(
+      str_detect(assessment, regex("Winter 2025", ignore_case = TRUE)) ~ "Winter 2025",
+      str_detect(assessment, regex("Sum 2026|Summer 2026", ignore_case = TRUE)) ~ "Summer 2026",
+      str_detect(assessment, regex("Sum 2025|Summer 2025", ignore_case = TRUE)) ~ "Summer 2025",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(school, treatment, grade, teacher, student_id, subject, wave, score)
+
+# JES control school.
+jes_raw <- read_excel(jes_file, col_types = "text")
+
+jes_long <- jes_raw %>%
+  rename(
+    student_id = `ID Number`,
+    grade = Grade
+  ) %>%
+  mutate(
+    school = "JES",
+    treatment = 0L,
+    teacher = NA_character_
+  ) %>%
+  pivot_longer(
+    cols = matches("^(ELA|Math)"),
+    names_to = "assessment",
+    values_to = "score"
+  ) %>%
+  mutate(
+    score = clean_score(score),
+    subject = case_when(
+      str_detect(assessment, "^ELA") ~ "ELA",
+      str_detect(assessment, "^Math") ~ "Math",
+      TRUE ~ NA_character_
+    ),
+    wave = case_when(
+      str_detect(assessment, regex("Winter 2025", ignore_case = TRUE)) ~ "Winter 2025",
+      str_detect(assessment, regex("Sum 2026|Summer 2026", ignore_case = TRUE)) ~ "Summer 2026",
+      str_detect(assessment, regex("Sum 2025|Summer 2025", ignore_case = TRUE)) ~ "Summer 2025",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(school, treatment, grade, teacher, student_id, subject, wave, score)
+
+atlas_long <- bind_rows(jmtes_long, jes_long) %>%
+  filter(!is.na(subject), !is.na(wave), !is.na(score)) %>%
+  mutate(
+    school = factor(school, levels = c("JES", "JMTES")),
+    treatment = as.integer(treatment),
+    subject = factor(subject, levels = subject_order),
+    wave = factor(wave, levels = wave_order),
+    post = if_else(wave == "Summer 2026", 1L, 0L)
+  )
+
+atlas_common <- atlas_long %>%
+  filter(wave %in% c("Winter 2025", "Summer 2026")) %>%
+  mutate(wave = factor(as.character(wave), levels = c("Winter 2025", "Summer 2026")))
+
+wide_common <- atlas_common %>%
+  select(school, treatment, student_id, subject, wave, score) %>%
+  pivot_wider(names_from = wave, values_from = score) %>%
+  filter(!is.na(`Winter 2025`), !is.na(`Summer 2026`)) %>%
+  mutate(gain = `Summer 2026` - `Winter 2025`)
+
+kable(head(atlas_long, 10), caption = "First 10 standardized ATLAS observations")
+```
+
+# Data availability
+
+```{r data-availability}
+data_availability <- atlas_long %>%
+  count(school, subject, wave, name = "n_scores") %>%
+  arrange(subject, school, wave)
+
+kable(data_availability, caption = "Available score counts by school, subject, and wave")
+```
+
+# Mean score for each wave
+
+```{r mean-scores}
+mean_scores <- atlas_long %>%
+  group_by(school, treatment, subject, wave) %>%
+  summarise(
+    n = n(),
+    mean_score = mean(score, na.rm = TRUE),
+    sd_score = sd(score, na.rm = TRUE),
+    se_score = sd_score / sqrt(n),
+    .groups = "drop"
+  ) %>%
+  arrange(subject, wave, school)
+
+kable(mean_scores, digits = 2, caption = "Mean Kindergarten ATLAS scores by school, subject, and wave")
+```
+
+# Line graph by subject
+
+Each plot shows the mean ATLAS score by wave for both schools. JES Summer 2025 is plotted when available; JMTES begins at Winter 2025 because Summer 2025 is not available in the JMTES Kindergarten workbook.
+
+```{r line-graphs, fig.height=6.5}
+mean_line_plot <- ggplot(mean_scores, aes(x = wave, y = mean_score, color = school, group = school)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_score - 1.96 * se_score, ymax = mean_score + 1.96 * se_score), width = 0.08) +
+  facet_wrap(~ subject, scales = "free_y") +
+  labs(
+    title = "Mean Kindergarten ATLAS Scores by School and Wave",
+    subtitle = "JMTES received G.R.O.W; JES is the control school",
+    x = "Assessment wave",
+    y = "Mean ATLAS score",
+    color = "School"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
+
+mean_line_plot
+
+dir.create("results", showWarnings = FALSE)
+ggsave("results/kindergarten_atlas_mean_scores_line_plot.png", mean_line_plot, width = 9, height = 6.5, dpi = 300)
+```
+
+# Primary impact analysis: ANCOVA
+
+## Why ANCOVA is the preferred primary analysis
+
+For the current Kindergarten ATLAS data, **ANCOVA is the preferred primary analysis** because there is only one common pre-period for JMTES and JES. A causal difference-in-differences design depends on a parallel trends assumption, but that assumption cannot be evaluated with only one common pre-treatment ATLAS scale-score wave. ANCOVA instead estimates the difference in Summer 2026 scores between JMTES and JES while controlling for each student's Winter 2025 score.
+
+The ANCOVA model is estimated separately by subject:
+
+\[
+Summer2026_i = \alpha + \beta_1 Treatment_i + \beta_2 Winter2025_i + \epsilon_i
+\]
+
+where:
+
+- \(Treatment_i = 1\) for JMTES students and 0 for JES students.
+- \(Winter2025_i\) is the student's baseline ATLAS score in the same subject.
+- \(\beta_1\) is the adjusted JMTES-vs-JES difference in Summer 2026 scores.
+
+A positive and statistically significant \(\beta_1\) would indicate that JMTES students scored higher than comparable JES students in Summer 2026 after adjusting for Winter 2025 baseline performance. This is still quasi-experimental, but it is a better primary model than DiD for these data because it directly adjusts for baseline achievement without requiring an untestable parallel trends assumption.
+
+```{r primary-ancova}
+run_ancova <- function(data) {
+  lm(`Summer 2026` ~ treatment + `Winter 2025`, data = data)
+}
+
+ancova_models <- wide_common %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_common$subject))) %>%
+  lapply(run_ancova)
+
+ancova_results <- bind_rows(lapply(names(ancova_models), function(s) {
+  model <- ancova_models[[s]]
+  tidy(model, conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+ancova_effects <- ancova_results %>%
+  filter(term == "treatment") %>%
+  transmute(
+    subject,
+    ancova_estimate = estimate,
+    std_error = std.error,
+    statistic,
+    p_value = p.value,
+    conf_low = conf.low,
+    conf_high = conf.high
+  )
+
+kable(ancova_results, digits = 3, caption = "Primary ANCOVA results by subject")
+kable(ancova_effects, digits = 3, caption = "Adjusted JMTES-vs-JES difference from primary ANCOVA model")
+```
+
+# Sensitivity check: Difference-in-differences-style estimate
+
+## Why include a DiD-style comparison, and what are its limits?
+
+With the current Kindergarten files, **difference-in-differences should not be described as the best causal option in a strong sense**, because the key DiD identification assumption -- parallel trends -- cannot be tested with only one common pre-period. JMTES and JES share a Winter 2025 pre-period and Summer 2026 post-period, but there are not multiple comparable pre-G.R.O.W ATLAS scale-score waves for both schools that would show whether the schools were trending similarly before G.R.O.W.
+
+The DiD-style estimate is still useful as a transparent sensitivity check because:
+
+1. JMTES received G.R.O.W and JES did not.
+2. Both schools have a common pre-period, Winter 2025.
+3. Both schools have a common post-period, Summer 2026.
+4. The evaluation question is whether JMTES improved more than JES over the same time interval.
+
+However, the estimate should be interpreted as a **descriptive/quasi-experimental pre/post comparison**, not as definitive causal evidence. A stronger causal DiD design would require additional pre-treatment waves for both schools, evidence that pre-treatment ATLAS trends were parallel, or additional comparable control schools. For this reason, this notebook uses ANCOVA as the primary model and reports DiD-style results as a sensitivity check rather than relying on DiD as the main estimate.
+
+The DiD-style estimate is the interaction term from this model, estimated separately by subject:
+
+\[
+Score_{ist} = \alpha + \beta_1 Treatment_s + \beta_2 Post_t + \beta_3 (Treatment_s \times Post_t) + \epsilon_{ist}
+\]
+
+where:
+
+- \(Treatment_s = 1\) for JMTES and 0 for JES.
+- \(Post_t = 1\) for Summer 2026 and 0 for Winter 2025.
+- \(\beta_3\) is the DiD-style estimate of the difference in score change between JMTES and JES.
+
+A positive and statistically significant \(\beta_3\) would show that JMTES improved more than JES over the observed period. Without evidence supporting parallel trends, that pattern is consistent with a possible G.R.O.W effect but should not be interpreted as conclusive causal proof.
+
+```{r did-models}
+did_data <- atlas_common %>%
+  mutate(
+    post = if_else(wave == "Summer 2026", 1L, 0L),
+    treatment_post = treatment * post
+  )
+
+run_did <- function(data) {
+  lm(score ~ treatment + post + treatment_post, data = data)
+}
+
+did_models <- did_data %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(did_data$subject))) %>%
+  lapply(run_did)
+
+did_results <- bind_rows(lapply(names(did_models), function(s) {
+  model <- did_models[[s]]
+  tidy(model, conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+kable(did_results, digits = 3, caption = "Difference-in-differences regression results by subject")
+```
+
+## DiD estimate only
+
+```{r did-estimate-only}
+did_effects <- did_results %>%
+  filter(term == "treatment_post") %>%
+  transmute(
+    subject,
+    did_estimate = estimate,
+    std_error = std.error,
+    statistic,
+    p_value = p.value,
+    conf_low = conf.low,
+    conf_high = conf.high
+  )
+
+kable(did_effects, digits = 3, caption = "Estimated G.R.O.W impact from DiD model")
+```
+
+## Manual DiD calculation from group means
+
+This table calculates the same estimate directly from mean scores:
+
+\[
+(JMTES_{post} - JMTES_{pre}) - (JES_{post} - JES_{pre})
+\]
+
+```{r manual-did}
+manual_did <- mean_scores %>%
+  filter(wave %in% c("Winter 2025", "Summer 2026")) %>%
+  select(school, subject, wave, mean_score) %>%
+  pivot_wider(names_from = c(school, wave), values_from = mean_score) %>%
+  mutate(
+    jmtes_change = `JMTES_Summer 2026` - `JMTES_Winter 2025`,
+    jes_change = `JES_Summer 2026` - `JES_Winter 2025`,
+    did = jmtes_change - jes_change
+  )
+
+kable(manual_did, digits = 2, caption = "Manual difference-in-differences calculation from mean scores")
+```
+
+# Robustness checks
+
+Because the evaluation has one treatment school and one control school, results should be interpreted cautiously. The checks below test whether the conclusion is sensitive to model specification.
+
+## Robustness check 1: Gain-score model
+
+This model compares mean student-level gains from Winter 2025 to Summer 2026 between the treatment and control schools.
+
+```{r gain-score}
+gain_models <- wide_common %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_common$subject))) %>%
+  lapply(function(data) lm(gain ~ treatment, data = data))
+
+gain_results <- bind_rows(lapply(names(gain_models), function(s) {
+  model <- gain_models[[s]]
+  tidy(model, conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+gain_summary <- wide_common %>%
+  group_by(subject, school) %>%
+  summarise(
+    n = n(),
+    mean_gain = mean(gain, na.rm = TRUE),
+    sd_gain = sd(gain, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+kable(gain_summary, digits = 2, caption = "Student-level gain summaries")
+kable(gain_results, digits = 3, caption = "Gain-score robustness model by subject")
+```
+
+## Robustness check 2: Heteroskedasticity-robust standard errors for DiD-style model
+
+This check keeps the same DiD specification but uses HC3 robust standard errors.
+
+```{r robust-se}
+robust_did_results <- bind_rows(lapply(names(did_models), function(s) {
+  model <- did_models[[s]]
+  robust_test <- coeftest(model, vcov. = vcovHC(model, type = "HC3"))
+  tibble(
+    subject = s,
+    term = rownames(robust_test),
+    estimate = robust_test[, 1],
+    robust_se = robust_test[, 2],
+    statistic = robust_test[, 3],
+    p_value = robust_test[, 4]
+  )
+}))
+
+kable(robust_did_results, digits = 3, caption = "DiD model with HC3 robust standard errors")
+```
+
+## Robustness check 3: Non-parametric Wilcoxon test on gains
+
+This test compares the distribution of student-level gains between schools without assuming normally distributed gains.
+
+```{r wilcoxon-gains}
+wilcoxon_results <- wide_common %>%
+  group_by(subject) %>%
+  summarise(
+    n_jes = sum(school == "JES"),
+    n_jmtes = sum(school == "JMTES"),
+    wilcox_p_value = wilcox.test(gain ~ school, exact = FALSE)$p.value,
+    .groups = "drop"
+  )
+
+kable(wilcoxon_results, digits = 3, caption = "Wilcoxon rank-sum test comparing gains by school")
+```
+
+## Robustness check 4: Winsorized gain-score comparison
+
+This check limits the influence of extreme gain scores by winsorizing gains at the 5th and 95th percentiles within subject.
+
+```{r winsorized-gains}
+winsorize <- function(x, probs = c(0.05, 0.95)) {
+  bounds <- quantile(x, probs = probs, na.rm = TRUE)
+  pmin(pmax(x, bounds[[1]]), bounds[[2]])
+}
+
+wide_winsor <- wide_common %>%
+  group_by(subject) %>%
+  mutate(gain_winsor = winsorize(gain)) %>%
+  ungroup()
+
+winsor_models <- wide_winsor %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_winsor$subject))) %>%
+  lapply(function(data) lm(gain_winsor ~ treatment, data = data))
+
+winsor_results <- bind_rows(lapply(names(winsor_models), function(s) {
+  model <- winsor_models[[s]]
+  tidy(model, conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+kable(winsor_results, digits = 3, caption = "Winsorized gain-score robustness model by subject")
+```
+
+# Interpretation guide
+
+Use the following hierarchy when interpreting the findings:
+
+1. **Primary estimate:** The ANCOVA treatment coefficient, which compares Summer 2026 scores between JMTES and JES after adjusting for Winter 2025 baseline scores.
+2. **Substantive magnitude:** Whether the estimated effect is meaningful in ATLAS score points, not only whether it is statistically significant.
+3. **Consistency across robustness checks:** Whether the DiD-style, gain-score, robust-SE, Wilcoxon, and winsorized analyses point in the same direction as ANCOVA.
+4. **Limitations:** Results are quasi-experimental because students were not randomly assigned to G.R.O.W, and there is only one treatment school and one control school.
+
+A positive ANCOVA treatment estimate means JMTES had higher Summer 2026 scores than JES after adjusting for Winter 2025 baseline scores. A positive DiD-style or gain-score estimate means JMTES improved more than JES between Winter 2025 and Summer 2026.
+
+# Recommended reporting language
+
+If the ANCOVA estimate is positive and robustness checks are consistent:
+
+> After adjusting for Winter 2025 baseline scores, JMTES students had higher Summer 2026 ATLAS scores than comparable JES students, which is consistent with a positive G.R.O.W effect. However, because this is a quasi-experimental comparison involving one treatment school and one control school, the estimate should be interpreted as suggestive evidence rather than definitive causal proof.
+
+If the ANCOVA estimate is near zero or inconsistent across checks:
+
+> The Kindergarten ATLAS data do not provide consistent evidence that JMTES had higher Summer 2026 scores than JES after adjusting for Winter 2025 baseline scores. Additional waves, additional comparison schools, and student-level covariates would strengthen the impact analysis.
+
+# Save analytic outputs
+
+```{r save-outputs}
+dir.create("results", showWarnings = FALSE)
+write.csv(atlas_long, "results/kindergarten_atlas_long.csv", row.names = FALSE)
+write.csv(mean_scores, "results/kindergarten_atlas_mean_scores.csv", row.names = FALSE)
+write.csv(ancova_effects, "results/kindergarten_atlas_ancova_effects.csv", row.names = FALSE)
+write.csv(did_effects, "results/kindergarten_atlas_did_effects.csv", row.names = FALSE)
+write.csv(gain_summary, "results/kindergarten_atlas_gain_summary.csv", row.names = FALSE)
+```
