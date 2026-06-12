@@ -1,0 +1,3 @@
+subject,ancova_estimate,std_error,statistic,p_value,conf_low,conf_high
+ELA,-1.594,2.027,-0.786,0.432,-5.566,2.379
+Math,2.514,1.787,1.406,0.160,-0.989,6.017
