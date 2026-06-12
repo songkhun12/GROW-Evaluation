@@ -1,0 +1,101 @@
+---
+title: "At Risk Report Absence Percentage Calculation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Purpose
+
+This notebook calculates absence percentages for the JMTES and JES At Risk Report files using **170 school days** as the denominator.
+
+Running this notebook creates two Excel workbooks in the project folder:
+
+- `JMTES At Risk Report with Absence Percentages.xlsx`
+- `JES At Risk Report with Absence Percentages.xlsx`
+
+The Excel workbooks are generated outputs and are intentionally not committed to Git because `.xlsx` files are binary files that cannot be displayed in pull-request diffs. To make the calculated results reviewable in GitHub, this notebook also writes CSV copies of the updated `Page1` sheets, which are committed with this change.
+
+The added fields are:
+
+- `Excused Absence %` = `Excused / 170 * 100`
+- `Unexcused Absence %` = `Unexcused / 170 * 100`
+- `Total Absences` = `Excused + Unexcused`
+- `Total Absence %` = `(Excused + Unexcused) / 170 * 100`
+
+```{r libraries}
+# Install these packages first if needed:
+# install.packages(c("readxl", "writexl", "dplyr"))
+
+library(readxl)
+library(writexl)
+library(dplyr)
+```
+
+```{r constants}
+school_days <- 170
+
+jmtes_input <- "JMTES At Risk Report_Updated 5.7.26 (PW_ GROW2026).xlsx"
+jes_input <- "JES At Risk Report 25-26_Updated 5.28.26 (PW_ Titans2026) .xlsx"
+
+jmtes_output <- "JMTES At Risk Report with Absence Percentages.xlsx"
+jes_output <- "JES At Risk Report with Absence Percentages.xlsx"
+
+jmtes_csv_output <- "JMTES At Risk Report with Absence Percentages.csv"
+jes_csv_output <- "JES At Risk Report with Absence Percentages.csv"
+```
+
+```{r helper-functions}
+add_absence_percentages <- function(input_file, output_file, school_days = 170) {
+  at_risk <- read_excel(input_file, sheet = "Page1", skip = 1) %>%
+    mutate(
+      Excused = as.numeric(Excused),
+      Unexcused = as.numeric(Unexcused),
+      `Excused Absence %` = round(Excused / school_days * 100, 2),
+      `Unexcused Absence %` = round(Unexcused / school_days * 100, 2),
+      `Total Absences` = Excused + Unexcused,
+      `Total Absence %` = round(`Total Absences` / school_days * 100, 2)
+    )
+
+  code_sheet <- read_excel(input_file, sheet = "Code", col_names = FALSE)
+
+  write_xlsx(
+    list(
+      Page1 = at_risk,
+      Code = code_sheet
+    ),
+    path = output_file
+  )
+
+  at_risk
+}
+```
+
+```{r calculate-and-write-files}
+jmtes_absence <- add_absence_percentages(jmtes_input, jmtes_output, school_days)
+jes_absence <- add_absence_percentages(jes_input, jes_output, school_days)
+
+write.csv(jmtes_absence, jmtes_csv_output, row.names = FALSE)
+write.csv(jes_absence, jes_csv_output, row.names = FALSE)
+```
+
+```{r confirm-output-files}
+stopifnot(file.exists(jmtes_output))
+stopifnot(file.exists(jes_output))
+stopifnot(file.exists(jmtes_csv_output))
+stopifnot(file.exists(jes_csv_output))
+
+message("Created Excel files:")
+message("- ", jmtes_output)
+message("- ", jes_output)
+message("Created reviewable CSV copies:")
+message("- ", jmtes_csv_output)
+message("- ", jes_csv_output)
+```
+
+```{r preview-results}
+head(jmtes_absence)
+head(jes_absence)
+```
