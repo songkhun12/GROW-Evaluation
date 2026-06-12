@@ -1,0 +1,13 @@
+outcome,estimand,primary_overlap_weighted_effect,primary_bootstrap_ci_low,primary_bootstrap_ci_high,unadjusted_difference,covariate_adjusted_regression_difference,exact_stratified_difference,treated_students_in_exact_overlap,total_treated_students
+Excused absences per 170-day year,JMTES - JES,0.99,,,0.85,0.99,0.99,419,419
+Unexcused absences per 170-day year,JMTES - JES,-5.80,,,-6.06,-5.79,-5.55,419,419
+Total absences per 170-day year,JMTES - JES,-4.81,,,-5.21,-4.80,-4.56,419,419
+Excused absence % of 170-day year,JMTES - JES,0.58,0.34,0.78,0.50,0.58,0.58,419,419
+Unexcused absence % of 170-day year,JMTES - JES,-3.41,-4.22,-2.54,-3.56,-3.41,-3.26,419,419
+Total absence % of 170-day year,JMTES - JES,-2.83,-3.77,-1.88,-3.06,-2.82,-2.68,419,419
+School behavior referrals (unweighted count) per 170-day year,JMTES - JES,-0.40,,,-0.42,-0.40,-0.39,419,419
+Bus behavior referrals (unweighted count) per 170-day year,JMTES - JES,-0.13,,,-0.13,-0.13,-0.12,419,419
+School behavior severity points per 170-day year,JMTES - JES,-0.81,-1.21,-0.39,-0.88,-0.81,-0.79,419,419
+Bus behavior severity points per 170-day year,JMTES - JES,-0.26,-0.35,-0.16,-0.26,-0.26,-0.24,419,419
+Highest school behavior severity category (0-4),JMTES - JES,-0.29,-0.42,-0.14,-0.29,-0.29,-0.26,419,419
+Highest bus behavior severity category (0-3),JMTES - JES,-0.12,-0.17,-0.04,-0.12,-0.12,-0.11,419,419
