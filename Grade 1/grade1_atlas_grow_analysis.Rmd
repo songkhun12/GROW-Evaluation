@@ -1,0 +1,645 @@
+---
+title: "Grade 1 ATLAS Assessment Analysis: G.R.O.W Impact at JMTES"
+author: "CSIC Evaluation Team"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 9,
+  fig.height = 5.5
+)
+```
+
+# Purpose
+
+This notebook analyzes Grade 1 ATLAS assessment scores for the G.R.O.W evaluation.
+
+- **Treatment school:** JMTES / Murrell Taylor Elementary, which received G.R.O.W.
+- **Control school:** JES, which did not receive G.R.O.W.
+- **Primary outcome:** ATLAS assessment scale scores.
+- **Subjects:** ELA and Math.
+- **Primary analysis:** ANCOVA, comparing Summer 2026 scores between JMTES and JES while adjusting for Summer 2025 prior-year baseline scores.
+- **Sensitivity analyses:** DiD-style pre/post comparison, gain-score models, Winter 2025 adjusted ANCOVA, robust standard errors, Wilcoxon tests, winsorized gain-score models, calipered nearest-neighbor matching, inverse probability weighting, permutation inference, and bootstrap confidence intervals.
+- **Primary analytic question:** After adjusting for baseline Summer 2025 ATLAS scores, did Grade 1 students at the treatment school score higher than students at the control school in Summer 2026?
+
+## Why the Grade 1 primary analysis differs from Kindergarten
+
+For Grade 1, both JMTES and JES have a **Summer 2025 prior-year summative score**, a **Winter 2025 mid-year score**, and a **Summer 2026 end-of-year score**. Because G.R.O.W was implemented during the 2025-26 school year, Summer 2025 is the cleanest pre-G.R.O.W baseline available in these files. Winter 2025 may already reflect partial exposure during the program year, so the primary ANCOVA uses **Summer 2025** as the baseline covariate. Winter 2025 is retained for descriptive plotting and sensitivity analysis.
+
+# Load packages
+
+```{r packages}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(broom)
+library(knitr)
+library(sandwich)
+library(lmtest)
+```
+
+# File paths and helper functions
+
+```{r paths-and-helpers}
+jmtes_file <- "../JMTES ATLAS Report_Updated 5.22.26 (PW_ ATLAS).xlsx"
+jes_file   <- "../JES ATLAS Report 25-26_Updated 5.28.26 (PW Titans2026).xlsx"
+
+clean_score <- function(x) {
+  score <- suppressWarnings(as.numeric(x))
+  ifelse(score < 900, NA_real_, score)
+}
+
+wave_order <- c("Summer 2025", "Winter 2025", "Summer 2026")
+subject_order <- c("ELA", "Math")
+```
+
+# Import and reshape ATLAS data
+
+The Grade 1 data are stored in the main school-level ATLAS workbooks:
+
+- JMTES sheet: `25-26 1st grade`
+- JES sheet: `1st`
+
+The workbooks use different column structures, so this section reads each sheet by position and standardizes the data into one long-format analytic file.
+
+```{r import-data}
+# JMTES Grade 1 sheet. Header rows are above the data; read as text and then use column positions.
+jmtes_raw <- read_excel(jmtes_file, sheet = "25-26 1st grade", skip = 2, col_names = FALSE, col_types = "text")
+
+jmtes_long <- jmtes_raw %>%
+  transmute(
+    grade = ...2,
+    teacher = ...3,
+    student_id = ...4,
+    ela_sum_2025 = ...5,
+    ela_winter_2025 = ...6,
+    ela_sum_2026 = ...7,
+    math_sum_2025 = ...8,
+    math_winter_2025 = ...9,
+    math_sum_2026 = ...10
+  ) %>%
+  filter(!is.na(grade), grade != "") %>%
+  mutate(
+    school = "JMTES",
+    treatment = 1L
+  ) %>%
+  pivot_longer(
+    cols = c(ela_sum_2025, ela_winter_2025, ela_sum_2026, math_sum_2025, math_winter_2025, math_sum_2026),
+    names_to = "assessment",
+    values_to = "score"
+  ) %>%
+  mutate(
+    score = clean_score(score),
+    subject = case_when(
+      str_detect(assessment, "^ela") ~ "ELA",
+      str_detect(assessment, "^math") ~ "Math",
+      TRUE ~ NA_character_
+    ),
+    wave = case_when(
+      str_detect(assessment, "sum_2025") ~ "Summer 2025",
+      str_detect(assessment, "winter_2025") ~ "Winter 2025",
+      str_detect(assessment, "sum_2026") ~ "Summer 2026",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(school, treatment, grade, teacher, student_id, subject, wave, score)
+
+# JES Grade 1 sheet. Row 4 contains dates, so remove non-student rows after reading.
+jes_raw <- read_excel(jes_file, sheet = "1st", skip = 2, col_names = FALSE, col_types = "text")
+
+jes_long <- jes_raw %>%
+  transmute(
+    grade = ...1,
+    student_id = ...2,
+    ela_sum_2025 = ...3,
+    ela_winter_2025 = ...5,
+    ela_sum_2026 = ...6,
+    math_sum_2025 = ...7,
+    math_winter_2025 = ...9,
+    math_sum_2026 = ...10
+  ) %>%
+  filter(!is.na(grade), grade != "") %>%
+  mutate(
+    school = "JES",
+    treatment = 0L,
+    teacher = NA_character_
+  ) %>%
+  pivot_longer(
+    cols = c(ela_sum_2025, ela_winter_2025, ela_sum_2026, math_sum_2025, math_winter_2025, math_sum_2026),
+    names_to = "assessment",
+    values_to = "score"
+  ) %>%
+  mutate(
+    score = clean_score(score),
+    subject = case_when(
+      str_detect(assessment, "^ela") ~ "ELA",
+      str_detect(assessment, "^math") ~ "Math",
+      TRUE ~ NA_character_
+    ),
+    wave = case_when(
+      str_detect(assessment, "sum_2025") ~ "Summer 2025",
+      str_detect(assessment, "winter_2025") ~ "Winter 2025",
+      str_detect(assessment, "sum_2026") ~ "Summer 2026",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(school, treatment, grade, teacher, student_id, subject, wave, score)
+
+atlas_long <- bind_rows(jmtes_long, jes_long) %>%
+  filter(!is.na(subject), !is.na(wave), !is.na(score)) %>%
+  mutate(
+    school = factor(school, levels = c("JES", "JMTES")),
+    treatment = as.integer(treatment),
+    subject = factor(subject, levels = subject_order),
+    wave = factor(wave, levels = wave_order),
+    post = if_else(wave == "Summer 2026", 1L, 0L)
+  )
+
+wide_common <- atlas_long %>%
+  select(school, treatment, student_id, subject, wave, score) %>%
+  pivot_wider(names_from = wave, values_from = score) %>%
+  filter(!is.na(`Summer 2025`), !is.na(`Summer 2026`)) %>%
+  mutate(
+    gain = `Summer 2026` - `Summer 2025`,
+    winter_gain = `Winter 2025` - `Summer 2025`,
+    post_winter_gain = `Summer 2026` - `Winter 2025`
+  )
+
+kable(head(atlas_long, 10), caption = "First 10 standardized Grade 1 ATLAS observations")
+```
+
+# Data availability
+
+```{r data-availability}
+data_availability <- atlas_long %>%
+  count(school, subject, wave, name = "n_scores") %>%
+  arrange(subject, school, wave)
+
+kable(data_availability, caption = "Available Grade 1 score counts by school, subject, and wave")
+```
+
+# Mean score for each wave
+
+```{r mean-scores}
+mean_scores <- atlas_long %>%
+  group_by(school, treatment, subject, wave) %>%
+  summarise(
+    n = n(),
+    mean_score = mean(score, na.rm = TRUE),
+    sd_score = sd(score, na.rm = TRUE),
+    se_score = sd_score / sqrt(n),
+    .groups = "drop"
+  ) %>%
+  arrange(subject, wave, school)
+
+kable(mean_scores, digits = 2, caption = "Mean Grade 1 ATLAS scores by school, subject, and wave")
+```
+
+# Line graph by subject
+
+```{r line-graphs, fig.height=6.5}
+mean_line_plot <- ggplot(mean_scores, aes(x = wave, y = mean_score, color = school, group = school)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_score - 1.96 * se_score, ymax = mean_score + 1.96 * se_score), width = 0.08) +
+  facet_wrap(~ subject, scales = "free_y") +
+  labs(
+    title = "Mean Grade 1 ATLAS Scores by School and Wave",
+    subtitle = "JMTES received G.R.O.W; JES is the control school",
+    x = "Assessment wave",
+    y = "Mean ATLAS score",
+    color = "School"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
+
+mean_line_plot
+
+dir.create("results", showWarnings = FALSE)
+ggsave("results/grade1_atlas_mean_scores_line_plot.png", mean_line_plot, width = 9, height = 6.5, dpi = 300)
+```
+
+# Primary impact analysis: ANCOVA using Summer 2025 baseline
+
+## Why ANCOVA is the preferred primary analysis for Grade 1
+
+For Grade 1, both schools have Summer 2025 prior-year summative scores. This makes ANCOVA using Summer 2025 as the baseline the most appropriate primary model because it adjusts for pre-G.R.O.W achievement without conditioning on Winter 2025, which may be an intermediate outcome during the program year.
+
+The primary model is estimated separately by subject:
+
+\[
+Summer2026_i = \alpha + \beta_1 Treatment_i + \beta_2 Summer2025_i + \epsilon_i
+\]
+
+where \(\beta_1\) is the adjusted JMTES-vs-JES difference in Summer 2026 scores.
+
+```{r primary-ancova}
+run_ancova <- function(data) {
+  lm(`Summer 2026` ~ treatment + `Summer 2025`, data = data)
+}
+
+ancova_models <- wide_common %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_common$subject))) %>%
+  lapply(run_ancova)
+
+ancova_results <- bind_rows(lapply(names(ancova_models), function(s) {
+  model <- ancova_models[[s]]
+  tidy(model, conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+ancova_effects <- ancova_results %>%
+  filter(term == "treatment") %>%
+  transmute(
+    subject,
+    ancova_estimate = estimate,
+    std_error = std.error,
+    statistic,
+    p_value = p.value,
+    conf_low = conf.low,
+    conf_high = conf.high
+  )
+
+kable(ancova_results, digits = 3, caption = "Primary Grade 1 ANCOVA results by subject")
+kable(ancova_effects, digits = 3, caption = "Adjusted JMTES-vs-JES difference from primary Grade 1 ANCOVA model")
+```
+
+# Sensitivity analysis: ANCOVA using Winter 2025 baseline
+
+This model is included only as a sensitivity check. It adjusts for Winter 2025, which is closer to the Summer 2026 outcome but may already reflect partial exposure to G.R.O.W.
+
+```{r winter-ancova}
+winter_ancova_models <- wide_common %>%
+  filter(!is.na(`Winter 2025`)) %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_common$subject))) %>%
+  lapply(function(data) lm(`Summer 2026` ~ treatment + `Winter 2025`, data = data))
+
+winter_ancova_results <- bind_rows(lapply(names(winter_ancova_models), function(s) {
+  tidy(winter_ancova_models[[s]], conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+kable(winter_ancova_results, digits = 3, caption = "Sensitivity ANCOVA using Winter 2025 baseline")
+```
+
+# Sensitivity check: DiD-style Summer 2025 to Summer 2026 comparison
+
+```{r did-models}
+did_data <- atlas_long %>%
+  filter(wave %in% c("Summer 2025", "Summer 2026")) %>%
+  mutate(
+    post = if_else(wave == "Summer 2026", 1L, 0L),
+    treatment_post = treatment * post
+  )
+
+run_did <- function(data) {
+  lm(score ~ treatment + post + treatment_post, data = data)
+}
+
+did_models <- did_data %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(did_data$subject))) %>%
+  lapply(run_did)
+
+did_results <- bind_rows(lapply(names(did_models), function(s) {
+  tidy(did_models[[s]], conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+did_effects <- did_results %>%
+  filter(term == "treatment_post") %>%
+  transmute(
+    subject,
+    did_estimate = estimate,
+    std_error = std.error,
+    statistic,
+    p_value = p.value,
+    conf_low = conf.low,
+    conf_high = conf.high
+  )
+
+kable(did_results, digits = 3, caption = "DiD-style sensitivity regression results by subject")
+kable(did_effects, digits = 3, caption = "DiD-style sensitivity estimates")
+```
+
+# Robustness checks
+
+## Robustness check 1: Gain-score model
+
+```{r gain-score}
+gain_models <- wide_common %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_common$subject))) %>%
+  lapply(function(data) lm(gain ~ treatment, data = data))
+
+gain_results <- bind_rows(lapply(names(gain_models), function(s) {
+  tidy(gain_models[[s]], conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+gain_summary <- wide_common %>%
+  group_by(subject, school) %>%
+  summarise(
+    n = n(),
+    mean_gain = mean(gain, na.rm = TRUE),
+    sd_gain = sd(gain, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+kable(gain_summary, digits = 2, caption = "Grade 1 student-level Summer 2025 to Summer 2026 gain summaries")
+kable(gain_results, digits = 3, caption = "Grade 1 gain-score robustness model by subject")
+```
+
+## Robustness check 2: HC3 robust standard errors for DiD-style model
+
+```{r robust-se}
+robust_did_results <- bind_rows(lapply(names(did_models), function(s) {
+  robust_test <- coeftest(did_models[[s]], vcov. = vcovHC(did_models[[s]], type = "HC3"))
+  tibble(
+    subject = s,
+    term = rownames(robust_test),
+    estimate = robust_test[, 1],
+    robust_se = robust_test[, 2],
+    statistic = robust_test[, 3],
+    p_value = robust_test[, 4]
+  )
+}))
+
+kable(robust_did_results, digits = 3, caption = "Grade 1 DiD-style model with HC3 robust standard errors")
+```
+
+## Robustness check 3: Wilcoxon test on gains
+
+```{r wilcoxon-gains}
+wilcoxon_results <- wide_common %>%
+  group_by(subject) %>%
+  summarise(
+    n_jes = sum(school == "JES"),
+    n_jmtes = sum(school == "JMTES"),
+    wilcox_p_value = wilcox.test(gain ~ school, exact = FALSE)$p.value,
+    .groups = "drop"
+  )
+
+kable(wilcoxon_results, digits = 3, caption = "Wilcoxon rank-sum test comparing Grade 1 gains by school")
+```
+
+## Robustness check 4: Winsorized gain-score comparison
+
+```{r winsorized-gains}
+winsorize <- function(x, probs = c(0.05, 0.95)) {
+  bounds <- quantile(x, probs = probs, na.rm = TRUE)
+  pmin(pmax(x, bounds[[1]]), bounds[[2]])
+}
+
+wide_winsor <- wide_common %>%
+  group_by(subject) %>%
+  mutate(gain_winsor = winsorize(gain)) %>%
+  ungroup()
+
+winsor_models <- wide_winsor %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_winsor$subject))) %>%
+  lapply(function(data) lm(gain_winsor ~ treatment, data = data))
+
+winsor_results <- bind_rows(lapply(names(winsor_models), function(s) {
+  tidy(winsor_models[[s]], conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+kable(winsor_results, digits = 3, caption = "Grade 1 winsorized gain-score robustness model by subject")
+```
+
+## Robustness check 5: Preferred matching method: calipered nearest-neighbor matching on baseline score
+
+Matching can work here as a sensitivity analysis because both schools have student-level Summer 2025 baseline scores. With the current Grade 1 files, the strongest common pre-treatment covariate is the Summer 2025 prior-year ATLAS score. Because there is only one strong shared covariate, propensity score matching would be nearly equivalent to matching directly on Summer 2025 score. The preferred matching approach for these files mirrors the Kindergarten approach, with the Grade 1 baseline changed to Summer 2025:
+
+1. **Exact matching by subject**: ELA students are only matched to ELA students, and Math students are only matched to Math students.
+2. **Nearest-neighbor matching on Summer 2025 baseline score**: each JMTES student is matched to the JES student with the closest Summer 2025 score.
+3. **Matching with replacement**: the same JES student may be reused if that student is the closest match for more than one JMTES student. This improves match quality when the control group is limited.
+4. **Caliper restriction**: matches are only accepted when the baseline-score distance is within 0.20 pooled standard deviations of Summer 2025 scores for that subject. This avoids poor matches.
+
+Important limitation: this matching method only adjusts for observed baseline score differences. It cannot adjust for unobserved differences between schools, classrooms, families, or students. ANCOVA remains the primary analysis; matching is a robustness check.
+
+```{r calipered-nearest-neighbor-matching}
+pooled_sd <- function(x_treated, x_control) {
+  n_t <- length(x_treated)
+  n_c <- length(x_control)
+  sqrt(((n_t - 1) * var(x_treated, na.rm = TRUE) + (n_c - 1) * var(x_control, na.rm = TRUE)) / (n_t + n_c - 2))
+}
+
+caliper_match_subject <- function(data, caliper_sd = 0.20) {
+  treated <- data %>% filter(treatment == 1) %>% arrange(student_id)
+  controls <- data %>% filter(treatment == 0) %>% arrange(student_id)
+  caliper_points <- caliper_sd * pooled_sd(treated$`Summer 2025`, controls$`Summer 2025`)
+
+  bind_rows(lapply(seq_len(nrow(treated)), function(i) {
+    baseline_distance <- abs(controls$`Summer 2025` - treated$`Summer 2025`[i])
+    match_index <- which.min(baseline_distance)
+    accepted_match <- baseline_distance[match_index] <= caliper_points
+
+    tibble(
+      subject = as.character(treated$subject[i]),
+      treated_id = treated$student_id[i],
+      control_id = if_else(accepted_match, controls$student_id[match_index], NA_character_),
+      treated_pre = treated$`Summer 2025`[i],
+      control_pre = if_else(accepted_match, controls$`Summer 2025`[match_index], NA_real_),
+      treated_post = treated$`Summer 2026`[i],
+      control_post = if_else(accepted_match, controls$`Summer 2026`[match_index], NA_real_),
+      caliper_points = caliper_points,
+      baseline_distance = baseline_distance[match_index],
+      matched = accepted_match,
+      matched_effect = if_else(accepted_match, treated$`Summer 2026`[i] - controls$`Summer 2026`[match_index], NA_real_)
+    )
+  }))
+}
+
+matched_pairs <- wide_common %>%
+  group_by(subject) %>%
+  group_split() %>%
+  lapply(caliper_match_subject) %>%
+  bind_rows()
+
+matching_results <- matched_pairs %>%
+  group_by(subject) %>%
+  summarise(
+    n_treated_total = n(),
+    n_matched = sum(matched),
+    n_unmatched = sum(!matched),
+    caliper_points = first(caliper_points),
+    mean_baseline_distance = mean(baseline_distance[matched], na.rm = TRUE),
+    matched_effect = mean(matched_effect, na.rm = TRUE),
+    sd_effect = sd(matched_effect, na.rm = TRUE),
+    se_effect = sd_effect / sqrt(n_matched),
+    statistic = matched_effect / se_effect,
+    p_value = 2 * pt(-abs(statistic), df = n_matched - 1),
+    conf_low = matched_effect + qt(0.025, df = n_matched - 1) * se_effect,
+    conf_high = matched_effect + qt(0.975, df = n_matched - 1) * se_effect,
+    .groups = "drop"
+  )
+
+matching_balance <- matched_pairs %>%
+  filter(matched) %>%
+  group_by(subject) %>%
+  summarise(
+    treated_pre_mean = mean(treated_pre, na.rm = TRUE),
+    matched_control_pre_mean = mean(control_pre, na.rm = TRUE),
+    mean_baseline_difference_after_matching = treated_pre_mean - matched_control_pre_mean,
+    mean_absolute_baseline_distance = mean(abs(treated_pre - control_pre), na.rm = TRUE),
+    .groups = "drop"
+  )
+
+kable(matching_results, digits = 3, caption = "Grade 1 calipered nearest-neighbor Summer 2025 baseline-score matching results")
+kable(matching_balance, digits = 3, caption = "Grade 1 baseline balance after matching")
+```
+
+## Robustness check 6: Inverse probability weighting using Summer 2025 baseline score
+
+```{r ipw}
+run_ipw <- function(data) {
+  propensity_model <- glm(treatment ~ `Summer 2025`, data = data, family = binomial())
+
+  data_ipw <- data %>%
+    mutate(
+      propensity = predict(propensity_model, type = "response"),
+      propensity = pmin(pmax(propensity, 0.01), 0.99),
+      ipw = if_else(treatment == 1, 1 / propensity, 1 / (1 - propensity))
+    )
+
+  lm(`Summer 2026` ~ treatment, data = data_ipw, weights = ipw)
+}
+
+ipw_models <- wide_common %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_common$subject))) %>%
+  lapply(run_ipw)
+
+ipw_results <- bind_rows(lapply(names(ipw_models), function(s) {
+  tidy(ipw_models[[s]], conf.int = TRUE) %>%
+    mutate(subject = s, .before = 1)
+}))
+
+kable(ipw_results, digits = 3, caption = "Grade 1 inverse probability weighted comparison by subject")
+```
+
+## Robustness check 7: Permutation test for the ANCOVA treatment effect
+
+```{r permutation-test}
+permute_ancova <- function(data, n_perm = 2000, seed = 2026) {
+  set.seed(seed)
+  observed <- coef(lm(`Summer 2026` ~ treatment + `Summer 2025`, data = data))["treatment"]
+
+  permuted <- replicate(n_perm, {
+    data_perm <- data %>% mutate(treatment = sample(treatment, size = n(), replace = FALSE))
+    coef(lm(`Summer 2026` ~ treatment + `Summer 2025`, data = data_perm))["treatment"]
+  })
+
+  tibble(
+    observed_effect = unname(observed),
+    n_permutations = n_perm,
+    permutation_p_value = mean(abs(permuted) >= abs(observed), na.rm = TRUE),
+    permutation_mean = mean(permuted, na.rm = TRUE),
+    permutation_sd = sd(permuted, na.rm = TRUE)
+  )
+}
+
+permutation_results <- wide_common %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_common$subject))) %>%
+  lapply(permute_ancova) %>%
+  bind_rows(.id = "subject")
+
+kable(permutation_results, digits = 3, caption = "Grade 1 permutation test for ANCOVA treatment coefficient")
+```
+
+## Robustness check 8: Bootstrap confidence intervals for ANCOVA
+
+```{r bootstrap-ancova}
+bootstrap_ancova <- function(data, n_boot = 2000, seed = 2026) {
+  set.seed(seed)
+  observed <- coef(lm(`Summer 2026` ~ treatment + `Summer 2025`, data = data))["treatment"]
+
+  boot_estimates <- replicate(n_boot, {
+    boot_index <- sample(seq_len(nrow(data)), size = nrow(data), replace = TRUE)
+    boot_data <- data[boot_index, ]
+    coef(lm(`Summer 2026` ~ treatment + `Summer 2025`, data = boot_data))["treatment"]
+  })
+
+  tibble(
+    observed_effect = unname(observed),
+    n_bootstrap = n_boot,
+    bootstrap_se = sd(boot_estimates, na.rm = TRUE),
+    conf_low = quantile(boot_estimates, 0.025, na.rm = TRUE),
+    conf_high = quantile(boot_estimates, 0.975, na.rm = TRUE)
+  )
+}
+
+bootstrap_results <- wide_common %>%
+  group_by(subject) %>%
+  group_split() %>%
+  setNames(levels(droplevels(wide_common$subject))) %>%
+  lapply(bootstrap_ancova) %>%
+  bind_rows(.id = "subject")
+
+kable(bootstrap_results, digits = 3, caption = "Grade 1 bootstrap confidence intervals for ANCOVA treatment coefficient")
+```
+
+# Methods considered but not used as primary analyses
+
+The following methods are not recommended as primary Grade 1 analyses with the current files:
+
+- **Full causal DiD/event study:** requires multiple pre-G.R.O.W waves for both schools to evaluate parallel trends.
+- **Student fixed effects:** requires more comparable repeated observations and clearer treatment timing.
+- **School fixed effects with clustered standard errors:** requires more than one treatment and one control school.
+- **Regression discontinuity:** requires a known assignment cutoff.
+- **Instrumental variables:** requires a valid instrument for G.R.O.W exposure.
+- **Synthetic control:** requires multiple control schools and multiple pre-treatment periods.
+
+# Interpretation guide
+
+Use the following hierarchy when interpreting the findings:
+
+1. **Primary estimate:** the ANCOVA treatment coefficient using Summer 2025 baseline score.
+2. **Substantive magnitude:** whether the estimated effect is meaningful in ATLAS score points.
+3. **Consistency across sensitivity checks:** whether DiD-style, gain-score, matching, IPW, permutation, bootstrap, robust-SE, Wilcoxon, and winsorized analyses point in the same direction.
+4. **Limitations:** results remain quasi-experimental because students were not randomly assigned and the evaluation has one treatment school and one control school.
+
+# Save analytic outputs
+
+```{r save-outputs}
+dir.create("results", showWarnings = FALSE)
+write.csv(atlas_long, "results/grade1_atlas_long_cleaned.csv", row.names = FALSE)
+write.csv(mean_scores, "results/grade1_atlas_mean_scores.csv", row.names = FALSE)
+write.csv(ancova_effects, "results/grade1_atlas_ancova_effects.csv", row.names = FALSE)
+write.csv(did_effects, "results/grade1_atlas_did_effects.csv", row.names = FALSE)
+write.csv(gain_results, "results/grade1_atlas_gain_results.csv", row.names = FALSE)
+write.csv(gain_summary, "results/grade1_atlas_gain_summary.csv", row.names = FALSE)
+write.csv(robust_did_results, "results/grade1_atlas_robust_did_results.csv", row.names = FALSE)
+write.csv(wilcoxon_results, "results/grade1_atlas_wilcoxon_results.csv", row.names = FALSE)
+write.csv(winsor_results, "results/grade1_atlas_winsor_results.csv", row.names = FALSE)
+write.csv(matched_pairs, "results/grade1_atlas_matching_pairs.csv", row.names = FALSE)
+write.csv(matching_results, "results/grade1_atlas_matching_results.csv", row.names = FALSE)
+write.csv(matching_balance, "results/grade1_atlas_matching_balance.csv", row.names = FALSE)
+write.csv(ipw_results, "results/grade1_atlas_ipw_results.csv", row.names = FALSE)
+write.csv(permutation_results, "results/grade1_atlas_permutation_results.csv", row.names = FALSE)
+write.csv(bootstrap_results, "results/grade1_atlas_bootstrap_results.csv", row.names = FALSE)
+```
