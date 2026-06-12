@@ -4,7 +4,7 @@
 Place the previous-year and current-year JMTES Excel files in this ``Grade 4``
 folder, then run this script from anywhere in the repo. The script discovers the
 source files from their names, reads the worksheet that contains a Student ID
-column, and writes one CSV that keeps every student from either file.
+column, and writes CSV and Excel outputs that keep every student from either file.
 """
 from __future__ import annotations
 
@@ -17,9 +17,12 @@ from xml.etree import ElementTree as ET
 
 GRADE_DIR = Path(__file__).resolve().parent
 OUT_CSV = GRADE_DIR / "JMTES Grade 4 Previous Current Merged.csv"
+OUT_XLSX = GRADE_DIR / "JMTES Grade 4 Previous Current Merged.xlsx"
 
 NS_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 NS_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+NS_PKG_REL = "http://schemas.openxmlformats.org/package/2006/relationships"
+NS_CONTENT = "http://schemas.openxmlformats.org/package/2006/content-types"
 NS = {"a": NS_MAIN, "r": NS_REL}
 
 
@@ -185,6 +188,81 @@ def _extract_dataset(path: Path, prefix: str) -> OrderedDict[str, dict[str, str]
     raise ValueError(f"No worksheet with student IDs was found in {path.name}")
 
 
+def _xml_escape(value: str) -> str:
+    return (
+        str(value)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
+
+def _cell_ref(row_idx: int, col_idx: int) -> str:
+    letters = ""
+    n = col_idx
+    while n:
+        n, rem = divmod(n - 1, 26)
+        letters = chr(65 + rem) + letters
+    return f"{letters}{row_idx}"
+
+
+def _write_xlsx(path: Path, headers: list[str], rows: list[dict[str, str]]) -> None:
+    sheet_rows = [headers] + [[row.get(header, "") for header in headers] for row in rows]
+    row_xml = []
+    for row_idx, row in enumerate(sheet_rows, start=1):
+        cells = []
+        for col_idx, value in enumerate(row, start=1):
+            if value == "":
+                continue
+            cells.append(
+                f'<c r="{_cell_ref(row_idx, col_idx)}" t="inlineStr">'
+                f'<is><t>{_xml_escape(value)}</t></is></c>'
+            )
+        row_xml.append(f'<row r="{row_idx}">{"".join(cells)}</row>')
+
+    sheet_xml = (
+        f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<worksheet xmlns="{NS_MAIN}" xmlns:r="{NS_REL}">'
+        f'<sheetData>{"".join(row_xml)}</sheetData></worksheet>'
+    )
+    workbook_xml = (
+        f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<workbook xmlns="{NS_MAIN}" xmlns:r="{NS_REL}">'
+        f'<sheets><sheet name="Merged Grade 4" sheetId="1" r:id="rId1"/></sheets></workbook>'
+    )
+    workbook_rels = (
+        f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<Relationships xmlns="{NS_PKG_REL}">'
+        f'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" '
+        f'Target="worksheets/sheet1.xml"/></Relationships>'
+    )
+    root_rels = (
+        f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<Relationships xmlns="{NS_PKG_REL}">'
+        f'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
+        f'Target="xl/workbook.xml"/></Relationships>'
+    )
+    content_types = (
+        f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<Types xmlns="{NS_CONTENT}">'
+        f'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        f'<Default Extension="xml" ContentType="application/xml"/>'
+        f'<Override PartName="/xl/workbook.xml" '
+        f'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+        f'<Override PartName="/xl/worksheets/sheet1.xml" '
+        f'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+        f'</Types>'
+    )
+
+    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("[Content_Types].xml", content_types)
+        archive.writestr("_rels/.rels", root_rels)
+        archive.writestr("xl/workbook.xml", workbook_xml)
+        archive.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
+        archive.writestr("xl/worksheets/sheet1.xml", sheet_xml)
+
+
 def main() -> None:
     previous_file, current_file = _find_source_files()
     previous = _extract_dataset(previous_file, "Previous Year")
@@ -214,10 +292,12 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=headers)
         writer.writeheader()
         writer.writerows(merged_rows)
+    _write_xlsx(OUT_XLSX, headers, merged_rows)
 
     print(f"Previous file: {previous_file.name}")
     print(f"Current file: {current_file.name}")
     print(f"Wrote {OUT_CSV.relative_to(GRADE_DIR.parent)}")
+    print(f"Wrote {OUT_XLSX.relative_to(GRADE_DIR.parent)}")
     print(f"Previous rows: {len(previous)}")
     print(f"Current rows: {len(current)}")
     print(f"Merged rows: {len(merged_rows)}")
