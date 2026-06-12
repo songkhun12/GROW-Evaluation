@@ -30,6 +30,7 @@ This notebook analyzes Kindergarten ATLAS assessment scores for the G.R.O.W eval
 - **Primary analysis:** ANCOVA, comparing Summer 2026 scores between JMTES and JES while adjusting for Winter 2025 baseline scores.
 - **Sensitivity analyses:** DiD-style pre/post comparison, gain-score models, robust standard errors, Wilcoxon tests, and winsorized gain-score models.
 - **Primary analytic question:** After adjusting for baseline Winter 2025 ATLAS scores, did Kindergarten students at the treatment school score higher than students at the control school in Summer 2026?
+- **Primary analytic question:** Did Kindergarten ATLAS assessment scores improve more at the treatment school than at the control school after G.R.O.W implementation?
 
 The strongest common pre/post comparison available in the two Kindergarten workbooks is:
 
@@ -64,6 +65,7 @@ clean_score <- function(x) {
   # such as 4/5 in JES Summer 2025, are screening/performance codes rather
   # than comparable ATLAS scale scores and are excluded from score analysis.
   ifelse(score < 900, NA_real_, score)
+  suppressWarnings(as.numeric(x))
 }
 
 wave_order <- c("Summer 2025", "Winter 2025", "Summer 2026")
