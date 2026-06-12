@@ -1,0 +1,195 @@
+---
+title: "Ordered Logit Analysis of GROW Behavior Referral Severity"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Purpose
+
+This notebook adds an ordered-logit analysis for behavior referrals in the GROW evaluation. The prior impact analysis included severity-weighted behavior points, but the ordered-logit model is useful because the At Risk Report codes define behavior referrals as ordered severity levels rather than interchangeable events.
+
+The ordered-logit analysis is appropriate for the **highest referral severity category** observed for each student:
+
+- School behavior severity: `0 = none`, `1 = L-1`, `2 = L-2`, `3 = L-3`, `4 = L-4`.
+- Bus behavior severity: `0 = none`, `1 = Local or Transportation 1`, `2 = Transportation 2`, `3 = Transportation 3`.
+
+The analysis estimates predicted probabilities for each severity level under two counterfactual conditions:
+
+1. every student is assigned to **JMTES/GROW treatment**; and
+2. every student is assigned to **JES/control**.
+
+The difference is reported as **JMTES - JES**, so negative differences for higher-severity categories indicate lower predicted probability of severe behavior referrals under GROW.
+
+## Important limitation
+
+The ordered-logit outcome is the highest observed severity category, not an annualized count. Because the JMTES report was pulled on May 7, 2026, before the school year ended, students at JMTES had a shorter observation window than JES for reaching a high severity category. Therefore, this ordered-logit model should be interpreted as a **severity-distribution robustness analysis**. The annualized severity-point analysis in `grow_absence_behavior_impact_analysis.py` remains the better primary behavior analysis for combining severity with exposure time.
+
+```{r libraries}
+# install.packages("MASS") # if MASS is not already installed
+library(MASS)
+```
+
+```{r load-data}
+jmtes <- read.csv("JMTES At Risk Report with Absence Percentages.csv", check.names = FALSE)
+jes <- read.csv("JES At Risk Report with Absence Percentages.csv", check.names = FALSE)
+
+jmtes$school <- "JMTES"
+jes$school <- "JES"
+
+dat <- rbind(jmtes, jes)
+dat$treatment <- ifelse(dat$school == "JMTES", 1, 0)
+
+# Covariates used in the prior overlap-weighted impact analysis.
+dat$grade <- factor(dat[["Student Grade"]])
+dat$gender <- factor(trimws(dat[["Gender"]]))
+dat$ethnicity <- factor(trimws(dat[["Ethnic Name"]]))
+dat$meal_code <- factor(trimws(dat[["Meal Status Code"]]))
+dat$entry_code <- factor(trimws(dat[["Entry Code - E/W"]]))
+dat$age <- as.numeric(dat[["Student Age"]])
+```
+
+```{r construct-ordered-outcomes}
+to_num <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x[is.na(x)] <- 0
+  x
+}
+
+l1 <- to_num(dat[["L-1"]])
+l2 <- to_num(dat[["L-2"]])
+l3 <- to_num(dat[["L-3"]])
+l4 <- to_num(dat[["L-4"]])
+local <- to_num(dat[["Local"]])
+bus1 <- to_num(dat[["Transportation 1"]])
+bus2 <- to_num(dat[["Transportation 2"]])
+bus3 <- to_num(dat[["Transportation 3"]])
+
+dat$school_highest_severity_num <- ifelse(l4 > 0, 4,
+  ifelse(l3 > 0, 3,
+    ifelse(l2 > 0, 2,
+      ifelse(l1 > 0, 1, 0)
+    )
+  )
+)
+
+dat$bus_highest_severity_num <- ifelse(bus3 > 0, 3,
+  ifelse(bus2 > 0, 2,
+    ifelse(local + bus1 > 0, 1, 0)
+  )
+)
+
+dat$school_highest_severity <- ordered(
+  dat$school_highest_severity_num,
+  levels = 0:4,
+  labels = c("None", "L-1", "L-2", "L-3", "L-4")
+)
+
+dat$bus_highest_severity <- ordered(
+  dat$bus_highest_severity_num,
+  levels = 0:3,
+  labels = c("None", "Local/T-1", "T-2", "T-3")
+)
+```
+
+```{r overlap-weights}
+propensity_model <- glm(
+  treatment ~ grade + gender + ethnicity + age + meal_code + entry_code,
+  data = dat,
+  family = binomial()
+)
+
+dat$propensity_score <- pmin(pmax(predict(propensity_model, type = "response"), 0.01), 0.99)
+dat$overlap_weight <- ifelse(dat$treatment == 1, 1 - dat$propensity_score, dat$propensity_score)
+```
+
+```{r ordered-logit-helper}
+fit_ordered_logit_predictions <- function(outcome_name, category_scores) {
+  formula <- as.formula(
+    paste0(outcome_name, " ~ treatment + grade + gender + ethnicity + age + meal_code + entry_code")
+  )
+
+  model <- polr(
+    formula,
+    data = dat,
+    weights = overlap_weight,
+    method = "logistic",
+    Hess = TRUE
+  )
+
+  treated_data <- dat
+  control_data <- dat
+  treated_data$treatment <- 1
+  control_data$treatment <- 0
+
+  treated_prob <- colMeans(predict(model, newdata = treated_data, type = "probs"))
+  control_prob <- colMeans(predict(model, newdata = control_data, type = "probs"))
+
+  probability_table <- data.frame(
+    outcome = outcome_name,
+    severity_category = names(treated_prob),
+    category_score = category_scores,
+    predicted_probability_jmtes = as.numeric(treated_prob),
+    predicted_probability_jes = as.numeric(control_prob),
+    probability_difference_jmtes_minus_jes = as.numeric(treated_prob - control_prob)
+  )
+
+  expected_table <- data.frame(
+    outcome = outcome_name,
+    expected_severity_jmtes = sum(as.numeric(treated_prob) * category_scores),
+    expected_severity_jes = sum(as.numeric(control_prob) * category_scores),
+    expected_severity_difference_jmtes_minus_jes =
+      sum(as.numeric(treated_prob) * category_scores) - sum(as.numeric(control_prob) * category_scores)
+  )
+
+  list(model = model, probabilities = probability_table, expected = expected_table)
+}
+```
+
+```{r fit-models}
+school_ordered <- fit_ordered_logit_predictions("school_highest_severity", 0:4)
+bus_ordered <- fit_ordered_logit_predictions("bus_highest_severity", 0:3)
+
+ordered_probability_results <- rbind(
+  school_ordered$probabilities,
+  bus_ordered$probabilities
+)
+
+ordered_expected_results <- rbind(
+  school_ordered$expected,
+  bus_ordered$expected
+)
+
+write.csv(
+  ordered_probability_results,
+  "grow_ordered_logit_behavior_predicted_probabilities.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  ordered_expected_results,
+  "grow_ordered_logit_behavior_expected_severity.csv",
+  row.names = FALSE
+)
+```
+
+```{r ordered-logit-results}
+ordered_probability_results
+ordered_expected_results
+```
+
+## How to interpret the results
+
+The key output is the predicted probability difference for each ordered severity category. For higher-severity categories, a negative `probability_difference_jmtes_minus_jes` means that the ordered-logit model predicts a lower probability of that severity level under JMTES/GROW than under JES/control, after adjusting for observed student covariates and overlap weights.
+
+In the existing severity-weighted impact results, JMTES had lower severity-weighted behavior outcomes than JES:
+
+- School behavior severity points: **-0.81** points per student per 170-day year.
+- Bus behavior severity points: **-0.26** points per student per 170-day year.
+- Highest school behavior severity category: **-0.29** categories on the 0-4 scale.
+- Highest bus behavior severity category: **-0.12** categories on the 0-3 scale.
+
+Those results suggest that the GROW treatment school had fewer and less severe referrals than the control school. The ordered-logit predicted probability analysis should be used to describe **where in the ordered severity distribution** those differences occur: for example, whether GROW is associated with higher probability of no referral and lower probability of moderate/high severity referral categories.
+
