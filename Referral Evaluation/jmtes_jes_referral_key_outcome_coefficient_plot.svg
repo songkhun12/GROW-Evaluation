@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360">
+<rect width="100%" height="100%" fill="white"/>
+<text x="260" y="22" font-family="Arial" font-size="16" font-weight="bold">JMTES coefficient estimates for referral outcomes</text>
+<line x1="892.8" x2="892.8" y1="35" y2="305" stroke="#888" stroke-dasharray="5,5"/>
+<text x="250" y="73.8" text-anchor="end" font-family="Arial" font-size="13">Classroom referrals</text>
+<line x1="567.9" x2="763.0" y1="68.8" y2="68.8" stroke="#2C7FB8" stroke-width="3"/>
+<circle cx="665.4" cy="68.8" r="5" fill="#2C7FB8"/>
+<text x="769.0" y="73.8" font-family="Arial" font-size="12">-0.89</text>
+<text x="250" y="141.2" text-anchor="end" font-family="Arial" font-size="13">Classroom severity-weighted frequency</text>
+<line x1="608.6" x2="801.9" y1="136.2" y2="136.2" stroke="#2C7FB8" stroke-width="3"/>
+<circle cx="705.3" cy="136.2" r="5" fill="#2C7FB8"/>
+<text x="807.9" y="141.2" font-family="Arial" font-size="12">-0.74</text>
+<text x="250" y="208.8" text-anchor="end" font-family="Arial" font-size="13">Bus referrals</text>
+<line x1="318.1" x2="634.3" y1="203.8" y2="203.8" stroke="#2C7FB8" stroke-width="3"/>
+<circle cx="476.2" cy="203.8" r="5" fill="#2C7FB8"/>
+<text x="640.3" y="208.8" font-family="Arial" font-size="12">-1.64</text>
+<text x="250" y="276.2" text-anchor="end" font-family="Arial" font-size="13">Bus severity-weighted frequency</text>
+<line x1="331.3" x2="654.3" y1="271.2" y2="271.2" stroke="#2C7FB8" stroke-width="3"/>
+<circle cx="492.8" cy="271.2" r="5" fill="#2C7FB8"/>
+<text x="660.3" y="276.2" font-family="Arial" font-size="12">-1.57</text>
+<line x1="384.1" x2="384.1" y1="305" y2="310" stroke="black"/>
+<text x="384.1" y="327" text-anchor="middle" font-family="Arial" font-size="12">-2</text>
+<line x1="638.5" x2="638.5" y1="305" y2="310" stroke="black"/>
+<text x="638.5" y="327" text-anchor="middle" font-family="Arial" font-size="12">-1</text>
+<text x="560.0" y="350" text-anchor="middle" font-family="Arial" font-size="13">Log incidence rate ratio (95% CI)</text>
+</svg>
