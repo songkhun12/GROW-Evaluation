@@ -1,0 +1,177 @@
+---
+title: "Covariate-Adjusted Attendance Regression Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Purpose
+
+This notebook implements the requested attendance methodology: a covariate-adjusted, regression-based comparison of JMTES, the GROW treatment school, and JES, the comparison school.
+
+The outcomes are:
+
+- unexcused absence rate, measured as the percentage of enrolled school days missed;
+- excused absence rate, measured as the percentage of enrolled school days missed; and
+- total absence rate, measured as the percentage of enrolled school days missed.
+
+The coefficient on `JMTES` is the estimated GROW treatment-control difference. Negative values mean lower absence rates at JMTES than JES after adjusting for the included covariates.
+
+## Why this regression is useful, and why overlap weighting was primary
+
+This regression model is useful because it is transparent, easy to communicate, and matches a standard evaluation specification: regress the attendance outcome on a treatment indicator and student covariates.
+
+However, the overlap-weighted propensity-score design remains the more defensible **primary** observational analysis because it explicitly emphasizes students who are comparable across JMTES and JES on observed covariates. Regression uses all students and relies more heavily on linear-model extrapolation if the two schools differ in covariate composition. In practice, both approaches point to the same conclusion, so this regression is included as a robustness check and as the direct implementation of the requested methodology.
+
+```{r libraries}
+# install.packages(c("dplyr", "sandwich", "lmtest")) # if needed
+library(dplyr)
+library(sandwich)
+library(lmtest)
+```
+
+```{r load-data}
+jmtes <- read.csv("JMTES At Risk Report with Absence Percentages.csv", check.names = FALSE)
+jes <- read.csv("JES At Risk Report with Absence Percentages.csv", check.names = FALSE)
+
+jmtes$school <- "JMTES"
+jes$school <- "JES"
+
+dat <- bind_rows(jmtes, jes)
+dat$JMTES <- ifelse(dat$school == "JMTES", 1, 0)
+```
+
+```{r school-calendar}
+school_closures <- as.Date(c(
+  "2025-09-01",
+  "2025-10-31",
+  paste0("2025-11-", 24:28),
+  paste0("2025-12-", 22:31),
+  "2026-01-01",
+  "2026-01-02",
+  "2026-01-19",
+  paste0("2026-01-", 26:30),
+  "2026-02-02",
+  paste0("2026-03-", 23:27),
+  "2026-04-24"
+))
+
+count_school_days <- function(start_date, end_date) {
+  start_date <- max(start_date, as.Date("2025-08-18"))
+  end_date <- min(end_date, as.Date("2026-05-22"))
+
+  if (start_date > end_date) {
+    return(0)
+  }
+
+  days <- seq.Date(start_date, end_date, by = "day")
+  sum(!(weekdays(days) %in% c("Saturday", "Sunday")) & !(days %in% school_closures))
+}
+```
+
+```{r construct-regression-data}
+to_num <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x[is.na(x)] <- 0
+  x
+}
+
+excel_origin <- as.Date("1899-12-30")
+dat$entry_date <- excel_origin + to_num(dat[["Entry Date - E/W"]])
+dat$report_end <- ifelse(dat$school == "JMTES", "2026-05-07", "2026-05-22")
+dat$report_end <- as.Date(dat$report_end)
+
+dat$enrolled_days <- mapply(count_school_days, dat$entry_date, dat$report_end)
+
+dat$unexcused <- to_num(dat[["Unexcused"]])
+dat$excused <- to_num(dat[["Excused"]])
+dat$total_absences <- dat$unexcused + dat$excused
+
+dat$unexcused_absence_rate <- dat$unexcused / dat$enrolled_days * 100
+dat$excused_absence_rate <- dat$excused / dat$enrolled_days * 100
+dat$total_absence_rate <- dat$total_absences / dat$enrolled_days * 100
+
+dat$Female <- ifelse(trimws(dat[["Gender"]]) == "Female", 1, 0)
+dat$Black <- ifelse(trimws(dat[["Ethnic Name"]]) == "Black", 1, 0)
+
+dat$SES <- case_when(
+  trimws(dat[["Meal Status Code"]]) == "03" ~ 0,
+  trimws(dat[["Meal Status Code"]]) %in% c("02", "06") ~ 1,
+  TRUE ~ 2
+)
+
+dat$grade <- factor(dat[["Student Grade"]])
+```
+
+```{r regression-helper}
+run_attendance_model <- function(outcome) {
+  formula <- as.formula(
+    paste0(outcome, " ~ JMTES + Female + Black + SES + grade")
+  )
+
+  model <- lm(formula, data = dat)
+  robust_results <- coeftest(model, vcov = vcovHC(model, type = "HC1"))
+  treatment_row <- robust_results["JMTES", ]
+
+  data.frame(
+    outcome = outcome,
+    estimand = "JMTES - JES",
+    coefficient_jmtes = treatment_row["Estimate"],
+    robust_se = treatment_row["Std. Error"],
+    ci_low = treatment_row["Estimate"] - 1.96 * treatment_row["Std. Error"],
+    ci_high = treatment_row["Estimate"] + 1.96 * treatment_row["Std. Error"],
+    p_value = treatment_row["Pr(>|t|)"],
+    students = nobs(model)
+  )
+}
+```
+
+```{r fit-models}
+attendance_regression_results <- bind_rows(
+  run_attendance_model("unexcused_absence_rate"),
+  run_attendance_model("excused_absence_rate"),
+  run_attendance_model("total_absence_rate")
+)
+
+outcome_labels <- c(
+  unexcused_absence_rate = "Unexcused absence rate (% enrolled days)",
+  excused_absence_rate = "Excused absence rate (% enrolled days)",
+  total_absence_rate = "Total absence rate (% enrolled days)"
+)
+
+attendance_regression_results$outcome <- outcome_labels[attendance_regression_results$outcome]
+
+write.csv(
+  dat,
+  "grow_attendance_regression_student_data.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  attendance_regression_results,
+  "grow_attendance_regression_results.csv",
+  row.names = FALSE
+)
+```
+
+```{r results}
+attendance_regression_results
+```
+
+## Results
+
+The regression results support the same broad conclusion as the overlap-weighted analysis:
+
+- JMTES has lower unexcused absence rates than JES after adjustment.
+- JMTES has lower total absence rates than JES after adjustment.
+- JMTES has slightly higher excused absence rates than JES after adjustment.
+
+In the generated regression output, the JMTES coefficient is:
+
+- **-4.44 percentage points** for unexcused absence rate;
+- **+0.78 percentage points** for excused absence rate; and
+- **-3.67 percentage points** for total absence rate.
+
+These coefficients are interpreted as adjusted percentage-point differences in the percentage of enrolled school days missed.
