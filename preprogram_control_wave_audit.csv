@@ -1,0 +1,16 @@
+Grade,Subject,Common clean pre-program ATLAS score waves available in both schools,Primary ANCOVA control score waves,Notes
+Kindergarten,ELA,None,Winter 2025 proxy,JMTES does not have a common Summer 2025 scale-score baseline; Winter 2025 is pre-outcome but may not be fully pre-program.
+Kindergarten,Math,None,Winter 2025 proxy,JMTES does not have a common Summer 2025 scale-score baseline; Winter 2025 is pre-outcome but may not be fully pre-program.
+Grade 1,ELA,Summer 2025,Summer 2025,2025 screener fields are not ATLAS scale scores and are not used as controls.
+Grade 1,Math,Summer 2025,Summer 2025,2025 screener fields are not ATLAS scale scores and are not used as controls.
+Grade 2,ELA,Summer 2025,Summer 2025,2025 screener fields are not ATLAS scale scores and are not used as controls.
+Grade 2,Math,Summer 2025,Summer 2025,2025 screener fields are not ATLAS scale scores and are not used as controls.
+Grade 3,ELA,Summer 2025,Summer 2025,Fall/Winter 2025 are current-year pre-outcome waves and are not treated as clean pre-program controls.
+Grade 3,Math,Summer 2025,Summer 2025,Fall/Winter 2025 are current-year pre-outcome waves and are not treated as clean pre-program controls.
+Grade 3,Science,None,Winter 2025 proxy,No common prior-year Science scale score is available in both schools.
+Grade 4,ELA,Summer 2025,Summer 2025,"JMTES has Fall/Winter 2024, but JES Grade 4 files do not, so those waves cannot be common controls."
+Grade 4,Math,Summer 2025,Summer 2025,"JMTES has Fall/Winter 2024, but JES Grade 4 files do not, so those waves cannot be common controls."
+Grade 4,Science,Summer 2025,Summer 2025,"JMTES has Fall/Winter 2024, but JES Grade 4 files do not, so those waves cannot be common controls."
+Grade 5,ELA,Summer 2024; Summer 2025,Summer 2024; Summer 2025,Corrected multi-baseline case; both waves are common clean pre-program controls.
+Grade 5,Math,Summer 2024; Summer 2025,Summer 2024; Summer 2025,Corrected multi-baseline case; both waves are common clean pre-program controls.
+Grade 5,Science,Summer 2025,Summer 2025,"JMTES has Summer/Fall/Winter 2024 Science, but JES Grade 5 files do not include Summer 2024 Science."

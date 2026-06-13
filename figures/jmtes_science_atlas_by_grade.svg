@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560" role="img" aria-label="JMTES Science mean ATLAS scores by grade over time">
+<rect width="100%" height="100%" fill="white"/>
+<text x="480.0" y="30" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700">JMTES Science ATLAS Mean Scores Over Time</text>
+<text x="480.0" y="52" text-anchor="middle" font-family="Arial" font-size="13" fill="#555">Lines show grade-level means for students at Murrell Taylor Elementary (JMTES)</text>
+<line x1="80" y1="465.0" x2="730" y2="465.0" stroke="#e6e6e6" stroke-width="1"/>
+<text x="70" y="469.0" text-anchor="end" font-family="Arial" font-size="12" fill="#555">1035</text>
+<line x1="80" y1="397.5" x2="730" y2="397.5" stroke="#e6e6e6" stroke-width="1"/>
+<text x="70" y="401.5" text-anchor="end" font-family="Arial" font-size="12" fill="#555">1040</text>
+<line x1="80" y1="330.0" x2="730" y2="330.0" stroke="#e6e6e6" stroke-width="1"/>
+<text x="70" y="334.0" text-anchor="end" font-family="Arial" font-size="12" fill="#555">1045</text>
+<line x1="80" y1="262.5" x2="730" y2="262.5" stroke="#e6e6e6" stroke-width="1"/>
+<text x="70" y="266.5" text-anchor="end" font-family="Arial" font-size="12" fill="#555">1050</text>
+<line x1="80" y1="195.0" x2="730" y2="195.0" stroke="#e6e6e6" stroke-width="1"/>
+<text x="70" y="199.0" text-anchor="end" font-family="Arial" font-size="12" fill="#555">1055</text>
+<line x1="80" y1="127.5" x2="730" y2="127.5" stroke="#e6e6e6" stroke-width="1"/>
+<text x="70" y="131.5" text-anchor="end" font-family="Arial" font-size="12" fill="#555">1060</text>
+<line x1="80" y1="60.0" x2="730" y2="60.0" stroke="#e6e6e6" stroke-width="1"/>
+<text x="70" y="64.0" text-anchor="end" font-family="Arial" font-size="12" fill="#555">1065</text>
+<line x1="80" y1="60" x2="80" y2="465" stroke="#333"/>
+<line x1="80" y1="465" x2="730" y2="465" stroke="#333"/>
+<line x1="80.0" y1="465" x2="80.0" y2="470" stroke="#333"/>
+<text x="80.0" y="489" text-anchor="middle" font-family="Arial" font-size="12">Summer 2025</text>
+<line x1="296.7" y1="465" x2="296.7" y2="470" stroke="#333"/>
+<text x="296.7" y="489" text-anchor="middle" font-family="Arial" font-size="12">Fall 2025</text>
+<line x1="513.3" y1="465" x2="513.3" y2="470" stroke="#333"/>
+<text x="513.3" y="489" text-anchor="middle" font-family="Arial" font-size="12">Winter 2025</text>
+<line x1="730.0" y1="465" x2="730.0" y2="470" stroke="#333"/>
+<text x="730.0" y="489" text-anchor="middle" font-family="Arial" font-size="12">Summer 2026</text>
+<text x="405.0" y="532" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">Assessment wave</text>
+<text transform="translate(22 262.5) rotate(-90)" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">Mean ATLAS scale score</text>
+<polyline fill="none" stroke="#d62728" stroke-width="3" points="296.7,375.1 513.3,299.0 730.0,224.4"/>
+<circle cx="296.7" cy="375.1" r="4.5" fill="#d62728" stroke="white" stroke-width="1.5"/>
+<text x="302.7" y="368.1" font-family="Arial" font-size="10" fill="#d62728">1041.7</text>
+<circle cx="513.3" cy="299.0" r="4.5" fill="#d62728" stroke="white" stroke-width="1.5"/>
+<text x="519.3" y="292.0" font-family="Arial" font-size="10" fill="#d62728">1047.3</text>
+<circle cx="730.0" cy="224.4" r="4.5" fill="#d62728" stroke="white" stroke-width="1.5"/>
+<text x="736.0" y="217.4" font-family="Arial" font-size="10" fill="#d62728">1052.8</text>
+<polyline fill="none" stroke="#9467bd" stroke-width="3" points="80.0,188.7 296.7,331.5 513.3,263.1 730.0,211.9"/>
+<circle cx="80.0" cy="188.7" r="4.5" fill="#9467bd" stroke="white" stroke-width="1.5"/>
+<text x="86.0" y="181.7" font-family="Arial" font-size="10" fill="#9467bd">1055.5</text>
+<circle cx="296.7" cy="331.5" r="4.5" fill="#9467bd" stroke="white" stroke-width="1.5"/>
+<text x="302.7" y="324.5" font-family="Arial" font-size="10" fill="#9467bd">1044.9</text>
+<circle cx="513.3" cy="263.1" r="4.5" fill="#9467bd" stroke="white" stroke-width="1.5"/>
+<text x="519.3" y="256.1" font-family="Arial" font-size="10" fill="#9467bd">1050.0</text>
+<circle cx="730.0" cy="211.9" r="4.5" fill="#9467bd" stroke="white" stroke-width="1.5"/>
+<text x="736.0" y="204.9" font-family="Arial" font-size="10" fill="#9467bd">1053.8</text>
+<polyline fill="none" stroke="#8c564b" stroke-width="3" points="80.0,199.4 296.7,314.2 513.3,283.7 730.0,222.3"/>
+<circle cx="80.0" cy="199.4" r="4.5" fill="#8c564b" stroke="white" stroke-width="1.5"/>
+<text x="86.0" y="192.4" font-family="Arial" font-size="10" fill="#8c564b">1054.7</text>
+<circle cx="296.7" cy="314.2" r="4.5" fill="#8c564b" stroke="white" stroke-width="1.5"/>
+<text x="302.7" y="307.2" font-family="Arial" font-size="10" fill="#8c564b">1046.2</text>
+<circle cx="513.3" cy="283.7" r="4.5" fill="#8c564b" stroke="white" stroke-width="1.5"/>
+<text x="519.3" y="276.7" font-family="Arial" font-size="10" fill="#8c564b">1048.4</text>
+<circle cx="730.0" cy="222.3" r="4.5" fill="#8c564b" stroke="white" stroke-width="1.5"/>
+<text x="736.0" y="215.3" font-family="Arial" font-size="10" fill="#8c564b">1053.0</text>
+<text x="765" y="80" font-family="Arial" font-size="14" font-weight="700">Grade</text>
+<line x1="765" y1="100" x2="793" y2="100" stroke="#1f77b4" stroke-width="3" opacity="0.35"/>
+<circle cx="779" cy="100" r="4" fill="#1f77b4" opacity="0.35"/>
+<text x="803" y="104" font-family="Arial" font-size="13" fill="#333" opacity="0.35">Kindergarten (no data)</text>
+<line x1="765" y1="128" x2="793" y2="128" stroke="#ff7f0e" stroke-width="3" opacity="0.35"/>
+<circle cx="779" cy="128" r="4" fill="#ff7f0e" opacity="0.35"/>
+<text x="803" y="132" font-family="Arial" font-size="13" fill="#333" opacity="0.35">Grade 1 (no data)</text>
+<line x1="765" y1="156" x2="793" y2="156" stroke="#2ca02c" stroke-width="3" opacity="0.35"/>
+<circle cx="779" cy="156" r="4" fill="#2ca02c" opacity="0.35"/>
+<text x="803" y="160" font-family="Arial" font-size="13" fill="#333" opacity="0.35">Grade 2 (no data)</text>
+<line x1="765" y1="184" x2="793" y2="184" stroke="#d62728" stroke-width="3" opacity="1"/>
+<circle cx="779" cy="184" r="4" fill="#d62728" opacity="1"/>
+<text x="803" y="188" font-family="Arial" font-size="13" fill="#333" opacity="1">Grade 3</text>
+<line x1="765" y1="212" x2="793" y2="212" stroke="#9467bd" stroke-width="3" opacity="1"/>
+<circle cx="779" cy="212" r="4" fill="#9467bd" opacity="1"/>
+<text x="803" y="216" font-family="Arial" font-size="13" fill="#333" opacity="1">Grade 4</text>
+<line x1="765" y1="240" x2="793" y2="240" stroke="#8c564b" stroke-width="3" opacity="1"/>
+<circle cx="779" cy="240" r="4" fill="#8c564b" opacity="1"/>
+<text x="803" y="244" font-family="Arial" font-size="13" fill="#333" opacity="1">Grade 5</text>
+<text x="765" y="290" font-family="Arial" font-size="12" fill="#666">Science ATLAS data are available</text>
+<text x="765" y="307" font-family="Arial" font-size="12" fill="#666">only for Grades 3–5.</text>
+</svg>

@@ -1,0 +1,4 @@
+subject,n_treated,n_control,wilcoxon_statistic,p_value
+ELA,34,92,998.0,0.0018658247914393744
+Math,34,91,1163.5,0.03336189562884595
+Science,34,92,1547.5,0.9277422464592244
