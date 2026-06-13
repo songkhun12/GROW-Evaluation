@@ -1,0 +1,4 @@
+outcome,estimand,coefficient_jmtes,robust_se,ci_low,ci_high,p_value_normal_approx,students,controls
+Unexcused absence rate (% enrolled days),JMTES - JES,-4.44,0.60,-5.62,-3.27,0.0000,1095,"Female, Black, SES ordered meal status, grade indicators"
+Excused absence rate (% enrolled days),JMTES - JES,0.78,0.18,0.42,1.13,0.0000,1095,"Female, Black, SES ordered meal status, grade indicators"
+Total absence rate (% enrolled days),JMTES - JES,-3.67,0.65,-4.94,-2.40,0.0000,1095,"Female, Black, SES ordered meal status, grade indicators"

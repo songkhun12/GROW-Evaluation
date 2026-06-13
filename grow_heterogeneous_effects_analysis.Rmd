@@ -1,0 +1,214 @@
+---
+title: "Heterogeneous GROW Impact Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Purpose
+
+This notebook examines whether the estimated GROW impact varies across student groups observed in the At Risk Report data. JMTES is treated as the GROW treatment school and JES as the control school. Effects are reported as **JMTES - JES**, so negative values indicate lower absence or lower behavior severity at JMTES within that subgroup.
+
+The subgroup analysis is exploratory. It is intended to identify whether the main findings are broadly consistent across groups, not to make definitive claims about which subgroup benefits most. Subgroup sample sizes are smaller than the full sample, and the study remains an observational two-school comparison.
+
+## Analysis approach
+
+The analysis uses the same overlap-weighted framework as the primary impact analysis:
+
+1. combine the JMTES and JES absence-percentage CSV files;
+2. define treatment as `1 = JMTES/GROW` and `0 = JES/control`;
+3. reconstruct severity-weighted behavior outcomes using the At Risk Report severity levels;
+4. estimate a propensity score for attending JMTES using grade, gender, ethnicity, age, meal status, and entry code;
+5. calculate overlap weights; and
+6. estimate subgroup-specific weighted mean differences for the main attendance and behavior outcomes.
+
+```{r load-data}
+jmtes <- read.csv("JMTES At Risk Report with Absence Percentages.csv", check.names = FALSE)
+jes <- read.csv("JES At Risk Report with Absence Percentages.csv", check.names = FALSE)
+
+jmtes$school <- "JMTES"
+jes$school <- "JES"
+
+dat <- rbind(jmtes, jes)
+dat$treatment <- ifelse(dat$school == "JMTES", 1, 0)
+
+# Covariates available in the At Risk Report.
+dat$grade <- factor(dat[["Student Grade"]])
+dat$gender <- factor(trimws(dat[["Gender"]]))
+dat$ethnicity <- factor(trimws(dat[["Ethnic Name"]]))
+dat$meal_code <- factor(trimws(dat[["Meal Status Code"]]))
+dat$meal_group <- ifelse(trimws(dat[["Meal Status Code"]]) == "03", "Full Pay", "Free/Reduced/Direct/Medicaid")
+dat$entry_code <- factor(trimws(dat[["Entry Code - E/W"]]))
+dat$age <- as.numeric(dat[["Student Age"]])
+```
+
+```{r construct-outcomes}
+to_num <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  x[is.na(x)] <- 0
+  x
+}
+
+l1 <- to_num(dat[["L-1"]])
+l2 <- to_num(dat[["L-2"]])
+l3 <- to_num(dat[["L-3"]])
+l4 <- to_num(dat[["L-4"]])
+local <- to_num(dat[["Local"]])
+bus1 <- to_num(dat[["Transportation 1"]])
+bus2 <- to_num(dat[["Transportation 2"]])
+bus3 <- to_num(dat[["Transportation 3"]])
+annualizer <- 170 / to_num(dat[["Report School Days"]])
+
+dat$excused_absence_pct <- to_num(dat[["Excused Absence %"]])
+dat$unexcused_absence_pct <- to_num(dat[["Unexcused Absence %"]])
+dat$total_absence_pct <- to_num(dat[["Total Absence %"]])
+dat$school_behavior_severity_points_170 <- (l1 + 2 * l2 + 3 * l3 + 4 * l4) * annualizer
+dat$bus_behavior_severity_points_170 <- ((local + bus1) + 2 * bus2 + 3 * bus3) * annualizer
+```
+
+```{r overlap-weights}
+propensity_model <- glm(
+  treatment ~ grade + gender + ethnicity + age + meal_code + entry_code,
+  data = dat,
+  family = binomial()
+)
+
+dat$propensity_score <- pmin(pmax(predict(propensity_model, type = "response"), 0.01), 0.99)
+dat$overlap_weight <- ifelse(dat$treatment == 1, 1 - dat$propensity_score, dat$propensity_score)
+```
+
+```{r subgroup-functions}
+weighted_mean <- function(x, w) {
+  sum(x * w) / sum(w)
+}
+
+subgroup_effect <- function(data, group_var, group_level, outcome) {
+  subgroup_data <- data[data[[group_var]] == group_level, ]
+  treated <- subgroup_data[subgroup_data$treatment == 1, ]
+  control <- subgroup_data[subgroup_data$treatment == 0, ]
+
+  if (nrow(treated) < 10 || nrow(control) < 10) {
+    return(NULL)
+  }
+
+  treated_mean <- weighted_mean(treated[[outcome]], treated$overlap_weight)
+  control_mean <- weighted_mean(control[[outcome]], control$overlap_weight)
+
+  data.frame(
+    group_variable = group_var,
+    group_level = as.character(group_level),
+    treatment_students = nrow(treated),
+    control_students = nrow(control),
+    outcome = outcome,
+    weighted_jmtes_mean = treated_mean,
+    weighted_jes_mean = control_mean,
+    effect_jmtes_minus_jes = treated_mean - control_mean
+  )
+}
+```
+
+```{r estimate-heterogeneous-effects}
+group_variables <- c("grade", "gender", "ethnicity", "meal_group", "entry_code")
+outcomes <- c(
+  "excused_absence_pct",
+  "unexcused_absence_pct",
+  "total_absence_pct",
+  "school_behavior_severity_points_170",
+  "bus_behavior_severity_points_170"
+)
+
+all_results <- list()
+result_index <- 1
+
+for (group_var in group_variables) {
+  for (group_level in sort(unique(dat[[group_var]]))) {
+    for (outcome in outcomes) {
+      result <- subgroup_effect(dat, group_var, group_level, outcome)
+      if (!is.null(result)) {
+        all_results[[result_index]] <- result
+        result_index <- result_index + 1
+      }
+    }
+  }
+}
+
+heterogeneous_effects <- do.call(rbind, all_results)
+
+outcome_labels <- c(
+  excused_absence_pct = "Excused absence % of 170-day year",
+  unexcused_absence_pct = "Unexcused absence % of 170-day year",
+  total_absence_pct = "Total absence % of 170-day year",
+  school_behavior_severity_points_170 = "School behavior severity points per 170-day year",
+  bus_behavior_severity_points_170 = "Bus behavior severity points per 170-day year"
+)
+
+heterogeneous_effects$outcome <- outcome_labels[heterogeneous_effects$outcome]
+
+write.csv(
+  heterogeneous_effects,
+  "grow_heterogeneous_effects.csv",
+  row.names = FALSE
+)
+
+focus_results <- heterogeneous_effects[
+  heterogeneous_effects$group_variable %in% c("grade", "gender", "ethnicity", "meal_group") &
+    heterogeneous_effects$outcome %in% c(
+      "Unexcused absence % of 170-day year",
+      "Total absence % of 170-day year",
+      "School behavior severity points per 170-day year",
+      "Bus behavior severity points per 170-day year"
+    ),
+]
+
+write.csv(
+  focus_results,
+  "grow_heterogeneous_effects_focus.csv",
+  row.names = FALSE
+)
+```
+
+```{r preview-results}
+focus_results
+```
+
+## Results summary
+
+The heterogeneity analysis suggests that the favorable GROW pattern is **not driven by only one demographic group**. Most examined groups show lower unexcused absence, lower total absence, and lower bus behavior severity at JMTES relative to comparable JES students.
+
+### Attendance heterogeneity
+
+The largest unexcused-absence reductions are in:
+
+- **Grade 5:** -5.22 percentage points;
+- **Grade 1:** -4.86 percentage points; and
+- **Male students:** -4.48 percentage points.
+
+Total absence reductions are also broad. The largest total-absence reductions are in:
+
+- **Grade 5:** -4.72 percentage points;
+- **Male students:** -3.77 percentage points; and
+- **Grade 1:** -3.56 percentage points.
+
+### Behavior heterogeneity
+
+Behavior impacts vary more across groups than attendance impacts.
+
+School behavior severity reductions are larger for:
+
+- **Male students:** -1.23 severity points, compared with -0.32 for female students;
+- **Black students:** -1.08 severity points, compared with -0.37 for NonBlack students; and
+- **Grades 5, 3, and 4:** -1.65, -1.45, and -1.29 severity points, respectively.
+
+Bus behavior severity reductions are smaller in magnitude but generally favorable across groups, especially:
+
+- **Grade 5:** -0.48 severity points;
+- **Grade 3:** -0.39 severity points; and
+- **Male students:** -0.33 severity points.
+
+The main exception is **Grade 2 school behavior severity**, where the subgroup estimate is positive (+0.65). That suggests the favorable school-behavior pattern is not uniform across every grade.
+
+## Interpretation
+
+These subgroup results support the main conclusion that GROW is associated with lower unexcused absence, lower total absence, and lower behavior severity at JMTES. However, subgroup findings should be treated as exploratory because each subgroup has fewer students than the full sample, and the study is still an observational comparison of one treatment school and one control school.
