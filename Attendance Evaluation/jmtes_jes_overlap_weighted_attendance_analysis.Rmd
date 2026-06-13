@@ -1,0 +1,316 @@
+---
+title: "Comparing School Absences Between JMTES and JES"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(width = 120, scipen = 999)
+```
+
+# Purpose
+
+This analysis estimates the association between attendance at Jacksonville Middle/Elementary School (JMTES, the GROW school) and student absence outcomes, using Jacksonville Elementary School (JES) as the comparison school. Because students were not randomly assigned to JMTES or JES, the primary specification uses an overlap-weighted propensity score design. Overlap weighting emphasizes students with similar observed baseline characteristics across schools and down-weights students whose covariate profiles are uncommon in the other school.
+
+The outcomes are absence percentages rather than raw absence counts. This is important because the JMTES file was collected before the school year ended, when the report covered 159 school days, whereas the JES file covered 170 school days. Percentage outcomes therefore place both schools on a comparable scale.
+
+# Data sources
+
+```{r data-sources}
+jmtes_file <- "JMTES At Risk Report with Absence Percentages.csv"
+jes_file   <- "JES At Risk Report with Absence Percentages.csv"
+
+required_files <- c(jmtes_file, jes_file)
+missing_files <- required_files[!file.exists(required_files)]
+if (length(missing_files) > 0) {
+  stop("Missing required file(s): ", paste(missing_files, collapse = ", "))
+}
+```
+
+# Helper functions
+
+```{r helper-functions}
+clean_chr <- function(x) trimws(as.character(x))
+
+num <- function(x) suppressWarnings(as.numeric(clean_chr(x)))
+
+weighted_mean <- function(x, w) {
+  ok <- is.finite(x) & is.finite(w) & w > 0
+  sum(w[ok] * x[ok]) / sum(w[ok])
+}
+
+weighted_var <- function(x, w) {
+  ok <- is.finite(x) & is.finite(w) & w > 0
+  x <- x[ok]
+  w <- w[ok]
+  mu <- sum(w * x) / sum(w)
+  sum(w * (x - mu)^2) / sum(w)
+}
+
+smd_numeric <- function(x, treat, w = NULL) {
+  if (is.null(w)) w <- rep(1, length(x))
+  m1 <- weighted_mean(x[treat == 1], w[treat == 1])
+  m0 <- weighted_mean(x[treat == 0], w[treat == 0])
+  v1 <- weighted_var(x[treat == 1], w[treat == 1])
+  v0 <- weighted_var(x[treat == 0], w[treat == 0])
+  denom <- sqrt((v1 + v0) / 2)
+  if (!is.finite(denom) || denom == 0) return(NA_real_)
+  (m1 - m0) / denom
+}
+
+smd_binary <- function(x, treat, w = NULL) {
+  if (is.null(w)) w <- rep(1, length(x))
+  p1 <- weighted_mean(as.numeric(x)[treat == 1], w[treat == 1])
+  p0 <- weighted_mean(as.numeric(x)[treat == 0], w[treat == 0])
+  p <- (p1 + p0) / 2
+  denom <- sqrt(p * (1 - p))
+  if (!is.finite(denom) || denom == 0) return(NA_real_)
+  (p1 - p0) / denom
+}
+
+make_factor_smds <- function(data, var, treat, w = NULL) {
+  lvls <- sort(unique(as.character(data[[var]])))
+  do.call(rbind, lapply(lvls, function(level) {
+    indicator <- as.character(data[[var]]) == level
+    data.frame(
+      variable = paste0(var, ": ", level),
+      smd = smd_binary(indicator, treat, w),
+      row.names = NULL
+    )
+  }))
+}
+
+format_p <- function(p) {
+  ifelse(is.na(p), NA_character_, ifelse(p < 0.001, "<0.001", sprintf("%.3f", p)))
+}
+
+model_row <- function(model, term = "jmtes") {
+  coefs <- coef(summary(model))
+  out <- coefs[term, , drop = FALSE]
+  data.frame(
+    estimate = unname(out[1, "Estimate"]),
+    std_error = unname(out[1, "Std. Error"]),
+    t_value = unname(out[1, "t value"]),
+    p_value = unname(out[1, "Pr(>|t|)"]),
+    conf_low = unname(confint(model, term)[1]),
+    conf_high = unname(confint(model, term)[2]),
+    row.names = NULL
+  )
+}
+```
+
+# Import and prepare data
+
+```{r import-clean}
+read_school <- function(file, school_name, jmtes_indicator) {
+  raw <- read.csv(file, stringsAsFactors = FALSE, check.names = FALSE)
+  data.frame(
+    school = school_name,
+    jmtes = jmtes_indicator,
+    student_id = clean_chr(raw[["Student Id"]]),
+    grade = clean_chr(raw[["Student Grade"]]),
+    female = ifelse(tolower(clean_chr(raw[["Gender"]])) == "female", 1, 0),
+    gender = clean_chr(raw[["Gender"]]),
+    black = ifelse(grepl("^black$", tolower(clean_chr(raw[["Ethnic Name"]]))), 1, 0),
+    race_ethnicity = clean_chr(raw[["Ethnic Name"]]),
+    age = num(raw[["Student Age"]]),
+    meal_status = clean_chr(raw[["Meal Status Code"]]),
+    entry_code = clean_chr(raw[["Entry Code - E/W"]]),
+    report_school_days = num(raw[["Report School Days"]]),
+    full_school_year_days = num(raw[["Full School Year Days"]]),
+    unexcused_absences = num(raw[["Unexcused"]]),
+    excused_absences = num(raw[["Excused"]]),
+    total_absences = num(raw[["Total Absences"]]),
+    unexcused_pct = num(raw[["Unexcused Absence %"]]),
+    excused_pct = num(raw[["Excused Absence %"]]),
+    total_pct = num(raw[["Total Absence %"]]),
+    stringsAsFactors = FALSE
+  )
+}
+
+attendance <- rbind(
+  read_school(jmtes_file, "JMTES", 1),
+  read_school(jes_file, "JES", 0)
+)
+
+attendance <- subset(
+  attendance,
+  !is.na(jmtes) & !is.na(grade) & !is.na(female) & !is.na(black) & !is.na(age) &
+    !is.na(meal_status) & !is.na(entry_code) & !is.na(unexcused_pct) & !is.na(excused_pct) & !is.na(total_pct)
+)
+
+attendance$school <- factor(attendance$school, levels = c("JES", "JMTES"))
+attendance$grade <- factor(attendance$grade)
+attendance$gender <- factor(attendance$gender)
+attendance$female <- as.numeric(attendance$female)
+attendance$black <- as.numeric(attendance$black)
+attendance$meal_status <- factor(attendance$meal_status)
+attendance$entry_code <- factor(attendance$entry_code)
+
+school_summary <- aggregate(
+  cbind(student_id = attendance$student_id, report_school_days = attendance$report_school_days),
+  by = list(school = attendance$school),
+  FUN = function(x) if (is.character(x)) length(unique(x)) else unique(x)[1]
+)
+names(school_summary) <- c("school", "students", "report_school_days")
+school_summary
+```
+
+# Descriptive absence percentages
+
+```{r descriptive-outcomes}
+outcome_summary <- do.call(rbind, lapply(c("unexcused_pct", "excused_pct", "total_pct"), function(v) {
+  do.call(rbind, lapply(levels(attendance$school), function(s) {
+    x <- attendance[attendance$school == s, v]
+    data.frame(
+      outcome = v,
+      school = s,
+      n = length(x),
+      mean = mean(x),
+      sd = sd(x),
+      median = median(x),
+      q25 = unname(quantile(x, 0.25)),
+      q75 = unname(quantile(x, 0.75)),
+      row.names = NULL
+    )
+  }))
+}))
+outcome_summary
+```
+
+# Propensity score model
+
+The propensity score model estimates each student's probability of attending JMTES rather than JES based on observed covariates available in the at-risk report files:
+
+\[
+p_i = Pr(JMTES_i = 1 \mid X_i)
+\]
+
+\[
+logit(p_i) = \alpha_0 + \alpha_1 Grade_i + \alpha_2 Female_i + \alpha_3 Black_i + \alpha_4 Age_i + \alpha_5 MealStatus_i + \alpha_6 EntryCode_i
+\]
+
+```{r propensity-model}
+ps_model <- glm(
+  jmtes ~ grade + female + black + age + meal_status + entry_code,
+  data = attendance,
+  family = binomial()
+)
+
+attendance$propensity <- as.numeric(predict(ps_model, type = "response"))
+attendance$overlap_weight <- ifelse(attendance$jmtes == 1, 1 - attendance$propensity, attendance$propensity)
+
+summary(attendance$propensity)
+summary(attendance$overlap_weight)
+```
+
+# Covariate balance
+
+Standardized mean differences (SMDs) are shown before and after overlap weighting. Smaller absolute SMDs indicate better balance between JMTES and JES. As a rule of thumb, absolute SMDs below 0.10 are often considered well balanced.
+
+```{r balance}
+treat <- attendance$jmtes
+balance_rows <- rbind(
+  data.frame(variable = "age", unweighted_smd = smd_numeric(attendance$age, treat), weighted_smd = smd_numeric(attendance$age, treat, attendance$overlap_weight)),
+  data.frame(variable = "female", unweighted_smd = smd_binary(attendance$female == 1, treat), weighted_smd = smd_binary(attendance$female == 1, treat, attendance$overlap_weight)),
+  data.frame(variable = "black", unweighted_smd = smd_binary(attendance$black == 1, treat), weighted_smd = smd_binary(attendance$black == 1, treat, attendance$overlap_weight))
+)
+
+factor_vars <- c("grade", "meal_status", "entry_code")
+factor_balance <- do.call(rbind, lapply(factor_vars, function(v) {
+  unweighted <- make_factor_smds(attendance, v, treat)
+  weighted <- make_factor_smds(attendance, v, treat, attendance$overlap_weight)
+  data.frame(variable = unweighted$variable, unweighted_smd = unweighted$smd, weighted_smd = weighted$smd)
+}))
+
+balance_table <- rbind(balance_rows, factor_balance)
+balance_table$abs_unweighted_smd <- abs(balance_table$unweighted_smd)
+balance_table$abs_weighted_smd <- abs(balance_table$weighted_smd)
+balance_table <- balance_table[order(-balance_table$abs_unweighted_smd), ]
+balance_table
+```
+
+# Overlap-weighted outcome models
+
+For each absence percentage outcome, the primary model is:
+
+\[
+Y_i = \beta_0 + \beta_1 JMTES_i + \epsilon_i
+\]
+
+The doubly adjusted model adds the same covariates used in the propensity score model:
+
+\[
+Y_i = \beta_0 + \beta_1 JMTES_i + \beta_2 Grade_i + \beta_3 Female_i + \beta_4 Black_i + \beta_5 Age_i + \beta_6 MealStatus_i + \beta_7 EntryCode_i + \epsilon_i
+\]
+
+In both cases, \(\beta_1\) is the estimated difference in absence percentage points for JMTES students relative to comparable JES students. Negative estimates indicate lower absence percentages at JMTES; positive estimates indicate higher absence percentages at JMTES.
+
+```{r weighted-models}
+outcomes <- c(
+  unexcused_pct = "Unexcused absence percentage",
+  excused_pct = "Excused absence percentage",
+  total_pct = "Total absence percentage"
+)
+
+fit_outcome <- function(outcome) {
+  primary_formula <- as.formula(paste(outcome, "~ jmtes"))
+  adjusted_formula <- as.formula(paste(outcome, "~ jmtes + grade + female + black + age + meal_status + entry_code"))
+
+  primary_model <- lm(primary_formula, data = attendance, weights = overlap_weight)
+  adjusted_model <- lm(adjusted_formula, data = attendance, weights = overlap_weight)
+
+  primary <- model_row(primary_model)
+  adjusted <- model_row(adjusted_model)
+
+  primary$model <- "Overlap weighted"
+  adjusted$model <- "Overlap weighted + covariates"
+  out <- rbind(primary, adjusted)
+  out$outcome <- unname(outcomes[outcome])
+  out
+}
+
+model_results <- do.call(rbind, lapply(names(outcomes), fit_outcome))
+model_results <- model_results[, c("outcome", "model", "estimate", "std_error", "t_value", "p_value", "conf_low", "conf_high")]
+model_results$p_value_formatted <- format_p(model_results$p_value)
+model_results
+```
+
+# Weighted means by school
+
+```{r weighted-means}
+weighted_means <- do.call(rbind, lapply(names(outcomes), function(v) {
+  do.call(rbind, lapply(levels(attendance$school), function(s) {
+    idx <- attendance$school == s
+    data.frame(
+      outcome = unname(outcomes[v]),
+      school = s,
+      weighted_mean = weighted_mean(attendance[idx, v], attendance$overlap_weight[idx]),
+      unweighted_mean = mean(attendance[idx, v]),
+      row.names = NULL
+    )
+  }))
+}))
+weighted_means
+```
+
+# Export analysis tables
+
+```{r export}
+write.csv(attendance, "jmtes_jes_overlap_weighted_attendance_student_data.csv", row.names = FALSE)
+write.csv(balance_table, "jmtes_jes_overlap_weighted_attendance_balance.csv", row.names = FALSE)
+write.csv(model_results, "jmtes_jes_overlap_weighted_attendance_results.csv", row.names = FALSE)
+write.csv(weighted_means, "jmtes_jes_overlap_weighted_attendance_weighted_means.csv", row.names = FALSE)
+```
+
+# Interpretation guide
+
+The key estimates are the JMTES coefficients in `model_results`. Each estimate is measured in absence percentage points. For example, an estimate of `-1.25` for total absence percentage would mean that, after overlap weighting, JMTES students missed 1.25 percentage points fewer enrolled/report days than comparable JES students. Because this is a quasi-experimental comparison rather than a randomized design, the estimates should be interpreted as adjusted associations that depend on the observed covariates included in the propensity score and outcome models.
