@@ -284,6 +284,8 @@ model_results$p_value_formatted <- format_p(model_results$p_value)
 model_results
 ```
 
+The regression table above is the main reporting table. It includes all three requested outcomes and both model specifications: the overlap-weighted model without covariates and the overlap-weighted model with the same covariates used in the propensity score model.
+
 # Weighted means by school
 
 ```{r weighted-means}
@@ -309,6 +311,64 @@ write.csv(attendance, "jmtes_jes_overlap_weighted_attendance_student_data.csv", 
 write.csv(balance_table, "jmtes_jes_overlap_weighted_attendance_balance.csv", row.names = FALSE)
 write.csv(model_results, "jmtes_jes_overlap_weighted_attendance_results.csv", row.names = FALSE)
 write.csv(weighted_means, "jmtes_jes_overlap_weighted_attendance_weighted_means.csv", row.names = FALSE)
+
+regression_table <- model_results
+regression_table$estimate_label <- sprintf(
+  "%.3f (SE = %.3f), 95%% CI [%.3f, %.3f], p = %s",
+  regression_table$estimate,
+  regression_table$std_error,
+  regression_table$conf_low,
+  regression_table$conf_high,
+  regression_table$p_value_formatted
+)
+write.csv(regression_table, "jmtes_jes_overlap_weighted_attendance_regression_table.csv", row.names = FALSE)
+
+xml_escape <- function(x) {
+  x <- as.character(x)
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x <- gsub("\"", "&quot;", x, fixed = TRUE)
+  x
+}
+
+xml_row <- function(values) {
+  cells <- vapply(values, function(value) {
+    if (is.numeric(value) && length(value) == 1 && is.finite(value)) {
+      paste0("<Cell><Data ss:Type=\"Number\">", value, "</Data></Cell>")
+    } else {
+      paste0("<Cell><Data ss:Type=\"String\">", xml_escape(value), "</Data></Cell>")
+    }
+  }, character(1))
+  paste0("<Row>", paste(cells, collapse = ""), "</Row>")
+}
+
+regression_table_for_excel <- regression_table
+regression_table_for_excel$p_value <- regression_table_for_excel$p_value_formatted
+
+excel_xml <- c(
+  "<?xml version=\"1.0\"?>",
+  "<?mso-application progid=\"Excel.Sheet\"?>",
+  "<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\"",
+  " xmlns:o=\"urn:schemas-microsoft-com:office:office\"",
+  " xmlns:x=\"urn:schemas-microsoft-com:office:excel\"",
+  " xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\"",
+  " xmlns:html=\"http://www.w3.org/TR/REC-html40\">",
+  "<Worksheet ss:Name=\"Regression Table\"><Table>",
+  xml_row(names(regression_table_for_excel)),
+  apply(regression_table_for_excel, 1, xml_row),
+  "</Table></Worksheet>",
+  "<Worksheet ss:Name=\"Notes\"><Table>",
+  xml_row("Notes"),
+  xml_row("The JMTES coefficient is measured in absence percentage points relative to JES."),
+  xml_row("No-covariate models regress each absence percentage outcome on the JMTES indicator using overlap weights."),
+  xml_row("Covariate-adjusted models add grade, female, Black, age, meal-status code, and entry code."),
+  xml_row("Overlap weights are 1 - propensity score for JMTES students and propensity score for JES students."),
+  xml_row("Percentage outcomes are used because JMTES was reported through 159 school days and JES through 170 school days."),
+  "</Table></Worksheet>",
+  "</Workbook>"
+)
+writeLines(excel_xml, "jmtes_jes_overlap_weighted_attendance_regression_table_excel.xml")
 ```
 
 # Interpretation guide
