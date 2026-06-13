@@ -309,6 +309,67 @@ model_comparison_check$std_error_difference <- with(
 model_comparison_check
 ```
 
+# Coefficient plot
+
+The coefficient plot below displays the JMTES coefficient for all six fitted models: three attendance outcomes crossed with the two model specifications. Points are coefficient estimates and horizontal bars are 95 percent confidence intervals. Estimates to the left of zero indicate lower absence percentages at JMTES relative to comparable JES students, while estimates to the right of zero indicate higher absence percentages at JMTES.
+
+```{r coefficient-plot, fig.width=10, fig.height=6}
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  stop("The ggplot2 package is required to create the coefficient plot.")
+}
+
+coef_plot_data <- model_results
+coef_plot_data$outcome <- factor(
+  coef_plot_data$outcome,
+  levels = c(
+    "Unexcused absence percentage",
+    "Excused absence percentage",
+    "Total absence percentage"
+  )
+)
+coef_plot_data$model <- factor(
+  coef_plot_data$model,
+  levels = c("Overlap weighted", "Overlap weighted + covariates")
+)
+
+coefficient_plot <- ggplot2::ggplot(
+  coef_plot_data,
+  ggplot2::aes(
+    x = estimate,
+    y = outcome,
+    xmin = conf_low,
+    xmax = conf_high,
+    color = model,
+    shape = model
+  )
+) +
+  ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  ggplot2::geom_errorbarh(
+    position = ggplot2::position_dodge(width = 0.55),
+    height = 0.18,
+    linewidth = 0.8
+  ) +
+  ggplot2::geom_point(
+    position = ggplot2::position_dodge(width = 0.55),
+    size = 3
+  ) +
+  ggplot2::labs(
+    title = "Overlap-weighted JMTES coefficients for attendance outcomes",
+    subtitle = "Points are estimated percentage-point differences; bars are 95% confidence intervals",
+    x = "JMTES coefficient in absence percentage points",
+    y = NULL,
+    color = "Model",
+    shape = "Model"
+  ) +
+  ggplot2::theme_minimal(base_size = 12) +
+  ggplot2::theme(
+    legend.position = "bottom",
+    panel.grid.minor = ggplot2::element_blank()
+  )
+
+coefficient_plot
+```
+
 # Weighted means by school
 
 ```{r weighted-means}
@@ -335,6 +396,13 @@ write.csv(balance_table, "jmtes_jes_overlap_weighted_attendance_balance.csv", ro
 write.csv(model_results, "jmtes_jes_overlap_weighted_attendance_results.csv", row.names = FALSE)
 write.csv(weighted_means, "jmtes_jes_overlap_weighted_attendance_weighted_means.csv", row.names = FALSE)
 write.csv(model_comparison_check, "jmtes_jes_overlap_weighted_attendance_model_comparison_check.csv", row.names = FALSE)
+
+ggplot2::ggsave(
+  filename = "jmtes_jes_overlap_weighted_attendance_coefficient_plot.svg",
+  plot = coefficient_plot,
+  width = 10,
+  height = 6
+)
 
 regression_table <- model_results
 regression_table$estimate_label <- sprintf(
