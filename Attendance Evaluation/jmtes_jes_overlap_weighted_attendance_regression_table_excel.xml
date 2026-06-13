@@ -17,5 +17,6 @@
 <Row><Cell><Data ss:Type="String">Covariate-adjusted models add grade, female, Black, age, meal-status code, and entry code.</Data></Cell></Row>
 <Row><Cell><Data ss:Type="String">Overlap weights are 1 - propensity score for JMTES students and propensity score for JES students.</Data></Cell></Row>
 <Row><Cell><Data ss:Type="String">Percentage outcomes are used because JMTES was reported through 159 school days and JES through 170 school days.</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">The no-covariate and covariate-adjusted JMTES coefficients are expected to be similar when overlap weighting balances the same covariates that are later added to the outcome model.</Data></Cell></Row>
 </Table></Worksheet>
 </Workbook>

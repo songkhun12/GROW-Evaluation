@@ -286,6 +286,29 @@ model_results
 
 The regression table above is the main reporting table. It includes all three requested outcomes and both model specifications: the overlap-weighted model without covariates and the overlap-weighted model with the same covariates used in the propensity score model.
 
+The JMTES coefficients from the model without covariates and the model with covariates are expected to be very similar when the propensity score and overlap weights are working correctly. For overlap weights estimated from a logistic propensity score, the weighted covariate means for the variables in the propensity score model are balanced across the treatment and comparison groups. Because the covariates are already balanced after weighting, adding those same covariates to the weighted outcome regression should not substantially change the JMTES coefficient. Similar standard errors are also expected when the added covariates explain little additional weighted residual variation beyond the school indicator and the overlap-weighted design.
+
+```{r model-comparison-check}
+model_comparison_check <- reshape(
+  model_results[, c("outcome", "model", "estimate", "std_error")],
+  idvar = "outcome",
+  timevar = "model",
+  direction = "wide"
+)
+names(model_comparison_check) <- gsub("estimate\\.", "estimate_", names(model_comparison_check))
+names(model_comparison_check) <- gsub("std_error\\.", "std_error_", names(model_comparison_check))
+
+model_comparison_check$estimate_difference <- with(
+  model_comparison_check,
+  `estimate_Overlap weighted + covariates` - `estimate_Overlap weighted`
+)
+model_comparison_check$std_error_difference <- with(
+  model_comparison_check,
+  `std_error_Overlap weighted + covariates` - `std_error_Overlap weighted`
+)
+model_comparison_check
+```
+
 # Weighted means by school
 
 ```{r weighted-means}
@@ -311,6 +334,7 @@ write.csv(attendance, "jmtes_jes_overlap_weighted_attendance_student_data.csv", 
 write.csv(balance_table, "jmtes_jes_overlap_weighted_attendance_balance.csv", row.names = FALSE)
 write.csv(model_results, "jmtes_jes_overlap_weighted_attendance_results.csv", row.names = FALSE)
 write.csv(weighted_means, "jmtes_jes_overlap_weighted_attendance_weighted_means.csv", row.names = FALSE)
+write.csv(model_comparison_check, "jmtes_jes_overlap_weighted_attendance_model_comparison_check.csv", row.names = FALSE)
 
 regression_table <- model_results
 regression_table$estimate_label <- sprintf(
@@ -365,6 +389,7 @@ excel_xml <- c(
   xml_row("Covariate-adjusted models add grade, female, Black, age, meal-status code, and entry code."),
   xml_row("Overlap weights are 1 - propensity score for JMTES students and propensity score for JES students."),
   xml_row("Percentage outcomes are used because JMTES was reported through 159 school days and JES through 170 school days."),
+  xml_row("The no-covariate and covariate-adjusted JMTES coefficients are expected to be similar when overlap weighting balances the same covariates that are later added to the outcome model."),
   "</Table></Worksheet>",
   "</Workbook>"
 )
