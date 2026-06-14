@@ -309,6 +309,77 @@ model_comparison_check$std_error_difference <- with(
 model_comparison_check
 ```
 
+# Robustness check: trim high-end unexcused absence values
+
+Because the JES unexcused absence distribution is right-skewed, this appendix-style robustness check removes students with extremely high unexcused absence percentages before re-estimating the overlap-weighted attendance models. The cutoff is the pooled 95th percentile of unexcused absence percentage across the combined JMTES/JES analytic sample. This criterion is specified before re-estimating the models and removes the upper tail rather than choosing a school-specific cutoff.
+
+```{r unexcused-trim-robustness}
+trim_cutoff <- unname(quantile(attendance$unexcused_pct, probs = 0.95, type = 1, na.rm = TRUE))
+attendance_trimmed <- subset(attendance, unexcused_pct <= trim_cutoff)
+trimmed_out <- subset(attendance, unexcused_pct > trim_cutoff)
+
+trim_ps_model <- glm(
+  jmtes ~ grade + female + black + age + meal_status + entry_code,
+  data = attendance_trimmed,
+  family = binomial()
+)
+
+attendance_trimmed$propensity <- as.numeric(predict(trim_ps_model, type = "response"))
+attendance_trimmed$overlap_weight <- ifelse(
+  attendance_trimmed$jmtes == 1,
+  1 - attendance_trimmed$propensity,
+  attendance_trimmed$propensity
+)
+
+fit_trimmed_outcome <- function(outcome) {
+  primary_formula <- as.formula(paste(outcome, "~ jmtes"))
+  adjusted_formula <- as.formula(paste(outcome, "~ jmtes + grade + female + black + age + meal_status + entry_code"))
+
+  primary_model <- lm(primary_formula, data = attendance_trimmed, weights = overlap_weight)
+  adjusted_model <- lm(adjusted_formula, data = attendance_trimmed, weights = overlap_weight)
+
+  primary <- model_row(primary_model)
+  adjusted <- model_row(adjusted_model)
+
+  primary$model <- "OW"
+  adjusted$model <- "OW + covariates"
+  out <- rbind(primary, adjusted)
+  out$outcome <- unname(outcomes[outcome])
+  out$outcome_name <- outcome
+
+  weighted_mean_for_school <- function(school_name, variable) {
+    idx <- attendance_trimmed$school == school_name
+    weighted_mean(attendance_trimmed[idx, variable], attendance_trimmed$overlap_weight[idx])
+  }
+
+  out$jes_weighted_mean <- weighted_mean_for_school("JES", outcome)
+  out$jmtes_weighted_mean <- weighted_mean_for_school("JMTES", outcome)
+  out$n <- nrow(attendance_trimmed)
+  out$residual_df <- c(df.residual(primary_model), df.residual(adjusted_model))
+  out
+}
+
+trimmed_model_results <- do.call(rbind, lapply(names(outcomes), fit_trimmed_outcome))
+trimmed_model_results <- trimmed_model_results[, c(
+  "outcome_name", "outcome", "model", "estimate", "std_error", "t_value", "p_value",
+  "conf_low", "conf_high", "jes_weighted_mean", "jmtes_weighted_mean", "n", "residual_df"
+)]
+trimmed_model_results$p_value_formatted <- format_p(trimmed_model_results$p_value)
+
+trim_summary <- data.frame(
+  cutoff_rule = "Exclude students above pooled 95th percentile of unexcused absence percentage",
+  cutoff_value = trim_cutoff,
+  original_n = nrow(attendance),
+  trimmed_n = nrow(attendance_trimmed),
+  excluded_n = nrow(trimmed_out),
+  excluded_jmtes = sum(trimmed_out$jmtes == 1),
+  excluded_jes = sum(trimmed_out$jmtes == 0)
+)
+
+trim_summary
+trimmed_model_results
+```
+
 # Coefficient plot
 
 The coefficient plot below displays the JMTES coefficient for all six fitted models: three attendance outcomes crossed with the two model specifications. Points are coefficient estimates and horizontal bars are 95 percent confidence intervals. Estimates to the left of zero indicate lower absence percentages at JMTES relative to comparable JES students, while estimates to the right of zero indicate higher absence percentages at JMTES.
@@ -396,6 +467,9 @@ write.csv(balance_table, "jmtes_jes_overlap_weighted_attendance_balance.csv", ro
 write.csv(model_results, "jmtes_jes_overlap_weighted_attendance_results.csv", row.names = FALSE)
 write.csv(weighted_means, "jmtes_jes_overlap_weighted_attendance_weighted_means.csv", row.names = FALSE)
 write.csv(model_comparison_check, "jmtes_jes_overlap_weighted_attendance_model_comparison_check.csv", row.names = FALSE)
+write.csv(trimmed_model_results, "jmtes_jes_attendance_unexcused_trim_robustness_results.csv", row.names = FALSE)
+write.csv(attendance_trimmed, "jmtes_jes_attendance_unexcused_trim_robustness_student_data.csv", row.names = FALSE)
+write.csv(trim_summary, "jmtes_jes_attendance_unexcused_trim_robustness_summary.csv", row.names = FALSE)
 
 ggplot2::ggsave(
   filename = "jmtes_jes_overlap_weighted_attendance_coefficient_plot.svg",
