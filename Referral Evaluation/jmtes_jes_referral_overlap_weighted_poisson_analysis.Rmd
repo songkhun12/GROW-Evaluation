@@ -95,6 +95,48 @@ robust_poisson_row <- function(model, data, outcome, label) {
     row.names = NULL
   )
 }
+
+robust_logit_row <- function(model, data, outcome, label) {
+  x <- model.matrix(model)
+  w <- model.weights(model.frame(model))
+  mu <- fitted(model)
+  y <- model.response(model.frame(model))
+  response_resid <- y - mu
+
+  bread <- solve(t(x) %*% (x * as.numeric(w * mu * (1 - mu))))
+  meat <- t(x) %*% (x * as.numeric((w^2) * (response_resid^2)))
+  robust_vcov <- bread %*% meat %*% bread
+
+  estimate <- unname(coef(model)["jmtes"])
+  robust_se <- sqrt(unname(robust_vcov["jmtes", "jmtes"]))
+  z_value <- estimate / robust_se
+  p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+  odds_ratio <- exp(estimate)
+  ci_low <- exp(estimate - 1.96 * robust_se)
+  ci_high <- exp(estimate + 1.96 * robust_se)
+
+  weighted_probability <- function(group) {
+    idx <- data$jmtes == group
+    sum(data$overlap_weight[idx] * data[[outcome]][idx]) / sum(data$overlap_weight[idx])
+  }
+
+  data.frame(
+    outcome = outcome,
+    label = label,
+    coefficient = estimate,
+    robust_se = robust_se,
+    z_value = z_value,
+    p_value = p_value,
+    odds_ratio = odds_ratio,
+    ci_low = ci_low,
+    ci_high = ci_high,
+    jes_weighted_probability = weighted_probability(0),
+    jmtes_weighted_probability = weighted_probability(1),
+    observations = nrow(data),
+    events = sum(data[[outcome]]),
+    row.names = NULL
+  )
+}
 ```
 
 # Import and prepare referral outcomes
@@ -215,6 +257,37 @@ referral_results$stars <- stars(referral_results$p_value)
 referral_results
 ```
 
+# Robustness check: any-referral logistic models
+
+Because the referral outcomes have medians of zero, differences in mean referral counts could be influenced by a smaller number of students with multiple referrals. This robustness check estimates overlap-weighted logistic regression models for whether a student had at least one referral. These models test whether JMTES is associated with the extensive-margin probability of receiving any referral, rather than only the average number of referrals.
+
+```{r any-referral-logit-robustness}
+referrals$any_school_referral <- as.numeric(referrals$classroom_total > 0)
+referrals$any_bus_referral <- as.numeric(referrals$bus_total > 0)
+referrals$any_referral <- as.numeric(referrals$classroom_total > 0 | referrals$bus_total > 0)
+
+any_referral_outcomes <- c(
+  any_school_referral = "Any school referral",
+  any_bus_referral = "Any bus referral",
+  any_referral = "Any school or bus referral"
+)
+
+fit_any_referral_model <- function(outcome) {
+  model <- glm(
+    as.formula(paste(outcome, "~ jmtes + grade + female + black + age + meal_status + entry_code")),
+    data = referrals,
+    family = binomial(link = "logit"),
+    weights = overlap_weight
+  )
+  robust_logit_row(model, referrals, outcome, unname(any_referral_outcomes[outcome]))
+}
+
+any_referral_results <- do.call(rbind, lapply(names(any_referral_outcomes), fit_any_referral_model))
+any_referral_results$p_value_formatted <- format_p(any_referral_results$p_value)
+any_referral_results$stars <- stars(any_referral_results$p_value)
+any_referral_results
+```
+
 # AER-style regression table
 
 ```{r aer-table}
@@ -284,6 +357,7 @@ referral_coefficient_plot
 ```{r export}
 write.csv(referrals, "jmtes_jes_referral_student_data.csv", row.names = FALSE)
 write.csv(referral_results, "jmtes_jes_referral_poisson_results.csv", row.names = FALSE)
+write.csv(any_referral_results, "jmtes_jes_referral_any_referral_logit_robustness_results.csv", row.names = FALSE)
 write.csv(as.data.frame(classroom_table), "jmtes_jes_referral_aer_classroom_table.csv")
 write.csv(as.data.frame(bus_table), "jmtes_jes_referral_aer_bus_table.csv")
 
