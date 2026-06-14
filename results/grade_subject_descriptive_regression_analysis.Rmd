@@ -1,0 +1,127 @@
+---
+title: "Grade-by-Subject Descriptive Statistics and Regression Results"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(dplyr)
+library(readr)
+library(purrr)
+library(tidyr)
+library(knitr)
+```
+
+## Data
+
+This report reads the cleaned ATLAS long-format files from the Kindergarten, Grade 1, Grade 2, Grade 3, Grade 4, and Grade 5 folders. JMTES is coded as the treatment school and JES is coded as the comparison school.
+
+The checked-in Word-compatible report uses a text-based `.doc`/RTF file rather than a binary `.docx` so repository review tools can display the contents. The R Markdown can still render to `word_document` in an R environment with Pandoc.
+
+```{r load-data}
+grade_files <- tibble::tribble(
+  ~grade_label, ~path,
+  "Kindergarten", "Kindergarten/results/kindergarten_atlas_long_cleaned.csv",
+  "Grade 1",      "Grade 1/results/grade1_atlas_long_cleaned.csv",
+  "Grade 2",      "Grade 2/results/grade2_atlas_long_cleaned.csv",
+  "Grade 3",      "Grade 3/results/grade3_atlas_long_cleaned.csv",
+  "Grade 4",      "Grade 4/results/grade4_atlas_long_cleaned.csv",
+  "Grade 5",      "Grade 5/results/grade5_atlas_long_cleaned.csv"
+)
+
+atlas_long <- grade_files %>%
+  mutate(data = map2(path, grade_label, ~ read_csv(.x, show_col_types = FALSE) %>%
+                       mutate(grade_label = .y))) %>%
+  select(data) %>%
+  unnest(data) %>%
+  mutate(
+    score = as.numeric(score),
+    treatment = as.integer(treatment),
+    grade_label = factor(grade_label, levels = grade_files$grade_label),
+    school = factor(school, levels = c("JES", "JMTES"))
+  ) %>%
+  filter(!is.na(score), school %in% c("JES", "JMTES"))
+```
+
+## Descriptive Statistics
+
+The difference in means is calculated as JMTES minus JES. Positive values indicate higher pooled average scores at JMTES.
+
+```{r descriptive-statistics}
+descriptive_statistics <- atlas_long %>%
+  group_by(grade_label, subject, school) %>%
+  summarise(
+    n = n(),
+    mean = mean(score, na.rm = TRUE),
+    median = median(score, na.rm = TRUE),
+    sd = sd(score, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  group_by(grade_label, subject) %>%
+  mutate(
+    jmtes_minus_jes_mean_difference = mean[school == "JMTES"] - mean[school == "JES"],
+    jmtes_minus_jes_mean_difference = if_else(school == "JMTES", jmtes_minus_jes_mean_difference, NA_real_)
+  ) %>%
+  ungroup()
+
+write_csv(descriptive_statistics, "results/grade_subject_descriptive_statistics.csv")
+
+kable(
+  descriptive_statistics,
+  digits = 2,
+  caption = "Descriptive statistics by grade, subject, and school"
+)
+```
+
+## AER-Style Regression Table
+
+Each row reports a bivariate OLS regression within a grade-subject cell:
+
+\[
+Score_{is} = \alpha + \beta JMTES_{is} + \epsilon_{is}
+\]
+
+The coefficient on `JMTES` is equivalent to the JMTES minus JES mean difference in that grade-subject cell.
+
+```{r regression-table}
+regression_results <- atlas_long %>%
+  group_by(grade_label, subject) %>%
+  group_modify(~ {
+    model <- lm(score ~ treatment, data = .x)
+    coefs <- summary(model)$coefficients
+    tibble(
+      n = nrow(.x),
+      control_mean_jes = unname(coefs["(Intercept)", "Estimate"]),
+      jmtes_coefficient = unname(coefs["treatment", "Estimate"]),
+      standard_error = unname(coefs["treatment", "Std. Error"]),
+      t_statistic = unname(coefs["treatment", "t value"])
+    )
+  }) %>%
+  ungroup()
+
+write_csv(regression_results, "results/grade_subject_regression_results.csv")
+
+aer_regression_table <- regression_results %>%
+  transmute(
+    Grade = grade_label,
+    Subject = subject,
+    `JMTES coefficient` = sprintf("%.3f", jmtes_coefficient),
+    `Standard error` = sprintf("(%.3f)", standard_error),
+    `Control mean` = sprintf("%.2f", control_mean_jes),
+    Observations = n
+  )
+
+kable(
+  aer_regression_table,
+  align = c("l", "l", "r", "r", "r", "r"),
+  caption = "AER-style regression table: school mean differences by grade and subject"
+)
+```
+
+## Discussion
+
+The descriptive statistics pool all available ATLAS waves within each grade-subject-school cell, so they summarize overall score levels rather than causal program effects. Across the available cells, the largest positive JMTES-JES mean differences occur in Grade 5 Science, Grade 4 Math, Grade 4 Science, and Grade 4 ELA. JMTES also has positive differences in Kindergarten ELA; Grade 1 ELA; both Grade 2 subjects; Grade 3 ELA, Math, and Science; and Grade 5 ELA and Math. JES has higher pooled mean scores in Kindergarten Math and Grade 1 Math.
+
+The regression table presents the same mean differences in an American Economic Review-style layout, with the JES mean as the constant/control mean and the JMTES indicator as the estimated difference between schools. Since these are bivariate descriptive regressions and observations are pooled across waves, the estimates should be interpreted as descriptive contrasts between schools rather than as causal effects.
