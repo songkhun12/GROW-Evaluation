@@ -1,0 +1,35 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Arial;}}
+\fs24
+\pard\b\fs32 Appendix Robustness Analysis: Attendance Outcomes with High Unexcused Absence Outliers Removed\b0\fs24\par
+\par
+\pard\b Table A1 Robustness of GROW Attendance Estimates After Trimming High Unexcused Absence Values\b0\par
+\par
+\pard  	 Unexcused absence % 	  	 Excused absence % 	  	 Total absence % 	 \par
+\pard  	 (1) 	 (2) 	 (3) 	 (4) 	 (5) 	 (6)\par
+\pard  	 OW 	 OW + covariates 	 OW 	 OW + covariates 	 OW 	 OW + covariates\par
+\pard JMTES (GROW school) 	 -1.380*** 	 -1.380*** 	 0.658*** 	 0.658*** 	 -0.723** 	 -0.723**\par
+\pard  	 (0.301) 	 (0.295) 	 (0.137) 	 (0.136) 	 (0.344) 	 (0.338)\par
+\pard JES weighted mean 	 6.711 	 6.711 	 1.146 	 1.146 	 7.857 	 7.857\par
+\pard JMTES weighted mean 	 5.332 	 5.332 	 1.804 	 1.804 	 7.134 	 7.134\par
+\pard Student covariates 	 No 	 Yes 	 No 	 Yes 	 No 	 Yes\par
+\pard Overlap weights 	 Yes 	 Yes 	 Yes 	 Yes 	 Yes 	 Yes\par
+\pard Observations 	 1,041 	 1,041 	 1,041 	 1,041 	 1,041 	 1,041\par
+\pard Residual df 	 1,039 	 1,021 	 1,039 	 1,021 	 1,039 	 1,021\par
+\par
+\pard\b Cutoff criterion: Students were excluded if their unexcused absence percentage was above the pooled 95th percentile of the JMTES/JES analytic sample. The cutoff was 23.53%. This removed 54 of 1095 students (4.9%): 1 from JMTES and 53 from JES.\b0\par
+\par
+\pard\i Notes: The table reports overlap-weighted regression estimates after trimming high-end unexcused absence values. The outcome is the percentage of enrolled days missed. Standard errors are in parentheses. Student covariates include grade, gender, race/ethnicity, age, meal-status disadvantage, and entry-code controls. *** p<0.01, ** p<0.05, * p<0.10.\i0\par
+\par
+\pard\b\fs28 Discussion\b0\fs24\par
+\par
+\pard This robustness check trims the highest unexcused absence values because the JES unexcused absence distribution is right-skewed, with a mean notably above the median. The cutoff was set before re-estimating the models at the pooled 95th percentile of unexcused absence percentage (23.53%).\par
+\par
+\pard After removing students above this cutoff, the estimated JMTES association with unexcused absences remains negative. In the covariate-adjusted overlap-weighted model, JMTES students had 1.38 percentage points fewer unexcused absences than comparable JES students. The trimmed weighted means were 5.33% for JMTES and 6.71% for JES.\par
+\par
+\pard The excused absence result remains positive but smaller in magnitude than the unexcused absence reduction. In the trimmed covariate-adjusted model, JMTES had 0.66 percentage points more excused absences than comparable JES students.\par
+\par
+\pard For total absences, the trimmed covariate-adjusted estimate remains negative at -0.72 percentage points. This indicates that the main conclusion of lower overall missed instructional time at JMTES is not driven only by the highest unexcused absence values in the JES distribution.\par
+\par
+\pard Overall, the robustness analysis supports the main attendance findings. The size of the unexcused and total absence estimates is somewhat smaller after trimming the upper tail, as expected when extreme high-absence observations are removed, but the direction and statistical significance of the results remain consistent with the primary overlap-weighted analysis.\par
+}

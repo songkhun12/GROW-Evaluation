@@ -1,0 +1,374 @@
+---
+title: "Comparing Behavioral Referral Outcomes Between JMTES and JES"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(width = 120, scipen = 999)
+```
+
+# Purpose
+
+This analysis estimates the association between attendance at Jacksonville Middle/Elementary School (JMTES, the GROW school) and behavioral referral outcomes using Jacksonville Elementary School (JES) as the comparison school. The analysis follows the overlap-weighted propensity score strategy used in the attendance analysis, but it uses Poisson regression because referral outcomes are nonnegative counts with many zeroes.
+
+All Poisson models include an exposure offset for enrollment days so that students are compared on referral rates rather than raw counts alone. The coefficient on `jmtes` is reported as an incidence rate ratio (IRR). IRRs below 1 indicate lower referral rates at JMTES relative to comparable JES students, while IRRs above 1 indicate higher referral rates at JMTES.
+
+# Data sources
+
+```{r data-sources}
+jmtes_file <- file.path("..", "JMTES At Risk Report with Absence Percentages.csv")
+jes_file <- file.path("..", "JES At Risk Report with Absence Percentages.csv")
+
+required_files <- c(jmtes_file, jes_file)
+missing_files <- required_files[!file.exists(required_files)]
+if (length(missing_files) > 0) {
+  stop("Missing required file(s): ", paste(missing_files, collapse = ", "))
+}
+```
+
+# Helper functions
+
+```{r helper-functions}
+clean_chr <- function(x) trimws(as.character(x))
+num <- function(x) suppressWarnings(as.numeric(clean_chr(x)))
+
+format_p <- function(p) {
+  ifelse(is.na(p), NA_character_, ifelse(p < 0.001, "<0.001", sprintf("%.3f", p)))
+}
+
+stars <- function(p) {
+  ifelse(p < 0.01, "***", ifelse(p < 0.05, "**", ifelse(p < 0.10, "*", "")))
+}
+
+robust_poisson_row <- function(model, data, outcome, label) {
+  x <- model.matrix(model)
+  w <- model.weights(model.frame(model))
+  mu <- fitted(model)
+  y <- model.response(model.frame(model))
+  response_resid <- y - mu
+
+  bread <- solve(t(x) %*% (x * as.numeric(w * mu)))
+  meat <- t(x) %*% (x * as.numeric((w^2) * (response_resid^2)))
+  robust_vcov <- bread %*% meat %*% bread
+
+  estimate <- unname(coef(model)["jmtes"])
+  robust_se <- sqrt(unname(robust_vcov["jmtes", "jmtes"]))
+  z_value <- estimate / robust_se
+  p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+  irr <- exp(estimate)
+  ci_low <- exp(estimate - 1.96 * robust_se)
+  ci_high <- exp(estimate + 1.96 * robust_se)
+
+  weighted_rate <- function(group) {
+    idx <- data$jmtes == group
+    sum(data$overlap_weight[idx] * data[[outcome]][idx]) /
+      sum(data$overlap_weight[idx] * data$enrollment_days[idx]) * 170
+  }
+
+  data.frame(
+    outcome = outcome,
+    label = label,
+    coefficient = estimate,
+    coefficient_ci_low = estimate - 1.96 * robust_se,
+    coefficient_ci_high = estimate + 1.96 * robust_se,
+    robust_se = robust_se,
+    z_value = z_value,
+    p_value = p_value,
+    irr = irr,
+    ci_low = ci_low,
+    ci_high = ci_high,
+    percent_difference = 100 * (irr - 1),
+    percent_ci_low = 100 * (ci_low - 1),
+    percent_ci_high = 100 * (ci_high - 1),
+    jes_weighted_rate_per_170_days = weighted_rate(0),
+    jmtes_weighted_rate_per_170_days = weighted_rate(1),
+    observations = nrow(data),
+    events = sum(data[[outcome]]),
+    sparse_or_unstable = sum(data[[outcome]]) < 10 || weighted_rate(0) == 0 || weighted_rate(1) == 0,
+    row.names = NULL
+  )
+}
+
+robust_logit_row <- function(model, data, outcome, label) {
+  x <- model.matrix(model)
+  w <- model.weights(model.frame(model))
+  mu <- fitted(model)
+  y <- model.response(model.frame(model))
+  response_resid <- y - mu
+
+  bread <- solve(t(x) %*% (x * as.numeric(w * mu * (1 - mu))))
+  meat <- t(x) %*% (x * as.numeric((w^2) * (response_resid^2)))
+  robust_vcov <- bread %*% meat %*% bread
+
+  estimate <- unname(coef(model)["jmtes"])
+  robust_se <- sqrt(unname(robust_vcov["jmtes", "jmtes"]))
+  z_value <- estimate / robust_se
+  p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+  odds_ratio <- exp(estimate)
+  ci_low <- exp(estimate - 1.96 * robust_se)
+  ci_high <- exp(estimate + 1.96 * robust_se)
+
+  weighted_probability <- function(group) {
+    idx <- data$jmtes == group
+    sum(data$overlap_weight[idx] * data[[outcome]][idx]) / sum(data$overlap_weight[idx])
+  }
+
+  data.frame(
+    outcome = outcome,
+    label = label,
+    coefficient = estimate,
+    robust_se = robust_se,
+    z_value = z_value,
+    p_value = p_value,
+    odds_ratio = odds_ratio,
+    ci_low = ci_low,
+    ci_high = ci_high,
+    jes_weighted_probability = weighted_probability(0),
+    jmtes_weighted_probability = weighted_probability(1),
+    observations = nrow(data),
+    events = sum(data[[outcome]]),
+    row.names = NULL
+  )
+}
+```
+
+# Import and prepare referral outcomes
+
+```{r import-clean}
+read_school <- function(file, school_name, jmtes_indicator) {
+  raw <- read.csv(file, stringsAsFactors = FALSE, check.names = FALSE)
+
+  l1 <- num(raw[["L-1"]])
+  l2 <- num(raw[["L-2"]])
+  l3 <- num(raw[["L-3"]])
+  l4 <- num(raw[["L-4"]])
+  local <- num(raw[["Local"]])
+  bus1 <- num(raw[["Transportation 1"]])
+  bus2 <- num(raw[["Transportation 2"]])
+  bus3 <- num(raw[["Transportation 3"]])
+
+  data.frame(
+    school = school_name,
+    jmtes = jmtes_indicator,
+    student_id = clean_chr(raw[["Student Id"]]),
+    grade = clean_chr(raw[["Student Grade"]]),
+    female = ifelse(tolower(clean_chr(raw[["Gender"]])) == "female", 1, 0),
+    black = ifelse(grepl("^black$", tolower(clean_chr(raw[["Ethnic Name"]]))), 1, 0),
+    age = num(raw[["Student Age"]]),
+    meal_status = clean_chr(raw[["Meal Status Code"]]),
+    entry_code = clean_chr(raw[["Entry Code - E/W"]]),
+    enrollment_days = num(raw[["Report School Days"]]),
+    classroom_total = l1 + l2 + l3 + l4,
+    classroom_l1 = l1,
+    classroom_l2 = l2,
+    classroom_l3 = l3,
+    classroom_l4 = l4,
+    classroom_severity_points = l1 + 2 * l2 + 3 * l3 + 4 * l4,
+    bus_total = local + bus1 + bus2 + bus3,
+    bus_l1 = local + bus1,
+    bus_l2 = bus2,
+    bus_l3 = bus3,
+    bus_severity_points = local + bus1 + 2 * bus2 + 3 * bus3,
+    stringsAsFactors = FALSE
+  )
+}
+
+referrals <- rbind(
+  read_school(jmtes_file, "JMTES", 1),
+  read_school(jes_file, "JES", 0)
+)
+
+referrals <- subset(
+  referrals,
+  !is.na(jmtes) & !is.na(grade) & !is.na(female) & !is.na(black) & !is.na(age) &
+    !is.na(meal_status) & !is.na(entry_code) & !is.na(enrollment_days) & enrollment_days > 0
+)
+
+referrals$school <- factor(referrals$school, levels = c("JES", "JMTES"))
+referrals$grade <- factor(referrals$grade)
+referrals$female <- as.numeric(referrals$female)
+referrals$black <- as.numeric(referrals$black)
+referrals$meal_status <- factor(referrals$meal_status)
+referrals$entry_code <- factor(referrals$entry_code)
+
+aggregate(enrollment_days ~ school, data = referrals, FUN = function(x) unique(x)[1])
+```
+
+# Propensity score and overlap weights
+
+```{r propensity-model}
+ps_model <- glm(
+  jmtes ~ grade + female + black + age + meal_status + entry_code,
+  data = referrals,
+  family = binomial()
+)
+
+referrals$propensity <- as.numeric(predict(ps_model, type = "response"))
+referrals$overlap_weight <- ifelse(referrals$jmtes == 1, 1 - referrals$propensity, referrals$propensity)
+
+summary(referrals$propensity)
+summary(referrals$overlap_weight)
+```
+
+# Overlap-weighted Poisson referral models
+
+Each model uses the same covariate-adjusted Poisson specification with robust standard errors and an offset for enrollment days:
+
+\[
+log(E[Referrals_i]) = \beta_0 + \beta_1JMTES_i + \beta_2Grade_i + \beta_3Female_i + \beta_4Black_i + \beta_5Age_i + \beta_6MealStatus_i + \beta_7EntryCode_i + log(EnrollmentDays_i)
+\]
+
+```{r poisson-models}
+outcomes <- c(
+  classroom_total = "Classroom total referrals",
+  classroom_l1 = "Classroom Level I referrals",
+  classroom_l2 = "Classroom Level II referrals",
+  classroom_l3 = "Classroom Level III referrals",
+  classroom_l4 = "Classroom Level IV referrals",
+  classroom_severity_points = "Classroom severity-weighted frequency",
+  bus_total = "Bus total referrals",
+  bus_l1 = "Bus/Local Level I referrals",
+  bus_l2 = "Bus Level II referrals",
+  bus_l3 = "Bus Level III referrals",
+  bus_severity_points = "Bus severity-weighted frequency"
+)
+
+fit_referral_model <- function(outcome) {
+  model <- glm(
+    as.formula(paste(outcome, "~ jmtes + grade + female + black + age + meal_status + entry_code")),
+    data = referrals,
+    family = poisson(link = "log"),
+    weights = overlap_weight,
+    offset = log(enrollment_days)
+  )
+  robust_poisson_row(model, referrals, outcome, unname(outcomes[outcome]))
+}
+
+referral_results <- do.call(rbind, lapply(names(outcomes), fit_referral_model))
+referral_results$p_value_formatted <- format_p(referral_results$p_value)
+referral_results$stars <- stars(referral_results$p_value)
+referral_results
+```
+
+# Robustness check: any-referral logistic models
+
+Because the referral outcomes have medians of zero, differences in mean referral counts could be influenced by a smaller number of students with multiple referrals. This robustness check estimates overlap-weighted logistic regression models for whether a student had at least one referral. These models test whether JMTES is associated with the extensive-margin probability of receiving any referral, rather than only the average number of referrals.
+
+```{r any-referral-logit-robustness}
+referrals$any_school_referral <- as.numeric(referrals$classroom_total > 0)
+referrals$any_bus_referral <- as.numeric(referrals$bus_total > 0)
+referrals$any_referral <- as.numeric(referrals$classroom_total > 0 | referrals$bus_total > 0)
+
+any_referral_outcomes <- c(
+  any_school_referral = "Any school referral",
+  any_bus_referral = "Any bus referral",
+  any_referral = "Any school or bus referral"
+)
+
+fit_any_referral_model <- function(outcome) {
+  model <- glm(
+    as.formula(paste(outcome, "~ jmtes + grade + female + black + age + meal_status + entry_code")),
+    data = referrals,
+    family = binomial(link = "logit"),
+    weights = overlap_weight
+  )
+  robust_logit_row(model, referrals, outcome, unname(any_referral_outcomes[outcome]))
+}
+
+any_referral_results <- do.call(rbind, lapply(names(any_referral_outcomes), fit_any_referral_model))
+any_referral_results$p_value_formatted <- format_p(any_referral_results$p_value)
+any_referral_results$stars <- stars(any_referral_results$p_value)
+any_referral_results
+```
+
+# AER-style regression table
+
+```{r aer-table}
+make_aer_table <- function(results, outcome_names) {
+  selected <- results[match(names(outcome_names), results$outcome), ]
+  irr_text <- ifelse(selected$sparse_or_unstable, "Sparse/unstable", paste0(sprintf("%.3f", selected$irr), selected$stars))
+  se_text <- ifelse(selected$sparse_or_unstable, "--", paste0("(", sprintf("%.3f", selected$robust_se), ")"))
+  ci_text <- ifelse(
+    selected$sparse_or_unstable,
+    "--",
+    paste0("[", sprintf("%.3f", selected$ci_low), ", ", sprintf("%.3f", selected$ci_high), "]")
+  )
+  percent_text <- ifelse(selected$sparse_or_unstable, "--", paste0(sprintf("%.1f", selected$percent_difference), "%"))
+  table <- rbind(
+    `JMTES IRR` = irr_text,
+    `Robust SE` = se_text,
+    `95% CI` = ci_text,
+    `Percent difference` = percent_text,
+    `JES weighted rate per 170 days` = sprintf("%.2f", selected$jes_weighted_rate_per_170_days),
+    `JMTES weighted rate per 170 days` = sprintf("%.2f", selected$jmtes_weighted_rate_per_170_days),
+    Observations = as.character(selected$observations)
+  )
+  colnames(table) <- unname(outcome_names)
+  table
+}
+
+classroom_table <- make_aer_table(referral_results, outcomes[grep("^classroom", names(outcomes))])
+bus_table <- make_aer_table(referral_results, outcomes[grep("^bus", names(outcomes))])
+
+classroom_table
+bus_table
+```
+
+# Coefficient plot
+
+```{r coefficient-plot, fig.width=10, fig.height=7}
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  stop("The ggplot2 package is required to create the coefficient plot.")
+}
+
+plot_data <- referral_results
+plot_data$domain <- ifelse(grepl("^classroom", plot_data$outcome), "Classroom", "Bus")
+plot_data$label <- factor(plot_data$label, levels = rev(plot_data$label))
+
+referral_coefficient_plot <- ggplot2::ggplot(
+  plot_data,
+  ggplot2::aes(x = coefficient, y = label, xmin = coefficient_ci_low, xmax = coefficient_ci_high)
+) +
+  ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  ggplot2::geom_errorbarh(height = 0.18, linewidth = 0.8, color = "#2C7FB8") +
+  ggplot2::geom_point(size = 3, color = "#2C7FB8") +
+  ggplot2::facet_wrap(~ domain, scales = "free_y") +
+  ggplot2::labs(
+    title = "Overlap-weighted Poisson estimates for referral outcomes",
+    subtitle = "Points are log incidence rate ratios for JMTES relative to JES; bars are 95% confidence intervals",
+    x = "JMTES coefficient (log incidence rate ratio)",
+    y = NULL
+  ) +
+  ggplot2::theme_minimal(base_size = 12) +
+  ggplot2::theme(panel.grid.minor = ggplot2::element_blank())
+
+referral_coefficient_plot
+```
+
+# Export outputs
+
+```{r export}
+write.csv(referrals, "jmtes_jes_referral_student_data.csv", row.names = FALSE)
+write.csv(referral_results, "jmtes_jes_referral_poisson_results.csv", row.names = FALSE)
+write.csv(any_referral_results, "jmtes_jes_referral_any_referral_logit_robustness_results.csv", row.names = FALSE)
+write.csv(as.data.frame(classroom_table), "jmtes_jes_referral_aer_classroom_table.csv")
+write.csv(as.data.frame(bus_table), "jmtes_jes_referral_aer_bus_table.csv")
+
+ggplot2::ggsave(
+  filename = "jmtes_jes_referral_coefficient_plot.svg",
+  plot = referral_coefficient_plot,
+  width = 10,
+  height = 7
+)
+```
+
+# Discussion guide
+
+The main estimates are the JMTES IRRs in the AER-style tables. For total classroom referrals and total bus referrals, IRRs below 1 indicate that comparable JMTES students had lower referral rates than comparable JES students. The severity-weighted outcomes evaluate whether the overall frequency of more serious referrals differs after assigning larger weights to higher-severity incidents. These results remain quasi-experimental because the design adjusts for observed student characteristics but does not randomly assign students to schools.
