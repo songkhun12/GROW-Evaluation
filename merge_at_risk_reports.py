@@ -2,6 +2,7 @@
 """Merge updated at-risk data into grade-level Atlas Excel reports."""
 from __future__ import annotations
 
+import csv
 import html
 import posixpath
 import re
@@ -108,6 +109,13 @@ def build_at_risk_lookup(path: Path) -> tuple[list[str], dict[str, list[str]]]:
     return prefixed, lookup
 
 
+def write_csv(path: Path, rows: list[list[str]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8-sig") as fh:
+        writer = csv.writer(fh)
+        writer.writerows(rows)
+
+
 def write_xlsx(path: Path, rows: list[list[str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     sheet_rows = []
@@ -144,6 +152,7 @@ def merge_file(atlas_path: Path, at_headers: list[str], at_lookup: dict[str, lis
         merged.append(row + (match if match else blanks))
     out = atlas_path.with_name(atlas_path.stem + " - Merged At Risk.xlsx")
     write_xlsx(out, merged)
+    write_csv(out.with_suffix(".csv"), merged)
     return out
 
 
@@ -156,9 +165,10 @@ def main() -> None:
                 continue
             school = "JMTES" if atlas_path.name.upper().startswith("JMTES") else "JES"
             outputs.append(merge_file(atlas_path, *lookups[school]))
-    print("Created merged files:")
+    print("Created merged Excel and CSV files:")
     for out in outputs:
         print(f"- {out.relative_to(ROOT)}")
+        print(f"- {out.with_suffix('.csv').relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

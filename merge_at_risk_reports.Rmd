@@ -8,6 +8,7 @@ library(readxl)
 library(dplyr)
 library(stringr)
 library(writexl)
+library(readr)
 library(purrr)
 ```
 
@@ -63,6 +64,7 @@ merge_one_atlas <- function(path, at_risk_data) {
     paste0(tools::file_path_sans_ext(basename(path)), " - Merged At Risk.xlsx")
   )
   write_xlsx(merged_data, output_path)
+  write_csv(merged_data, sub("\\.xlsx$", ".csv", output_path))
   output_path
 }
 
