@@ -4,6 +4,7 @@ body{font-family:"Times New Roman",serif;font-size:11pt;} table{border-collapse:
 </style></head>
 <body>
 <p><b>Table 1</b><br>Impact of GROW on Attendance Outcomes</p>
+<p class="note">Source: Updated June 15, 2026 JMTES and JES At Risk Report attendance files in this repository. Values are generated from <code>jmtes_jes_overlap_weighted_attendance_regression_table.csv</code>, <code>jmtes_jes_overlap_weighted_attendance_weighted_means.csv</code>, and <code>jmtes_jes_overlap_weighted_attendance_student_data.csv</code>.</p>
 <table>
 <tr class="top"><th></th><th colspan="2">Unexcused absence %</th><th colspan="2">Excused absence %</th><th colspan="2">Total absence %</th></tr>
 <tr><th></th><th>(1)</th><th>(2)</th><th>(3)</th><th>(4)</th><th>(5)</th><th>(6)</th></tr>
