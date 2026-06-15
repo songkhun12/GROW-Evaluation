@@ -1,35 +1,13 @@
-{\rtf1\ansi\deff0
-{\fonttbl{\f0 Arial;}}
-\fs24
-\pard\b\fs32 Appendix Robustness Analysis: Attendance Outcomes with High Unexcused Absence Outliers Removed\b0\fs24\par
-\par
-\pard\b Table A1 Robustness of GROW Attendance Estimates After Trimming High Unexcused Absence Values\b0\par
-\par
-\pard  	 Unexcused absence % 	  	 Excused absence % 	  	 Total absence % 	 \par
-\pard  	 (1) 	 (2) 	 (3) 	 (4) 	 (5) 	 (6)\par
-\pard  	 OW 	 OW + covariates 	 OW 	 OW + covariates 	 OW 	 OW + covariates\par
-\pard JMTES (GROW school) 	 -1.380*** 	 -1.380*** 	 0.658*** 	 0.658*** 	 -0.723** 	 -0.723**\par
-\pard  	 (0.301) 	 (0.295) 	 (0.137) 	 (0.136) 	 (0.344) 	 (0.338)\par
-\pard JES weighted mean 	 6.711 	 6.711 	 1.146 	 1.146 	 7.857 	 7.857\par
-\pard JMTES weighted mean 	 5.332 	 5.332 	 1.804 	 1.804 	 7.134 	 7.134\par
-\pard Student covariates 	 No 	 Yes 	 No 	 Yes 	 No 	 Yes\par
-\pard Overlap weights 	 Yes 	 Yes 	 Yes 	 Yes 	 Yes 	 Yes\par
-\pard Observations 	 1,041 	 1,041 	 1,041 	 1,041 	 1,041 	 1,041\par
-\pard Residual df 	 1,039 	 1,021 	 1,039 	 1,021 	 1,039 	 1,021\par
-\par
-\pard\b Cutoff criterion: Students were excluded if their unexcused absence percentage was above the pooled 95th percentile of the JMTES/JES analytic sample. The cutoff was 23.53%. This removed 54 of 1095 students (4.9%): 1 from JMTES and 53 from JES.\b0\par
-\par
-\pard\i Notes: The table reports overlap-weighted regression estimates after trimming high-end unexcused absence values. The outcome is the percentage of enrolled days missed. Standard errors are in parentheses. Student covariates include grade, gender, race/ethnicity, age, meal-status disadvantage, and entry-code controls. *** p<0.01, ** p<0.05, * p<0.10.\i0\par
-\par
-\pard\b\fs28 Discussion\b0\fs24\par
-\par
-\pard This robustness check trims the highest unexcused absence values because the JES unexcused absence distribution is right-skewed, with a mean notably above the median. The cutoff was set before re-estimating the models at the pooled 95th percentile of unexcused absence percentage (23.53%).\par
-\par
-\pard After removing students above this cutoff, the estimated JMTES association with unexcused absences remains negative. In the covariate-adjusted overlap-weighted model, JMTES students had 1.38 percentage points fewer unexcused absences than comparable JES students. The trimmed weighted means were 5.33% for JMTES and 6.71% for JES.\par
-\par
-\pard The excused absence result remains positive but smaller in magnitude than the unexcused absence reduction. In the trimmed covariate-adjusted model, JMTES had 0.66 percentage points more excused absences than comparable JES students.\par
-\par
-\pard For total absences, the trimmed covariate-adjusted estimate remains negative at -0.72 percentage points. This indicates that the main conclusion of lower overall missed instructional time at JMTES is not driven only by the highest unexcused absence values in the JES distribution.\par
-\par
-\pard Overall, the robustness analysis supports the main attendance findings. The size of the unexcused and total absence estimates is somewhat smaller after trimming the upper tail, as expected when extreme high-absence observations are removed, but the direction and statistical significance of the results remain consistent with the primary overlap-weighted analysis.\par
-}
+# Unexcused Absence Trim Robustness Appendix
+
+This appendix uses the June 15, 2026 refreshed JMTES and JES at-risk reports and excludes students above the pooled 95th percentile of unexcused absence percentage before re-estimating the attendance models.
+
+```csv
+outcome_name,outcome,model,estimate,std_error,t_value,p_value,conf_low,conf_high,jes_weighted_mean,jmtes_weighted_mean,n,residual_df,p_value_formatted
+unexcused_pct,Unexcused absence percentage,OW,-0.7595153713467155,0.3011699398624171,-2.5218830660645732,0.011672850390009487,-1.3498084534770531,-0.16922228921637805,6.682210210199176,5.922694838852494,1038,1036,0.012
+unexcused_pct,Unexcused absence percentage,OW + covariates,-0.7769479014202536,0.2934209507552577,-2.647895112535115,0.00809946503442196,-1.3520529649005586,-0.2018428379399485,6.682210210199176,5.922694838852494,1038,1018,0.008
+excused_pct,Excused absence percentage,OW,0.5951641825581532,0.13524151784092828,4.400750539181231,1.0787708968366563e-05,0.33009080758993375,0.8602375575263725,1.1566637020693364,1.7518278846274957,1038,1036,<0.001
+excused_pct,Excused absence percentage,OW + covariates,0.6047919648223181,0.13405612163582048,4.511483380559882,6.4375828089652486e-06,0.34204196641610995,0.8675419632285263,1.1566637020693364,1.7518278846274957,1038,1018,<0.001
+total_pct,Total absence percentage,OW,-0.1643511887885601,0.34550588282687567,-0.47568275088072043,0.6343004114593245,-0.8415427191292364,0.5128403415521161,7.838873912268512,7.674522723479989,1038,1036,0.634
+total_pct,Total absence percentage,OW + covariates,-0.17215593659793665,0.3382947260036954,-0.5088933505751907,0.6108269810762271,-0.8352135995651797,0.49090172636930635,7.838873912268512,7.674522723479989,1038,1018,0.611
+```
