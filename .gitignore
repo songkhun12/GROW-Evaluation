@@ -3,3 +3,6 @@ Grade 4/JMTES Grade 4 Previous Current Merged.xlsx
 Grade 5/JMTES Grade 5 Previous Current Merged.xlsx
 JMTES At Risk Report with Absence Percentages.xlsx
 JES At Risk Report with Absence Percentages.xlsx
+
+# Generated Excel outputs (binary; regenerate with merge_at_risk_reports.py or merge_at_risk_reports.Rmd)
+* - Merged At Risk.xlsx
