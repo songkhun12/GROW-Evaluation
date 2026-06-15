@@ -1,2 +1,2 @@
 cutoff_rule,cutoff_value,original_n,trimmed_n,excluded_n,excluded_jmtes,excluded_jes
-Exclude students above pooled 95th percentile of unexcused absence percentage,23.53,1095,1041,54,1,53
+Not re-trimmed in Python refresh; source files updated to 170 report days,,1093,1093,0,0,0
