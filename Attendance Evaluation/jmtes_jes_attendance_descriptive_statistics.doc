@@ -1,6 +1,6 @@
 # JMTES/JES Attendance Descriptive Statistics (Updated June 15, 2026 data)
 
-Source files: JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx and JES At Risk Report_Updated 6.15.26 (PW_ #JES2026).xlsx. Absence percentages were recalculated using 170 report school days for both schools.
+Source files: `JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx` and `JES At Risk Report_Updated 6.15.26 (PW_ #JES2026).xlsx`. Absence percentages were recalculated using 170 report school days for both schools.
 
 ```csv
 outcome,school,n,mean,sd,median,q25,q75
