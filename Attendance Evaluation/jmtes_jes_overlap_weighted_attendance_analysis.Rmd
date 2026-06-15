@@ -20,7 +20,7 @@ options(width = 120, scipen = 999)
 
 This analysis estimates the association between attendance at Jacksonville Middle/Elementary School (JMTES, the GROW school) and student absence outcomes, using Jacksonville Elementary School (JES) as the comparison school. Because students were not randomly assigned to JMTES or JES, the primary specification uses an overlap-weighted propensity score design. Overlap weighting emphasizes students with similar observed baseline characteristics across schools and down-weights students whose covariate profiles are uncommon in the other school.
 
-The outcomes are absence percentages rather than raw absence counts. This is important because the JMTES file was collected before the school year ended, when the report covered 159 school days, whereas the JES file covered 170 school days. Percentage outcomes therefore place both schools on a comparable scale.
+The outcomes are absence percentages rather than raw absence counts. The current June 15, 2026 JMTES and JES at-risk report refresh covers 170 report school days for both schools. Percentage outcomes are retained so the analysis remains comparable to prior interim versions and reports the attendance outcomes on a common scale.
 
 # Data sources
 
@@ -530,7 +530,7 @@ excel_xml <- c(
   xml_row("No-covariate models regress each absence percentage outcome on the JMTES indicator using overlap weights."),
   xml_row("Covariate-adjusted models add grade, female, Black, age, meal-status code, and entry code."),
   xml_row("Overlap weights are 1 - propensity score for JMTES students and propensity score for JES students."),
-  xml_row("Percentage outcomes are used because JMTES was reported through 159 school days and JES through 170 school days."),
+  xml_row("Percentage outcomes are used so both June 15, 2026 refreshed at-risk reports are analyzed on a common 170-day scale."),
   xml_row("The no-covariate and covariate-adjusted JMTES coefficients are expected to be similar when overlap weighting balances the same covariates that are later added to the outcome model."),
   "</Table></Worksheet>",
   "</Workbook>"
