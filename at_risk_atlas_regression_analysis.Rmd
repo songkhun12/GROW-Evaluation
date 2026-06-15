@@ -1,0 +1,233 @@
+---
+title: "At-Risk and ATLAS Regression Analysis"
+author: "CSIC Evaluation Team"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Purpose
+
+This notebook analyzes the merged At-Risk/ATLAS files by grade and subject. Each model compares JMTES with JES for the Summer 2026 ATLAS outcome in a grade/subject cell, adjusting for the most comparable available baseline ATLAS score and at-risk report covariates.
+
+The regression table is formatted in an American Economic Review-style layout with one column per grade/subject model, coefficients in the first row, robust standard errors in parentheses below, observations, and R-squared.
+
+# Libraries
+
+```{r libraries}
+library(dplyr)
+library(readr)
+library(purrr)
+library(stringr)
+library(sandwich)
+library(lmtest)
+# flextable/officer can be used locally for .docx output, but the committed
+# Word-compatible table is RTF because binary .docx files are not supported.
+```
+
+# File map and model specifications
+
+```{r file-map}
+grade_files <- tribble(
+  ~grade, ~school, ~path,
+  "K", "JES", "Kindergarten/JES Atlas Report - Kindergarten - Merged At Risk.csv",
+  "K", "JMTES", "Kindergarten/JMTES Atlas Report - Kindergarten - Merged At Risk.csv",
+  "1", "JES", "Grade 1/JES Atlas Report - Grade 1 - Merged At Risk.csv",
+  "1", "JMTES", "Grade 1/JMTES Atlas Report - Grade 1 - Merged At Risk.csv",
+  "2", "JES", "Grade 2/JES Atlas Report - Grade 2 - Merged At Risk.csv",
+  "2", "JMTES", "Grade 2/JMTES Atlas Report - Grade 2 - Merged At Risk.csv",
+  "3", "JES", "Grade 3/JES Atlas Report - Grade 3 - Merged At Risk.csv",
+  "3", "JMTES", "Grade 3/JMTES Atlas Report - Grade 3 - Merged At Risk.csv",
+  "4", "JES", "Grade 4/JES Atlas Report - Grade 4 - Merged At Risk.csv",
+  "4", "JMTES", "Grade 4/JMTES Atlas Report - Grade 4 - Current Year - Merged At Risk.csv",
+  "5", "JES", "Grade 5/JES Atlas Report - Grade 5 - Merged At Risk.csv",
+  "5", "JMTES", "Grade 5/JMTES Atlas Report - Grade 5 - Current Year - Merged At Risk.csv"
+)
+
+model_specs <- tribble(
+  ~grade, ~subject, ~outcome, ~baseline,
+  "K", "ELA", "ELA Sum 2026", "ELA Winter 2025",
+  "K", "Math", "Math Sum 2026", "Math Winter 2025",
+  "1", "ELA", "ELA Sum 2026", "ELA Sum 2025",
+  "1", "Math", "Math Sum 2026", "Math Sum 2025",
+  "2", "ELA", "ELA Sum 2026", "ELA Sum 2025",
+  "2", "Math", "Math Sum 2026", "Math Sum 2025",
+  "3", "ELA", "ELA Sum 2026", "ELA Sum 2025",
+  "3", "Math", "Math Sum 2026", "Math Sum 2025",
+  "3", "Science", "Science Sum 2026", "Science Winter 2025",
+  "4", "ELA", "ELA Sum 2026", "ELA Winter 2025",
+  "4", "Math", "Math Sum 2026", "Math Winter 2025",
+  "4", "Science", "Science Sum 2026", "Science Winter 2025",
+  "5", "ELA", "ELA Sum 2026", "ELA Winter 2025",
+  "5", "Math", "Math Sum 2026", "Math Winter 2025",
+  "5", "Science", "Science Sum 2026", "Science Winter 2025"
+)
+```
+
+# Helpers
+
+```{r helpers}
+clean_score <- function(x) {
+  score <- suppressWarnings(as.numeric(x))
+  ifelse(score < 900, NA_real_, score)
+}
+
+num0 <- function(x) {
+  out <- suppressWarnings(as.numeric(x))
+  ifelse(is.na(out), 0, out)
+}
+
+meal_assistance <- function(x) {
+  ifelse(str_trim(as.character(x)) %in% c("02", "04", "05", "06"), 1, 0)
+}
+
+read_merged <- function(path, school) {
+  read_csv(path, col_types = cols(.default = col_character()), show_col_types = FALSE) |>
+    mutate(
+      school = school,
+      JMTES = ifelse(school == "JMTES", 1, 0),
+      unexcused = num0(`At Risk - Unexcused`),
+      excused = num0(`At Risk - Excused`),
+      female = ifelse(str_trim(`At Risk - Gender`) == "Female", 1, 0),
+      black = ifelse(str_trim(`At Risk - Ethnic Name`) == "Black", 1, 0),
+      meal_assistance = meal_assistance(`At Risk - Meal Status Code`)
+    )
+}
+
+fit_one_model <- function(grade_value, subject_value, outcome_col, baseline_col) {
+  dat <- grade_files |>
+    filter(grade == grade_value) |>
+    mutate(data = map2(path, school, read_merged)) |>
+    pull(data) |>
+    bind_rows() |>
+    mutate(
+      outcome_score = clean_score(.data[[outcome_col]]),
+      baseline_score = clean_score(.data[[baseline_col]])
+    ) |>
+    filter(!is.na(outcome_score), !is.na(baseline_score))
+
+  model <- lm(
+    outcome_score ~ JMTES + baseline_score + unexcused + excused + female + black + meal_assistance,
+    data = dat
+  )
+
+  robust <- coeftest(model, vcov = vcovHC(model, type = "HC1"))
+
+  tibble(
+    model = paste0("G", grade_value, " ", subject_value),
+    grade = grade_value,
+    subject = subject_value,
+    outcome = outcome_col,
+    baseline = baseline_col,
+    variable = rownames(robust),
+    coefficient = robust[, "Estimate"],
+    robust_se = robust[, "Std. Error"],
+    p_value = robust[, "Pr(>|t|)"],
+    n = nobs(model),
+    r_squared = summary(model)$r.squared
+  )
+}
+
+star <- function(p) case_when(
+  p < 0.01 ~ "***",
+  p < 0.05 ~ "**",
+  p < 0.10 ~ "*",
+  TRUE ~ ""
+)
+```
+
+# Fit models
+
+```{r fit-models}
+regression_results <- pmap_dfr(
+  model_specs,
+  \(grade, subject, outcome, baseline) fit_one_model(grade, subject, outcome, baseline)
+)
+
+write_csv(regression_results, "at_risk_atlas_regression_results.csv")
+```
+
+# AER-style table
+
+```{r make-table}
+variable_labels <- c(
+  JMTES = "JMTES treatment school",
+  baseline_score = "Baseline score",
+  unexcused = "Unexcused absences",
+  excused = "Excused absences",
+  female = "Female",
+  black = "Black",
+  meal_assistance = "Meal assistance"
+)
+
+models <- unique(regression_results$model)
+
+table_rows <- map_dfr(names(variable_labels), function(v) {
+  coef_row <- regression_results |>
+    filter(variable == v) |>
+    transmute(model, value = sprintf("%.3f%s", coefficient, star(p_value))) |>
+    tidyr::pivot_wider(names_from = model, values_from = value) |>
+    mutate(term = variable_labels[[v]], .before = 1)
+
+  se_row <- regression_results |>
+    filter(variable == v) |>
+    transmute(model, value = sprintf("(%.3f)", robust_se)) |>
+    tidyr::pivot_wider(names_from = model, values_from = value) |>
+    mutate(term = "", .before = 1)
+
+  bind_rows(coef_row, se_row)
+})
+
+n_row <- regression_results |>
+  distinct(model, n) |>
+  mutate(n = as.character(n)) |>
+  tidyr::pivot_wider(names_from = model, values_from = n) |>
+  mutate(term = "Observations", .before = 1)
+
+r2_row <- regression_results |>
+  distinct(model, r_squared) |>
+  mutate(r_squared = sprintf("%.3f", r_squared)) |>
+  tidyr::pivot_wider(names_from = model, values_from = r_squared) |>
+  mutate(term = "R-squared", .before = 1)
+
+aer_table <- bind_rows(table_rows, n_row, r2_row)
+
+rtf_escape <- function(x) {
+  x <- gsub("\\\\", "\\\\\\", x)
+  x <- gsub("\\{", "\\\\{", x)
+  x <- gsub("\\}", "\\\\}", x)
+  x
+}
+
+rtf_lines <- c(
+  "{\\rtf1\\ansi\\deff0",
+  "\\paperw15840\\paperh12240\\landscape\\margl720\\margr720\\margt720\\margb720",
+  "\\b Table 1--At-Risk Covariate-Adjusted ATLAS Regression Results\\b0\\par",
+  "\\par"
+)
+
+for (i in seq_len(nrow(aer_table))) {
+  row_values <- as.character(aer_table[i, ])
+  rtf_lines <- c(
+    rtf_lines,
+    "\\trowd\\trgaph60",
+    paste0("\\cellx", 1800 + seq_along(row_values) * 850),
+    paste0("\\intbl ", rtf_escape(row_values), "\\cell"),
+    "\\row"
+  )
+}
+
+rtf_lines <- c(
+  rtf_lines,
+  "\\par",
+  "Notes: Each column is a separate OLS model. The dependent variable is the Summer 2026 ATLAS score for the indicated grade and subject. Robust HC1 standard errors are in parentheses. All models adjust for the listed baseline score, absences, gender, race, and meal assistance. * p<0.10, ** p<0.05, *** p<0.01.\\par",
+  "}"
+)
+
+writeLines(rtf_lines, "at_risk_atlas_regression_table_AER.rtf")
+
+aer_table
+```
