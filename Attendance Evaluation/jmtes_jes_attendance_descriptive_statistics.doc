@@ -1,13 +1,11 @@
-# JMTES/JES Attendance Descriptive Statistics (Updated June 15, 2026 data)
+# Descriptive Statistics: JMTES vs. JES Attendance
 
-Source files: `JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx` and `JES At Risk Report_Updated 6.15.26 (PW_ #JES2026).xlsx`. Absence percentages were recalculated using 170 report school days for both schools.
+Source files were refreshed with the June 15, 2026 JMTES/JES At Risk Reports. Descriptive statistics are calculated from the rounded percentage values in the school absence-percentage CSV files, matching the values used by the analysis input files.
 
-```csv
-outcome,school,n,mean,sd,median,q25,q75
-Unexcused absence percentage,JES,676,9.00887573964497,10.074078714592314,5.88235294117647,2.941176470588235,11.76470588235294
-Unexcused absence percentage,JMTES,417,6.06996755536747,4.711409750137069,5.294117647058823,2.941176470588235,8.235294117647058
-Excused absence percentage,JES,676,1.28698224852071,2.1800465862119265,0.5882352941176471,0.0,1.7647058823529411
-Excused absence percentage,JMTES,417,1.7393144308082944,2.496208034097564,1.1764705882352942,0.0,2.3529411764705883
-Total absence percentage,JES,676,10.29585798816568,10.746839086151429,6.470588235294119,3.5294117647058822,13.529411764705882
-Total absence percentage,JMTES,417,7.809281986175765,5.612095211782209,7.0588235294117645,4.117647058823529,10.0
-```
+| Outcome | JMTES n | JMTES Mean | JMTES SD | JMTES Median | JMTES Min | JMTES Max | JES n | JES Mean | JES SD | JES Median | JES Min | JES Max | Difference |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Unexcused absence % | 417 | 6.0698800959 | 4.7113198109 | 5.29 | 0 | 45.88 | 676 | 9.0087721893 | 10.0741628367 | 5.88 | 0 | 105.88 | -2.9388920934 |
+| Excused absence % | 417 | 1.7396402878 | 2.4959779406 | 1.18 | 0 | 17.65 | 676 | 1.2872633136 | 2.1799859453 | 0.59 | 0 | 22.94 | 0.4523769742 |
+| Total absence % | 417 | 7.8091366906 | 5.6122854784 | 7.06 | 0 | 58.24 | 676 | 10.2957100592 | 10.7471510202 | 6.47 | 0 | 107.65 | -2.4865733685 |
+
+Note: JES source attendance rows are unchanged in count; using rounded CSV percentages keeps the JES medians aligned with the prior descriptive statistics (5.88, 0.59, and 6.47).
