@@ -1,0 +1,23 @@
+# 2026 Summative ATLAS Descriptive Statistics
+
+Median values are included in the `JMTES median` and `JES median` columns and are calculated from the non-missing student-level 2026 summative ATLAS scores.
+
+| Grade | Subject | JMTES<br> mean<br> (SD) | JES<br> mean<br> (SD) | Difference-in-mean<br> (JMTES - JES) | JMTES<br> median | JES<br> median | Observations<br> (JMTES/JES) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Kindergarten | ELA | 1054.75<br> (14.93) | 1052.16<br> (18.97) | 2.59 | 1059.5 | 1057 | 106/295 |
+| Kindergarten | Math | 1052.26<br> (16.34) | 1053.02<br> (18.77) | -0.76 | 1052 | 1052 | 106/290 |
+| Grade 1 | ELA | 1050.56<br> (16.88) | 1046.92<br> (22.55) | 3.64 | 1053 | 1055 | 165/325 |
+| Grade 1 | Math | 1049.43<br> (16.44) | 1050.31<br> (18.96) | -0.88 | 1049 | 1052 | 164/324 |
+| Grade 2 | ELA | 1048.51<br> (17.42) | 1048.48<br> (20.12) | 0.03 | 1052 | 1052 | 194/267 |
+| Grade 2 | Math | 1048.35<br> (12.61) | 1047.85<br> (15.99) | 0.49 | 1050 | 1050 | 193/265 |
+| Grade 3 | ELA | 1046.65<br> (16.51) | 1041.69<br> (15.49) | 4.96 | 1048 | 1042 | 321/353 |
+| Grade 3 | Math | 1041.26<br> (16.90) | 1038.66<br> (16.68) | 2.61 | 1041 | 1039 | 318/456 |
+| Grade 3 | Science | 1047.47<br> (16.47) | 1040.38<br> (12.23) | 7.09 | 1047 | 1041 | 242/240 |
+| Grade 4 | ELA | 1049.85<br> (16.96) | 1041.96<br> (15.11) | 7.89 | 1048 | 1040 | 277/344 |
+| Grade 4 | Math | 1044.36<br> (16.43) | 1036.18<br> (17.04) | 8.19 | 1043 | 1038.5 | 278/444 |
+| Grade 4 | Science | 1050.89<br> (15.44) | 1042.94<br> (11.79) | 7.95 | 1050 | 1041 | 279/343 |
+| Grade 5 | ELA | 1049.34<br> (15.53) | 1042.82<br> (13.42) | 6.52 | 1050 | 1042 | 181/282 |
+| Grade 5 | Math | 1044.48<br> (19.84) | 1037.69<br> (16.76) | 6.79 | 1046 | 1041 | 185/371 |
+| Grade 5 | Science | 1050.32<br> (14.04) | 1042.04<br> (11.03) | 8.28 | 1049 | 1041 | 183/283 |
+
+Notes: The table reports unweighted descriptive statistics for ATLAS assessment scores by grade, subject, and school. Standard deviations are reported in parentheses below means. The difference-in-mean column is JMTES minus JES, so positive values indicate higher average scores at JMTES. Median values are reported separately for each school. Because the number of observations varies across grade-subject cells, observations are reported in the final column as JMTES/JES.
