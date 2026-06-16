@@ -1,13 +1,52 @@
-<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Regression Table"><Table>
-<Row><Cell><Data ss:Type="String">outcome</Data></Cell><Cell><Data ss:Type="String">model</Data></Cell><Cell><Data ss:Type="String">estimate</Data></Cell><Cell><Data ss:Type="String">std_error</Data></Cell><Cell><Data ss:Type="String">t_value</Data></Cell><Cell><Data ss:Type="String">p_value</Data></Cell><Cell><Data ss:Type="String">conf_low</Data></Cell><Cell><Data ss:Type="String">conf_high</Data></Cell><Cell><Data ss:Type="String">p_value_formatted</Data></Cell><Cell><Data ss:Type="String">estimate_label</Data></Cell></Row>
-<Row><Cell><Data ss:Type="String">Unexcused absence percentage</Data></Cell><Cell><Data ss:Type="String">Overlap weighted</Data></Cell><Cell><Data ss:Type="Number">-2.771245161591081</Data></Cell><Cell><Data ss:Type="Number">0.4722651709780029</Data></Cell><Cell><Data ss:Type="Number">-5.867985470646023</Data></Cell><Cell><Data ss:Type="Number">4.411218971365447e-09</Data></Cell><Cell><Data ss:Type="Number">-3.6968848967079664</Data></Cell><Cell><Data ss:Type="Number">-1.8456054264741952</Data></Cell><Cell><Data ss:Type="String">&lt;0.001</Data></Cell><Cell><Data ss:Type="String">-2.771 (SE = 0.472), 95% CI [-3.697, -1.846], p = &lt;0.001</Data></Cell></Row>
-<Row><Cell><Data ss:Type="String">Unexcused absence percentage</Data></Cell><Cell><Data ss:Type="String">Overlap weighted + covariates</Data></Cell><Cell><Data ss:Type="Number">-2.771245158878772</Data></Cell><Cell><Data ss:Type="Number">0.46710670131661397</Data></Cell><Cell><Data ss:Type="Number">-5.932788271004419</Data></Cell><Cell><Data ss:Type="Number">2.9783282660134505e-09</Data></Cell><Cell><Data ss:Type="Number">-3.6867742934593353</Data></Cell><Cell><Data ss:Type="Number">-1.8557160242982085</Data></Cell><Cell><Data ss:Type="String">&lt;0.001</Data></Cell><Cell><Data ss:Type="String">-2.771 (SE = 0.467), 95% CI [-3.687, -1.856], p = &lt;0.001</Data></Cell></Row>
-<Row><Cell><Data ss:Type="String">Excused absence percentage</Data></Cell><Cell><Data ss:Type="String">Overlap weighted</Data></Cell><Cell><Data ss:Type="Number">0.5311988952178469</Data></Cell><Cell><Data ss:Type="Number">0.14062055853522568</Data></Cell><Cell><Data ss:Type="Number">3.7775336746709103</Data></Cell><Cell><Data ss:Type="Number">0.00015838909430428171</Data></Cell><Cell><Data ss:Type="Number">0.2555826004888046</Data></Cell><Cell><Data ss:Type="Number">0.8068151899468892</Data></Cell><Cell><Data ss:Type="String">&lt;0.001</Data></Cell><Cell><Data ss:Type="String">0.531 (SE = 0.141), 95% CI [0.256, 0.807], p = &lt;0.001</Data></Cell></Row>
-<Row><Cell><Data ss:Type="String">Excused absence percentage</Data></Cell><Cell><Data ss:Type="String">Overlap weighted + covariates</Data></Cell><Cell><Data ss:Type="Number">0.5311988947042455</Data></Cell><Cell><Data ss:Type="Number">0.1394124588856069</Data></Cell><Cell><Data ss:Type="Number">3.810268457714485</Data></Cell><Cell><Data ss:Type="Number">0.00013881597041941825</Data></Cell><Cell><Data ss:Type="Number">0.257950475288456</Data></Cell><Cell><Data ss:Type="Number">0.804447314120035</Data></Cell><Cell><Data ss:Type="String">&lt;0.001</Data></Cell><Cell><Data ss:Type="String">0.531 (SE = 0.139), 95% CI [0.258, 0.804], p = &lt;0.001</Data></Cell></Row>
-<Row><Cell><Data ss:Type="String">Total absence percentage</Data></Cell><Cell><Data ss:Type="String">Overlap weighted</Data></Cell><Cell><Data ss:Type="Number">-2.2400462663732292</Data></Cell><Cell><Data ss:Type="Number">0.5136454759635506</Data></Cell><Cell><Data ss:Type="Number">-4.361074654013283</Data></Cell><Cell><Data ss:Type="Number">1.2942519466127168e-05</Data></Cell><Cell><Data ss:Type="Number">-3.246791399261788</Data></Cell><Cell><Data ss:Type="Number">-1.2333011334846702</Data></Cell><Cell><Data ss:Type="String">&lt;0.001</Data></Cell><Cell><Data ss:Type="String">-2.240 (SE = 0.514), 95% CI [-3.247, -1.233], p = &lt;0.001</Data></Cell></Row>
-<Row><Cell><Data ss:Type="String">Total absence percentage</Data></Cell><Cell><Data ss:Type="String">Overlap weighted + covariates</Data></Cell><Cell><Data ss:Type="Number">-2.240046264174521</Data></Cell><Cell><Data ss:Type="Number">0.5091900362061528</Data></Cell><Cell><Data ss:Type="Number">-4.3992342836567335</Data></Cell><Cell><Data ss:Type="Number">1.0863349946761499e-05</Data></Cell><Cell><Data ss:Type="Number">-3.2380587351385803</Data></Cell><Cell><Data ss:Type="Number">-1.2420337932104615</Data></Cell><Cell><Data ss:Type="String">&lt;0.001</Data></Cell><Cell><Data ss:Type="String">-2.240 (SE = 0.509), 95% CI [-3.238, -1.242], p = &lt;0.001</Data></Cell></Row>
-</Table></Worksheet><Worksheet ss:Name="Notes"><Table>
-<Row><Cell><Data ss:Type="String">Updated with June 15, 2026 JMTES and JES At Risk Reports; covariate-adjusted models include grade, female, Black, age, meal-status code, and entry code.</Data></Cell></Row>
-</Table></Worksheet></Workbook>
+<xml><text># Impact of GROW on School Attendance: Comparing School Absences Between JMTES and JES
+
+## Data Source Verification
+
+The attendance analysis was rerun using the updated June 15, 2026 at-risk report files for both schools. The analysis script writes `jmtes_jes_attendance_data_source_audit.csv` when outputs are regenerated.
+
+| School | Source file | Source report date | Students loaded | Workbook title |
+|---|---|---:|---:|---|
+| JMTES | JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx | 2026-06-15 | 417 | Taylor Elementary RTI - at Risk Report |
+| JES | JES At Risk Report_Updated 6.15.26 (PW_ #JES2026).xlsx | 2026-06-15 | 676 | Jacksonville Elementary School RTI - at Risk Report |
+
+## Methodology
+
+To estimate the impact of GROW on student attendance, the analysis uses the same overlap-weighted propensity score approach described in the academic performance section. Students were not randomly assigned to JMTES, the GROW school, or JES, the comparison school, so overlap weighting gives more influence to students who were similar across the two schools before estimating the program effect.
+
+Each student's propensity score is estimated using observed student characteristics available in the attendance and at-risk report files: grade level, gender, race/ethnicity, age, meal-status code, and entry code. The propensity score model is:
+
+`pᵢ = Pr(JMTESᵢ = 1 | Xᵢ)`
+
+`logit(pᵢ) = α₀ + α₁Gradeᵢ + α₂Femaleᵢ + α₃Blackᵢ + α₄Ageᵢ + α₅MealStatusᵢ + α₆EntryCodeᵢ`
+
+After estimating the propensity score, overlap weights are assigned so that JMTES students are weighted by `1 − pᵢ` and JES students are weighted by `pᵢ`. This gives the greatest influence to students who provide the strongest comparison across the two schools and less influence to students who are less comparable.
+
+The program effect is estimated using weighted regression models for three attendance outcomes: unexcused absence percentage, excused absence percentage, and total absence percentage. For each outcome, the basic weighted model is:
+
+`Yᵢ = β₀ + β₁JMTESᵢ + εᵢ`
+
+The analysis also estimates a covariate-adjusted version of the weighted model:
+
+`Yᵢ = β₀ + β₁JMTESᵢ + β₂Gradeᵢ + β₃Femaleᵢ + β₄Blackᵢ + β₅Ageᵢ + β₆MealStatusᵢ + β₇EntryCodeᵢ + εᵢ`
+
+The main estimate is β₁, the adjusted difference in attendance outcomes between students exposed to GROW and comparable students at JES. Negative values indicate that JMTES students missed a smaller percentage of enrolled days than comparable JES students, while positive values indicate that JMTES students missed a larger percentage of enrolled days.
+
+## Results
+
+| Outcome | Model | Estimate | SE | 95% CI | p-value |
+|---|---|---:|---:|---:|---:|
+| Unexcused absence percentage | Overlap weighted | -2.771 | 0.453 | [-3.658, -1.884] | &lt;0.001 |
+| Unexcused absence percentage | Overlap weighted + covariates | -2.771 | 0.444 | [-3.642, -1.900] | &lt;0.001 |
+| Excused absence percentage | Overlap weighted | 0.531 | 0.149 | [0.240, 0.823] | &lt;0.001 |
+| Excused absence percentage | Overlap weighted + covariates | 0.531 | 0.147 | [0.244, 0.818] | &lt;0.001 |
+| Total absence percentage | Overlap weighted | -2.240 | 0.496 | [-3.212, -1.268] | &lt;0.001 |
+| Total absence percentage | Overlap weighted + covariates | -2.240 | 0.489 | [-3.198, -1.283] | &lt;0.001 |
+
+The updated overlap-weighted attendance results indicate that JMTES students had lower unexcused absence percentages than comparable JES students. In the covariate-adjusted overlap-weighted model, JMTES attendance was associated with a 2.771 percentage-point lower unexcused absence percentage.
+
+Excused absence percentages were higher at JMTES in the overlap-weighted models. In the covariate-adjusted model, JMTES attendance was associated with a 0.531 percentage-point higher excused absence percentage.
+
+For total absence percentage, JMTES students had lower overall absence percentages than comparable JES students. The covariate-adjusted overlap-weighted estimate was -2.240 percentage points, indicating lower total absence at JMTES after applying overlap weights and adjusting for the same covariates used in the propensity score model.
+
+As with the academic analysis, these estimates are interpreted as quasi-experimental evidence rather than definitive causal proof because the comparison is based on observational data rather than random assignment.
+</text></xml>

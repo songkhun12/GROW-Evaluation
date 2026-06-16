@@ -1,4 +1,5 @@
-outcome,estimate_Overlap weighted,estimate_Overlap weighted + covariates,std_error_Overlap weighted,std_error_Overlap weighted + covariates,estimate_difference,std_error_difference
-Unexcused absence percentage,-2.771245161591081,-2.771245158878772,0.4722651709780029,0.46710670131661397,2.712309044028416e-09,-0.0051584696613889425
-Excused absence percentage,0.5311988952178469,0.5311988947042455,0.14062055853522568,0.1394124588856069,-5.136013836448683e-10,-0.0012080996496187657
-Total absence percentage,-2.2400462663732292,-2.240046264174521,0.5136454759635506,0.5091900362061528,2.1987083265173624e-09,-0.004455439757397817
+check,value
+source_files,JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx; JES At Risk Report_Updated 6.15.26 (PW_ #JES2026).xlsx
+observations,1093
+jmtes_students,417
+jes_students,676
