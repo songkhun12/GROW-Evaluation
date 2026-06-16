@@ -1,0 +1,88 @@
+---
+title: "Merge Updated At-Risk Reports into Atlas Reports"
+output: html_document
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+library(readxl)
+library(dplyr)
+library(stringr)
+library(writexl)
+library(readr)
+library(purrr)
+```
+
+```{r merge-at-risk-atlas}
+root_dir <- "."
+
+at_risk_files <- list(
+  JES = file.path(root_dir, "JES At Risk Report_Updated 6.15.26 (PW_ #JES2026).xlsx"),
+  JMTES = file.path(root_dir, "JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx")
+)
+
+grade_dirs <- c("Kindergarten", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5")
+
+read_at_risk <- function(path) {
+  read_excel(path, skip = 1, col_types = "text") |>
+    mutate(across(everything(), ~ str_trim(as.character(.x)))) |>
+    distinct(`State Report Id`, .keep_all = TRUE) |>
+    rename_with(~ paste0("At Risk - ", .x))
+}
+
+find_header_row <- function(path, id_columns = c("ID Number", "Student IDs", "Student ID"), max_rows = 10) {
+  preview <- read_excel(path, col_names = FALSE, n_max = max_rows, col_types = "text")
+  matches <- apply(preview, 1, function(row) any(str_trim(row) %in% id_columns, na.rm = TRUE))
+  header_row <- which(matches)[1]
+  if (is.na(header_row)) {
+    stop("Could not find Atlas ID header row in: ", path)
+  }
+  header_row
+}
+
+read_atlas <- function(path) {
+  header_row <- find_header_row(path)
+  read_excel(path, skip = header_row - 1, col_types = "text") |>
+    mutate(across(everything(), ~ str_trim(as.character(.x))))
+}
+
+merge_one_atlas <- function(path, at_risk_data) {
+  atlas_data <- read_atlas(path)
+  atlas_id_column <- intersect(c("ID Number", "Student IDs", "Student ID"), names(atlas_data))[1]
+  if (is.na(atlas_id_column)) {
+    stop("Could not identify Atlas student ID column in: ", path)
+  }
+
+  merged_data <- atlas_data |>
+    left_join(
+      at_risk_data,
+      by = setNames("At Risk - State Report Id", atlas_id_column),
+      relationship = "many-to-one"
+    )
+
+  output_path <- file.path(
+    dirname(path),
+    paste0(tools::file_path_sans_ext(basename(path)), " - Merged At Risk.xlsx")
+  )
+  write_xlsx(merged_data, output_path)
+  write_csv(merged_data, sub("\\.xlsx$", ".csv", output_path))
+  output_path
+}
+
+at_risk_data <- map(at_risk_files, read_at_risk)
+
+atlas_files <- unlist(map(grade_dirs, function(grade_dir) {
+  list.files(
+    file.path(root_dir, grade_dir),
+    pattern = "Atlas Report.*\\.xlsx$",
+    full.names = TRUE
+  ) |>
+    discard(~ str_detect(basename(.x), "Merged At Risk"))
+}))
+
+created_files <- map_chr(atlas_files, function(path) {
+  school <- if (str_starts(str_to_upper(basename(path)), "JMTES")) "JMTES" else "JES"
+  merge_one_atlas(path, at_risk_data[[school]])
+})
+
+created_files
+```
