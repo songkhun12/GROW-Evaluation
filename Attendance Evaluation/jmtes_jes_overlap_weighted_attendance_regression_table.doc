@@ -1,0 +1,22 @@
+<html>
+<head><meta charset="utf-8"><style>
+body{font-family:"Times New Roman",serif;font-size:11pt;} table{border-collapse:collapse;} th,td{padding:3pt 6pt;text-align:center;vertical-align:bottom;} td.rowlabel{text-align:left;white-space:nowrap;} .top{border-top:1px solid black;} .bottom{border-bottom:1px solid black;} .note{font-size:10pt;}
+</style></head>
+<body>
+<p><b>Table 1</b><br>Impact of GROW on Attendance Outcomes</p>
+<p class="note">Source: Updated June 15, 2026 JMTES and JES At Risk Report attendance files in this repository. Values are generated from <code>jmtes_jes_overlap_weighted_attendance_regression_table.csv</code>, <code>jmtes_jes_overlap_weighted_attendance_weighted_means.csv</code>, and <code>jmtes_jes_overlap_weighted_attendance_student_data.csv</code>.</p>
+<table>
+<tr class="top"><th></th><th colspan="2">Unexcused absence %</th><th colspan="2">Excused absence %</th><th colspan="2">Total absence %</th></tr>
+<tr><th></th><th>(1)</th><th>(2)</th><th>(3)</th><th>(4)</th><th>(5)</th><th>(6)</th></tr>
+<tr class="bottom"><th></th><th>OW</th><th>OW + covariates</th><th>OW</th><th>OW + covariates</th><th>OW</th><th>OW + covariates</th></tr>
+<tr><td class="rowlabel">JMTES (GROW school)</td><td>-2.771***</td><td>-2.771***</td><td>0.531***</td><td>0.531***</td><td>-2.240***</td><td>-2.240***</td></tr>
+<tr><td class="rowlabel"></td><td>(0.472)</td><td>(0.467)</td><td>(0.141)</td><td>(0.139)</td><td>(0.514)</td><td>(0.509)</td></tr>
+<tr><td class="rowlabel">JES weighted mean</td><td>8.833</td><td>8.833</td><td>1.246</td><td>1.246</td><td>10.079</td><td>10.079</td></tr>
+<tr><td class="rowlabel">JMTES weighted mean</td><td>6.062</td><td>6.062</td><td>1.777</td><td>1.777</td><td>7.839</td><td>7.839</td></tr>
+<tr><td class="rowlabel">Student covariates</td><td>No</td><td>Yes</td><td>No</td><td>Yes</td><td>No</td><td>Yes</td></tr>
+<tr><td class="rowlabel">Overlap weights</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+<tr><td class="rowlabel">Observations</td><td>1,093</td><td>1,093</td><td>1,093</td><td>1,093</td><td>1,093</td><td>1,093</td></tr>
+<tr class="bottom"><td class="rowlabel">Residual df</td><td>1,091</td><td>1,073</td><td>1,091</td><td>1,073</td><td>1,091</td><td>1,073</td></tr>
+</table>
+<p class="note"><i>Notes:</i> The table reports overlap-weighted regression estimates. The outcome is the percentage of enrolled days missed. The JMTES coefficient is the percentage-point difference between students at the GROW school and comparable students at the comparison school. Standard errors are in parentheses. Student covariates include grade, gender, race/ethnicity, age, meal-status disadvantage, and entry-code controls. *** p&lt;0.01, ** p&lt;0.05, * p&lt;0.10.</p>
+</body></html>

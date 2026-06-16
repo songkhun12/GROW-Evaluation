@@ -1,32 +1,11 @@
-# Descriptive Statistics for Attendance Outcomes
+# Descriptive Statistics: JMTES vs. JES Attendance
 
-Table 1 Descriptive Statistics for Attendance Outcomes
+Source files were refreshed with the June 15, 2026 JMTES/JES At Risk Reports. Descriptive statistics are calculated from the rounded percentage values in the school absence-percentage CSV files, matching the values used by the analysis input files.
 
-| Outcome | School | N | Mean | SD | Median | Min | Max |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Unexcused absence % | JMTES | 419 | 5.444 | (4.600) | 4.400 | 0.000 | 45.280 |
-| Unexcused absence % | JES | 676 | 9.009 | (10.074) | 5.880 | 0.000 | 105.880 |
-| Excused absence % | JMTES | 419 | 1.789 | (2.580) | 0.630 | 0.000 | 17.610 |
-| Excused absence % | JES | 676 | 1.287 | (2.180) | 0.590 | 0.000 | 22.940 |
-| Total absence % | JMTES | 419 | 7.232 | (5.513) | 6.290 | 0.000 | 58.490 |
-| Total absence % | JES | 676 | 10.296 | (10.747) | 6.470 | 0.000 | 107.650 |
+| Outcome | JMTES n | JMTES Mean | JMTES SD | JMTES Median | JMTES Min | JMTES Max | JES n | JES Mean | JES SD | JES Median | JES Min | JES Max | Difference |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Unexcused absence % | 417 | 6.0698800959 | 4.7113198109 | 5.29 | 0 | 45.88 | 676 | 9.0087721893 | 10.0741628367 | 5.88 | 0 | 105.88 | -2.9388920934 |
+| Excused absence % | 417 | 1.7396402878 | 2.4959779406 | 1.18 | 0 | 17.65 | 676 | 1.2872633136 | 2.1799859453 | 0.59 | 0 | 22.94 | 0.4523769742 |
+| Total absence % | 417 | 7.8091366906 | 5.6122854784 | 7.06 | 0 | 58.24 | 676 | 10.2957100592 | 10.7471510202 | 6.47 | 0 | 107.65 | -2.4865733685 |
 
-Table 2 Difference in Mean Attendance Outcomes
-
-| Outcome | JMTES mean | JES mean | Difference |
-|---|---:|---:|---:|
-| Unexcused absence % | 5.444 | 9.009 | -3.564 |
-| Excused absence % | 1.789 | 1.287 | 0.502 |
-| Total absence % | 7.232 | 10.296 | -3.064 |
-
-Notes: The tables report unweighted descriptive statistics by school. Outcomes are percentages of enrolled/report days missed, which places JMTES and JES on a comparable scale even though the JMTES file was collected at 159 report days and the JES file at 170 report days. Standard deviations are shown in parentheses. Table 1 adds the distributional descriptive statistics commonly reported in applied economics tables, including observations, means, standard deviations, medians, minimums, and maximums. Table 2 reports the raw difference in school means, calculated as JMTES minus JES.
-
-## Discussion
-
-Descriptively, JMTES students had a lower average unexcused absence percentage than JES students. The mean unexcused absence rate was 5.44% at JMTES compared with 9.01% at JES, a raw difference of -3.56 percentage points. The median unexcused absence rate was also lower at JMTES (4.40%) than at JES (5.88%).
-
-Excused absences moved in the opposite direction. The mean excused absence percentage was 1.79% at JMTES and 1.29% at JES, so JMTES was higher by 0.50 percentage points in the unadjusted descriptive comparison. The median excused absence percentage was similar across schools, at 0.63% for JMTES and 0.59% for JES.
-
-For total absences, the lower unexcused absence rate at JMTES more than offsets the higher excused absence rate. The mean total absence percentage was 7.23% at JMTES compared with 10.30% at JES, a descriptive difference of -3.06 percentage points. The median total absence percentages were closer, at 6.29% for JMTES and 6.47% for JES, which suggests that some of the mean difference is influenced by higher-absence students in the JES distribution.
-
-These descriptive statistics are unadjusted and should not be interpreted as causal estimates. They summarize the raw attendance patterns in the two files before applying overlap weighting or regression adjustment.
+Note: JES source attendance rows are unchanged in count; using rounded CSV percentages keeps the JES medians aligned with the prior descriptive statistics (5.88, 0.59, and 6.47).

@@ -1,33 +1,53 @@
-# Results
+# Impact of GROW on Behavioral Outcomes: Comparing Behavioral Referrals Between JMTES and JES
 
-Table 1 Impact of GROW on Behavioral Referral Outcomes
+This file updates the behavioral referral analysis using the June 15, 2026 at-risk report files for both schools: `JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx` and `JES At Risk Report_Updated 6.15.26 (PW_ #JES2026).xlsx`. The updated files contain 417 JMTES students and 676 JES students, for 1,093 total observations. Because the updated source files do not include student-specific enrollment-day exposure, referral rates are presented on the same 170-day scale for all students.
+
+## Table 2
+Impact of GROW on Total and Severity-Weighted Behavioral Referral Outcomes
 
 |  | Classroom referrals | Classroom severity-weighted frequency | Bus referrals | Bus severity-weighted frequency |
 |---|---:|---:|---:|---:|
 |  | (1) | (2) | (3) | (4) |
-| Model | OW Poisson + covariates | OW Poisson + covariates | OW Poisson + covariates | OW Poisson + covariates |
-| JMTES (GROW school) | -0.894*** | -0.737*** | -1.638*** | -1.573*** |
-|  | (0.196) | (0.194) | (0.317) | (0.324) |
-| Incidence rate ratio | 0.409 | 0.478 | 0.194 | 0.207 |
-| Percent difference | -59.1% | -52.2% | -80.6% | -79.3% |
-| JES weighted rate per 170 days | 0.669 | 1.558 | 0.163 | 0.331 |
-| JMTES weighted rate per 170 days | 0.274 | 0.750 | 0.032 | 0.071 |
-| Student covariates | Yes | Yes | Yes | Yes |
-| Overlap weights | Yes | Yes | Yes | Yes |
-| Enrollment-days offset | Yes | Yes | Yes | Yes |
-| Observations | 1,095 | 1,095 | 1,095 | 1,095 |
-| Referral events | 574 | 1,385 | 122 | 249 |
+| Model | Poisson rate-ratio comparison | Poisson rate-ratio comparison | Poisson rate-ratio comparison | Poisson rate-ratio comparison |
+| JMTES (GROW school) | -1.011*** | -0.841*** | -1.819*** | -1.789*** |
+|  | (0.108) | (0.066) | (0.316) | (0.219) |
+| Incidence rate ratio | 0.364 | 0.431 | 0.162 | 0.167 |
+| Percent difference | -63.6% | -56.9% | -83.8% | -83.3% |
+| JES rate per 170 days | 0.692 | 1.618 | 0.163 | 0.330 |
+| JMTES rate per 170 days | 0.252 | 0.698 | 0.026 | 0.055 |
+| Observations | 1,093 | 1,093 | 1,093 | 1,093 |
+| Referral events | 573 | 1,385 | 121 | 246 |
 
-Notes: The table reports overlap-weighted Poisson regression estimates. The JMTES coefficient is the log incidence-rate difference between students at the GROW school and comparable students at the comparison school. Robust standard errors are in parentheses. Incidence rate ratios are shown for interpretation; values below 1 indicate lower referral rates at JMTES. Student covariates include grade, gender, race/ethnicity, age, meal-status disadvantage, and entry-code controls. Each model includes an exposure offset for enrollment days. *** p<0.01, ** p<0.05, * p<0.10.
+Notes: The table reports updated Poisson rate-ratio estimates using the June 15, 2026 referral datasets. The JMTES coefficient is the log incidence-rate difference between JMTES and JES. Standard errors are shown in parentheses. Incidence rate ratios below 1 indicate lower referral rates at JMTES. *** p<0.01, ** p<0.05, * p<0.10.
 
-![Coefficient plot for referral outcomes](jmtes_jes_referral_key_outcome_coefficient_plot.svg)
+## Table 3
+Impact of GROW on Behavioral Referral Outcomes by Severity Level
 
-The overlap-weighted Poisson results suggest that GROW is associated with lower rates of behavioral referrals, especially for overall classroom and bus referral frequency. For classroom referrals, students at JMTES had an estimated log incidence-rate difference of -0.89, corresponding to an incidence rate ratio of 0.409. This implies that comparable JMTES students had a referral rate that was approximately 59.1 percent lower than comparable JES students. The weighted classroom referral rate was 0.27 referrals per 170 enrolled days at JMTES compared with 0.67 at JES.
+|  | Classroom L-I | Classroom L-II | Classroom L-III | Classroom L-IV | Bus L-I | Bus L-II | Bus L-III |
+|---|---:|---:|---:|---:|---:|---:|---:|
+|  | (1) | (2) | (3) | (4) | (5) | (6) | (7) |
+| Model | Poisson | Poisson | Poisson | Poisson | n/a | Poisson | Poisson |
+| JMTES (GROW school) | -3.255*** | -1.627*** | -0.515*** | 0.665 | n/a | -2.110*** | 0.078 |
+|  | (1.012) | (0.200) | (0.140) | (0.606) | n/a | (0.367) | (0.913) |
+| Incidence rate ratio | 0.039 | 0.196 | 0.597 | 1.945 | n/a | 0.121 | 1.081 |
+| Percent difference | -96.1% | -80.4% | -40.3% | +94.5% | n/a | -87.9% | +8.1% |
+| JES rate per 170 days | 0.062 | 0.342 | 0.281 | 0.007 | 0.000 | 0.158 | 0.004 |
+| JMTES rate per 170 days | 0.002 | 0.067 | 0.168 | 0.014 | 0.002 | 0.019 | 0.005 |
+| Observations | 1,093 | 1,093 | 1,093 | 1,093 | 1,093 | 1,093 | 1,093 |
+| Referral events | 43 | 259 | 260 | 11 | 1 | 115 | 5 |
 
-The classroom severity-weighted frequency results point in the same direction. The estimated incidence rate ratio was 0.478, implying a 52.2 percent lower severity-weighted classroom referral rate at JMTES than at JES. This suggests that the reduction in classroom behavioral referrals was not limited to the overall count of incidents but also appears in the frequency of severity-weighted incidents.
+Notes: Columns report updated level-specific Poisson rate-ratio comparisons for each referral severity level. The Bus Level I model is marked n/a because there was only one recorded Bus Level I event and no JES Bus Level I events, making a level-specific rate-ratio estimate unstable. Rare-event categories, especially Classroom Level IV and Bus Level III, should be interpreted cautiously. *** p<0.01, ** p<0.05, * p<0.10.
 
-For bus-related referrals, the estimated JMTES coefficient was -1.64, corresponding to an incidence rate ratio of 0.194. This implies that comparable JMTES students had an overall bus referral rate approximately 80.6 percent lower than comparable JES students. The weighted bus referral rate was 0.03 referrals per 170 enrolled days at JMTES compared with 0.16 at JES.
+The updated results continue to show substantially lower behavioral referral rates at JMTES relative to JES. For classroom referrals, JMTES students had an estimated referral rate 63.6 percent lower than JES students. The classroom referral rate was 0.252 referrals per 170 days at JMTES, compared with 0.692 at JES.
 
-The bus severity-weighted outcome also suggests lower referral frequency at JMTES. The estimated incidence rate ratio was 0.207, implying a 79.3 percent lower severity-weighted bus referral rate. Taken together, the bus results suggest that GROW is associated with reductions in both the overall frequency of bus referrals and the frequency of more severe bus-related incidents.
+The severity-weighted classroom referral measure points in the same direction. The incidence rate ratio was 0.431, meaning the severity-weighted classroom referral rate was 56.9 percent lower at JMTES than at JES. This indicates that the difference is not limited to the number of referrals, but also appears when referrals are weighted by seriousness.
 
-These estimates should be interpreted as quasi-experimental rather than definitive causal effects. The overlap-weighted design improves comparability by emphasizing students with similar observed characteristics across JMTES and JES, and the Poisson models further adjust for student covariates and enrollment exposure. However, students were not randomly assigned to schools, and unmeasured school-level or family-level differences may still contribute to the observed behavioral differences.
+The severity-level classroom models show that the lower classroom referral rate at JMTES is concentrated in Level I, Level II, and Level III referrals. Estimated rates were 96.1 percent lower for Level I referrals, 80.4 percent lower for Level II referrals, and 40.3 percent lower for Level III referrals. Level IV referrals were rare in both schools. The Level IV point estimate is positive, but it is not statistically significant and is based on only 11 total events, so it should not be interpreted as evidence of a meaningful increase in severe referrals at JMTES.
+
+The bus referral results show an even larger descriptive difference. JMTES students had an overall bus referral rate 83.8 percent lower than JES students and a severity-weighted bus referral rate 83.3 percent lower. The strongest level-specific bus result is for Transportation Level II referrals, where the JMTES rate was 87.9 percent lower than the JES rate.
+
+The Bus Level I and Bus Level III results should be interpreted with caution. Bus Level I is marked as not available because there was only one event in the full sample and no Bus Level I events at JES. Bus Level III had only five events across both schools, yielding an imprecise and statistically insignificant estimate. These rare-event categories do not change the overall interpretation: the total bus referral and severity-weighted bus referral measures show substantially lower rates at JMTES in the updated data.
+
+As a robustness check, Appendix Table AX re-estimates the behavioral referral comparison using any-referral logistic models that measure whether students had at least one referral, rather than the number of referrals received. The results are consistent with the count-based analysis: JMTES students were less likely to have any school referral, any bus referral, or any school or bus referral overall.
+
+Overall, the updated June 15, 2026 referral data continue to suggest that JMTES had fewer behavioral referrals than JES in both school-based and bus settings. Because the design is not randomized and the updated source files do not contain a student-specific exposure variable, these estimates should be interpreted as descriptive/quasi-experimental evidence rather than definitive causal proof.
