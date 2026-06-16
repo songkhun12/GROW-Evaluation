@@ -1,7 +1,7 @@
-outcome,school,weighted_mean,unweighted_mean
-Unexcused absence percentage,JES,8.833071746679328,9.00887573964497
-Unexcused absence percentage,JMTES,6.061826585088297,6.06996755536747
-Excused absence percentage,JES,1.2455742098594715,1.28698224852071
-Excused absence percentage,JMTES,1.776773105077324,1.7393144308082944
-Total absence percentage,JES,10.078645956538802,10.29585798816568
-Total absence percentage,JMTES,7.838599690165621,7.809281986175765
+outcome,school,weighted_mean,sum_overlap_weight,n
+Unexcused absence percentage,JES,8.833071745160165,250.29154521382256,676
+Unexcused absence percentage,JMTES,6.061826586280198,250.2915452138225,417
+Excused absence percentage,JES,1.2455742110505734,250.29154521382256,676
+Excused absence percentage,JMTES,1.7767731057767906,250.2915452138225,417
+Total absence percentage,JES,10.078645956210739,250.29154521382256,676
+Total absence percentage,JMTES,7.838599692056989,250.2915452138225,417

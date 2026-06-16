@@ -1,22 +1,51 @@
-<html>
-<head><meta charset="utf-8"><style>
-body{font-family:"Times New Roman",serif;font-size:11pt;} table{border-collapse:collapse;} th,td{padding:3pt 6pt;text-align:center;vertical-align:bottom;} td.rowlabel{text-align:left;white-space:nowrap;} .top{border-top:1px solid black;} .bottom{border-bottom:1px solid black;} .note{font-size:10pt;}
-</style></head>
-<body>
-<p><b>Table 1</b><br>Impact of GROW on Attendance Outcomes</p>
-<p class="note">Source: Updated June 15, 2026 JMTES and JES At Risk Report attendance files in this repository. Values are generated from <code>jmtes_jes_overlap_weighted_attendance_regression_table.csv</code>, <code>jmtes_jes_overlap_weighted_attendance_weighted_means.csv</code>, and <code>jmtes_jes_overlap_weighted_attendance_student_data.csv</code>.</p>
-<table>
-<tr class="top"><th></th><th colspan="2">Unexcused absence %</th><th colspan="2">Excused absence %</th><th colspan="2">Total absence %</th></tr>
-<tr><th></th><th>(1)</th><th>(2)</th><th>(3)</th><th>(4)</th><th>(5)</th><th>(6)</th></tr>
-<tr class="bottom"><th></th><th>OW</th><th>OW + covariates</th><th>OW</th><th>OW + covariates</th><th>OW</th><th>OW + covariates</th></tr>
-<tr><td class="rowlabel">JMTES (GROW school)</td><td>-2.771***</td><td>-2.771***</td><td>0.531***</td><td>0.531***</td><td>-2.240***</td><td>-2.240***</td></tr>
-<tr><td class="rowlabel"></td><td>(0.472)</td><td>(0.467)</td><td>(0.141)</td><td>(0.139)</td><td>(0.514)</td><td>(0.509)</td></tr>
-<tr><td class="rowlabel">JES weighted mean</td><td>8.833</td><td>8.833</td><td>1.246</td><td>1.246</td><td>10.079</td><td>10.079</td></tr>
-<tr><td class="rowlabel">JMTES weighted mean</td><td>6.062</td><td>6.062</td><td>1.777</td><td>1.777</td><td>7.839</td><td>7.839</td></tr>
-<tr><td class="rowlabel">Student covariates</td><td>No</td><td>Yes</td><td>No</td><td>Yes</td><td>No</td><td>Yes</td></tr>
-<tr><td class="rowlabel">Overlap weights</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
-<tr><td class="rowlabel">Observations</td><td>1,093</td><td>1,093</td><td>1,093</td><td>1,093</td><td>1,093</td><td>1,093</td></tr>
-<tr class="bottom"><td class="rowlabel">Residual df</td><td>1,091</td><td>1,073</td><td>1,091</td><td>1,073</td><td>1,091</td><td>1,073</td></tr>
-</table>
-<p class="note"><i>Notes:</i> The table reports overlap-weighted regression estimates. The outcome is the percentage of enrolled days missed. The JMTES coefficient is the percentage-point difference between students at the GROW school and comparable students at the comparison school. Standard errors are in parentheses. Student covariates include grade, gender, race/ethnicity, age, meal-status disadvantage, and entry-code controls. *** p&lt;0.01, ** p&lt;0.05, * p&lt;0.10.</p>
-</body></html>
+# Impact of GROW on School Attendance: Comparing School Absences Between JMTES and JES
+
+## Data Source Verification
+
+The attendance analysis was rerun using the updated June 15, 2026 at-risk report files for both schools. The analysis script writes `jmtes_jes_attendance_data_source_audit.csv` when outputs are regenerated.
+
+| School | Source file | Source report date | Students loaded | Workbook title |
+|---|---|---:|---:|---|
+| JMTES | JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx | 2026-06-15 | 417 | Taylor Elementary RTI - at Risk Report |
+| JES | JES At Risk Report_Updated 6.15.26 (PW_ #JES2026).xlsx | 2026-06-15 | 676 | Jacksonville Elementary School RTI - at Risk Report |
+
+## Methodology
+
+To estimate the impact of GROW on student attendance, the analysis uses the same overlap-weighted propensity score approach described in the academic performance section. Students were not randomly assigned to JMTES, the GROW school, or JES, the comparison school, so overlap weighting gives more influence to students who were similar across the two schools before estimating the program effect.
+
+Each student's propensity score is estimated using observed student characteristics available in the attendance and at-risk report files: grade level, gender, race/ethnicity, age, meal-status code, and entry code. The propensity score model is:
+
+`pᵢ = Pr(JMTESᵢ = 1 | Xᵢ)`
+
+`logit(pᵢ) = α₀ + α₁Gradeᵢ + α₂Femaleᵢ + α₃Blackᵢ + α₄Ageᵢ + α₅MealStatusᵢ + α₆EntryCodeᵢ`
+
+After estimating the propensity score, overlap weights are assigned so that JMTES students are weighted by `1 − pᵢ` and JES students are weighted by `pᵢ`. This gives the greatest influence to students who provide the strongest comparison across the two schools and less influence to students who are less comparable.
+
+The program effect is estimated using weighted regression models for three attendance outcomes: unexcused absence percentage, excused absence percentage, and total absence percentage. For each outcome, the basic weighted model is:
+
+`Yᵢ = β₀ + β₁JMTESᵢ + εᵢ`
+
+The analysis also estimates a covariate-adjusted version of the weighted model:
+
+`Yᵢ = β₀ + β₁JMTESᵢ + β₂Gradeᵢ + β₃Femaleᵢ + β₄Blackᵢ + β₅Ageᵢ + β₆MealStatusᵢ + β₇EntryCodeᵢ + εᵢ`
+
+The main estimate is β₁, the adjusted difference in attendance outcomes between students exposed to GROW and comparable students at JES. Negative values indicate that JMTES students missed a smaller percentage of enrolled days than comparable JES students, while positive values indicate that JMTES students missed a larger percentage of enrolled days.
+
+## Results
+
+| Outcome | Model | Estimate | SE | 95% CI | p-value |
+|---|---|---:|---:|---:|---:|
+| Unexcused absence percentage | Overlap weighted | -2.771 | 0.453 | [-3.658, -1.884] | <0.001 |
+| Unexcused absence percentage | Overlap weighted + covariates | -2.771 | 0.444 | [-3.642, -1.900] | <0.001 |
+| Excused absence percentage | Overlap weighted | 0.531 | 0.149 | [0.240, 0.823] | <0.001 |
+| Excused absence percentage | Overlap weighted + covariates | 0.531 | 0.147 | [0.244, 0.818] | <0.001 |
+| Total absence percentage | Overlap weighted | -2.240 | 0.496 | [-3.212, -1.268] | <0.001 |
+| Total absence percentage | Overlap weighted + covariates | -2.240 | 0.489 | [-3.198, -1.283] | <0.001 |
+
+The updated overlap-weighted attendance results indicate that JMTES students had lower unexcused absence percentages than comparable JES students. In the covariate-adjusted overlap-weighted model, JMTES attendance was associated with a 2.771 percentage-point lower unexcused absence percentage.
+
+Excused absence percentages were higher at JMTES in the overlap-weighted models. In the covariate-adjusted model, JMTES attendance was associated with a 0.531 percentage-point higher excused absence percentage.
+
+For total absence percentage, JMTES students had lower overall absence percentages than comparable JES students. The covariate-adjusted overlap-weighted estimate was -2.240 percentage points, indicating lower total absence at JMTES after applying overlap weights and adjusting for the same covariates used in the propensity score model.
+
+As with the academic analysis, these estimates are interpreted as quasi-experimental evidence rather than definitive causal proof because the comparison is based on observational data rather than random assignment.
