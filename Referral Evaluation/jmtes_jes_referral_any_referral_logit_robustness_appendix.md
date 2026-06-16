@@ -1,31 +1,24 @@
-# Appendix Robustness Analysis: Any Referral Outcomes
+# Appendix X: Robustness Test of the Impact of GROW on Behavioral Outcomes
 
-Table A1 Robustness of GROW Referral Estimates Using Any-Referral Logistic Models
+As an additional robustness check, Appendix Table AX re-estimates the behavioral referral comparison using logistic models for whether a student had at least one referral during the study period. This checks whether the count-based findings are driven only by a smaller number of students with repeated referrals.
+
+Table AX
+Robustness of GROW Referral Estimates Using Any-Referral Logistic Models
 
 |  | Any school referral | Any bus referral | Any school or bus referral |
 |---|---:|---:|---:|
 |  | (1) | (2) | (3) |
-| Model | OW logit + covariates | OW logit + covariates | OW logit + covariates |
-| JMTES (GROW school) | -0.900*** | -1.178*** | -0.875*** |
-|  | (0.181) | (0.327) | (0.172) |
-| Odds ratio | 0.406 | 0.308 | 0.417 |
-| JES weighted probability | 25.0% | 8.8% | 28.3% |
-| JMTES weighted probability | 12.6% | 3.0% | 14.8% |
-| Student covariates | Yes | Yes | Yes |
-| Overlap weights | Yes | Yes | Yes |
-| Observations | 1,095 | 1,095 | 1,095 |
-| Students with outcome | 223 | 71 | 254 |
+| Model | Logit | Logit | Logit |
+| JMTES (GROW school) | -0.836*** | -1.261*** | -0.839*** |
+|  | (0.172) | (0.335) | (0.163) |
+| Odds ratio | 0.433 | 0.283 | 0.432 |
+| JES probability | 25.1% | 8.7% | 28.4% |
+| JMTES probability | 12.7% | 2.6% | 14.6% |
+| Observations | 1,093 | 1,093 | 1,093 |
+| Students with referrals | 223 | 70 | 253 |
 
-Notes: The table reports overlap-weighted logistic regression estimates for whether a student had at least one referral. The JMTES coefficient is a log-odds difference; robust standard errors are in parentheses. Odds ratios below 1 indicate lower odds of receiving at least one referral at JMTES than at JES. Student covariates include grade, gender, race/ethnicity, age, meal-status disadvantage, and entry-code controls. *** p<0.01, ** p<0.05, * p<0.10.
+Notes: The table reports updated logistic estimates for whether a student had at least one referral using the June 15, 2026 referral datasets. The JMTES coefficient is a log-odds difference; standard errors are in parentheses. Odds ratios below 1 indicate lower odds of receiving at least one referral at JMTES than at JES. *** p<0.01, ** p<0.05, * p<0.10.
 
-## Discussion
+As shown in Columns 1 through 3 of Table AX, the JMTES coefficient is negative and statistically significant for any school referral, any bus referral, and any school or bus referral. The probability of having any school referral was 12.7 percent at JMTES, compared with 25.1 percent at JES. The probability of having any bus referral was 2.6 percent at JMTES, compared with 8.7 percent at JES. The probability of having any school or bus referral was 14.6 percent at JMTES, compared with 28.4 percent at JES.
 
-This robustness check addresses the fact that the referral outcomes have medians of zero and that mean count differences could be influenced by a relatively small number of students with multiple referrals. The models therefore estimate whether JMTES is associated with the probability of receiving at least one referral rather than the average number of referrals.
-
-For school-based referrals, the overlap-weighted logistic model shows a negative JMTES coefficient of -0.90, corresponding to an odds ratio of 0.406. The weighted probability of any school referral was 12.6% at JMTES compared with 25.0% at JES.
-
-For bus referrals, the JMTES coefficient is also negative. The estimated odds ratio is 0.308, and the weighted probability of any bus referral was 3.0% at JMTES compared with 8.8% at JES.
-
-When school and bus referrals are combined, the estimated odds ratio is 0.417. This indicates that the main referral findings are not only a result of lower counts among students with multiple referrals; JMTES is also associated with a lower likelihood of having any referral at all.
-
-Overall, the any-referral robustness check supports the main Poisson referral analysis. Because the outcome is binary, it is less sensitive to extreme referral counts and provides evidence that the GROW association appears on the extensive margin of whether a student receives a referral.
+These results are consistent with the main findings, suggesting that JMTES is associated not only with fewer referrals overall, but also with a lower likelihood that students receive at least one referral during the study period.
