@@ -15,6 +15,18 @@ This notebook analyzes the merged At-Risk/ATLAS files by grade and subject. Each
 
 The regression table is formatted in an American Economic Review-style layout with one column per grade/subject model, coefficients in the first row, robust standard errors in parentheses below, observations, and R-squared.
 
+
+# Estimator clarification
+
+The main AER-style regression table in `at_risk_atlas_regression_table_AER.rtf` reports **covariate-adjusted, baseline-adjusted OLS/ANCOVA** estimates. It is not the overlap-weighted table, and it is not the matching or DiD table.
+
+The additional methods requested by reviewers are reported separately in:
+
+- `at_risk_atlas_additional_methods_results.csv`
+- `at_risk_atlas_additional_methods_AER.rtf`
+
+That second table reports, for each grade/subject cell, three alternative JMTES-minus-JES estimates: overlap-weighted baseline-adjusted ANCOVA, nearest-neighbor matching, and covariate-adjusted DiD/gain-score estimates.
+
 # Libraries
 
 ```{r libraries}
@@ -127,7 +139,9 @@ fit_one_model <- function(grade_value, subject_value, outcome_col, baseline_col)
     robust_se = robust[, "Std. Error"],
     p_value = robust[, "Pr(>|t|)"],
     n = nobs(model),
-    r_squared = summary(model)$r.squared
+    r_squared = summary(model)$r.squared,
+    dependent_mean = mean(dat$outcome_score),
+    dependent_sd = sd(dat$outcome_score)
   )
 }
 
@@ -193,7 +207,54 @@ r2_row <- regression_results |>
   tidyr::pivot_wider(names_from = model, values_from = r_squared) |>
   mutate(term = "R-squared", .before = 1)
 
-aer_table <- bind_rows(table_rows, n_row, r2_row)
+mean_row <- regression_results |>
+  distinct(model, dependent_mean) |>
+  mutate(dependent_mean = sprintf("%.3f", dependent_mean)) |>
+  tidyr::pivot_wider(names_from = model, values_from = dependent_mean) |>
+  mutate(term = "Mean dependent variable", .before = 1)
+
+sd_row <- regression_results |>
+  distinct(model, dependent_sd) |>
+  mutate(dependent_sd = sprintf("%.3f", dependent_sd)) |>
+  tidyr::pivot_wider(names_from = model, values_from = dependent_sd) |>
+  mutate(term = "SD dependent variable", .before = 1)
+
+baseline_row <- tibble(term = "Baseline score control", !!!setNames(rep("Yes", length(models)), models))
+attendance_row <- tibble(term = "Attendance controls", !!!setNames(rep("Yes", length(models)), models))
+demographic_row <- tibble(term = "Demographic controls", !!!setNames(rep("Yes", length(models)), models))
+robust_row <- tibble(term = "HC1 robust SE", !!!setNames(rep("Yes", length(models)), models))
+
+grade_row <- model_specs |>
+  mutate(model = paste0("G", grade, " ", subject)) |>
+  transmute(model, value = grade) |>
+  tidyr::pivot_wider(names_from = model, values_from = value) |>
+  mutate(term = "Grade", .before = 1)
+
+subject_row <- model_specs |>
+  mutate(model = paste0("G", grade, " ", subject)) |>
+  transmute(model, value = subject) |>
+  tidyr::pivot_wider(names_from = model, values_from = value) |>
+  mutate(term = "Subject", .before = 1)
+
+outcome_row <- model_specs |>
+  mutate(model = paste0("G", grade, " ", subject)) |>
+  transmute(model, value = outcome) |>
+  tidyr::pivot_wider(names_from = model, values_from = value) |>
+  mutate(term = "Dependent variable", .before = 1)
+
+baseline_measure_row <- model_specs |>
+  mutate(model = paste0("G", grade, " ", subject)) |>
+  transmute(model, value = baseline) |>
+  tidyr::pivot_wider(names_from = model, values_from = value) |>
+  mutate(term = "Baseline measure", .before = 1)
+
+blank_row <- tibble(term = "", !!!setNames(rep("", length(models)), models))
+
+aer_table <- bind_rows(
+  grade_row, subject_row, outcome_row, baseline_measure_row, blank_row,
+  table_rows, blank_row, n_row, r2_row, mean_row, sd_row,
+  baseline_row, attendance_row, demographic_row, robust_row
+)
 
 rtf_escape <- function(x) {
   x <- gsub("\\\\", "\\\\\\", x)
@@ -223,7 +284,7 @@ for (i in seq_len(nrow(aer_table))) {
 rtf_lines <- c(
   rtf_lines,
   "\\par",
-  "Notes: Each column is a separate OLS model. The dependent variable is the Summer 2026 ATLAS score for the indicated grade and subject. Robust HC1 standard errors are in parentheses. All models adjust for the listed baseline score, absences, gender, race, and meal assistance. * p<0.10, ** p<0.05, *** p<0.01.\\par",
+  "Notes: Each column is a separate OLS model. Coefficients are reported with HC1 robust standard errors in parentheses. All models include a baseline ATLAS score, unexcused and excused absence counts, gender, race, and meal-assistance controls. Mean and standard deviation rows describe the estimation sample for each dependent variable. * p<0.10, ** p<0.05, *** p<0.01.\\par",
   "}"
 )
 
@@ -231,3 +292,16 @@ writeLines(rtf_lines, "at_risk_atlas_regression_table_AER.rtf")
 
 aer_table
 ```
+
+# Additional overlap-weighting, matching, and DiD results
+
+```{r additional-methods-table}
+additional_methods <- read_csv(
+  "at_risk_atlas_additional_methods_results.csv",
+  col_types = cols(.default = col_character())
+)
+
+additional_methods
+```
+
+The Word-compatible version of these alternative estimates is written to `at_risk_atlas_additional_methods_AER.rtf`.
