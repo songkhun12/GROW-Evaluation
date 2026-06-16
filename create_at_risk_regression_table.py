@@ -152,9 +152,10 @@ def ols_hc1(y: list[float], x: list[list[float]], names: list[str]) -> dict[str,
     tss = sum((yi - mean_y) ** 2 for yi in y)
     rss = sum(ei * ei for ei in resid)
     r2 = 1 - rss / tss if tss else float("nan")
+    sd_y = math.sqrt(tss / (n - 1)) if n > 1 else float("nan")
     normal = NormalDist()
     pvals = [2 * (1 - normal.cdf(abs(b / s))) if s > 0 else float("nan") for b, s in zip(beta, se)]
-    return {"n": n, "r2": r2, "coef": dict(zip(names, beta)), "se": dict(zip(names, se)), "p": dict(zip(names, pvals))}
+    return {"n": n, "r2": r2, "mean_y": mean_y, "sd_y": sd_y, "coef": dict(zip(names, beta)), "se": dict(zip(names, se)), "p": dict(zip(names, pvals))}
 
 
 def model_data(grade: str, subject: str, outcome_col: str, baseline_col: str) -> tuple[list[float], list[list[float]]]:
@@ -212,22 +213,34 @@ def run_models() -> list[dict[str, object]]:
 def write_results_csv(results: list[dict[str, object]]) -> None:
     with RESULTS_CSV.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
-        writer.writerow(["model", "grade", "subject", "outcome", "baseline", "variable", "coefficient", "robust_se", "p_value", "n", "r_squared"])
+        writer.writerow(["model", "grade", "subject", "outcome", "baseline", "variable", "coefficient", "robust_se", "p_value", "n", "r_squared", "dependent_mean", "dependent_sd"])
         for result in results:
             for var in VARIABLE_LABELS:
                 writer.writerow([
                     result["model"], result["grade"], result["subject"], result["outcome"], result["baseline_col"], VARIABLE_LABELS[var],
-                    fmt(result["coef"][var]), fmt(result["se"][var]), fmt(result["p"][var]), result["n"], fmt(result["r2"]),
+                    fmt(result["coef"][var]), fmt(result["se"][var]), fmt(result["p"][var]), result["n"], fmt(result["r2"]), fmt(result["mean_y"]), fmt(result["sd_y"]),
                 ])
 
 
 def table_rows(results: list[dict[str, object]]) -> list[list[str]]:
     rows = [["", *[r["model"] for r in results]]]
+    rows.append(["Grade", *[str(r["grade"]) for r in results]])
+    rows.append(["Subject", *[str(r["subject"]) for r in results]])
+    rows.append(["Dependent variable", *[str(r["outcome"]) for r in results]])
+    rows.append(["Baseline measure", *[str(r["baseline_col"]) for r in results]])
+    rows.append(["", *["" for _ in results]])
     for var, label in VARIABLE_LABELS.items():
         rows.append([label, *[fmt(r["coef"][var]) + stars(r["p"][var]) for r in results]])
         rows.append(["", *[f"({fmt(r['se'][var])})" for r in results]])
+    rows.append(["", *["" for _ in results]])
     rows.append(["Observations", *[str(r["n"]) for r in results]])
     rows.append(["R-squared", *[fmt(r["r2"]) for r in results]])
+    rows.append(["Mean dependent variable", *[fmt(r["mean_y"]) for r in results]])
+    rows.append(["SD dependent variable", *[fmt(r["sd_y"]) for r in results]])
+    rows.append(["Baseline score control", *["Yes" for _ in results]])
+    rows.append(["Attendance controls", *["Yes" for _ in results]])
+    rows.append(["Demographic controls", *["Yes" for _ in results]])
+    rows.append(["HC1 robust SE", *["Yes" for _ in results]])
     return rows
 
 
@@ -252,7 +265,7 @@ def write_rtf(results: list[dict[str, object]]) -> None:
         lines.append(r"\row")
     lines.extend([
         r"\par",
-        r"Notes: Each column is a separate OLS model. The dependent variable is the Summer 2026 ATLAS score for the indicated grade and subject. Robust HC1 standard errors are in parentheses. All models adjust for the listed baseline score, absences, gender, race, and meal assistance. * p<0.10, ** p<0.05, *** p<0.01.\par",
+        r"Notes: Each column is a separate OLS model. Coefficients are reported with HC1 robust standard errors in parentheses. All models include a baseline ATLAS score, unexcused and excused absence counts, gender, race, and meal-assistance controls. Mean and standard deviation rows describe the estimation sample for each dependent variable. * p<0.10, ** p<0.05, *** p<0.01.\par",
         "}",
     ])
     RTF.write_text("\n".join(lines), encoding="utf-8")
