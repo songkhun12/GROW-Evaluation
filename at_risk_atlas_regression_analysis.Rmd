@@ -15,6 +15,18 @@ This notebook analyzes the merged At-Risk/ATLAS files by grade and subject. Each
 
 The regression table is formatted in an American Economic Review-style layout with one column per grade/subject model, coefficients in the first row, robust standard errors in parentheses below, observations, and R-squared.
 
+
+# Estimator clarification
+
+The main AER-style regression table in `at_risk_atlas_regression_table_AER.rtf` reports **covariate-adjusted, baseline-adjusted OLS/ANCOVA** estimates. It is not the overlap-weighted table, and it is not the matching or DiD table.
+
+The additional methods requested by reviewers are reported separately in:
+
+- `at_risk_atlas_additional_methods_results.csv`
+- `at_risk_atlas_additional_methods_AER.rtf`
+
+That second table reports, for each grade/subject cell, three alternative JMTES-minus-JES estimates: overlap-weighted baseline-adjusted ANCOVA, nearest-neighbor matching, and covariate-adjusted DiD/gain-score estimates.
+
 # Libraries
 
 ```{r libraries}
@@ -280,3 +292,16 @@ writeLines(rtf_lines, "at_risk_atlas_regression_table_AER.rtf")
 
 aer_table
 ```
+
+# Additional overlap-weighting, matching, and DiD results
+
+```{r additional-methods-table}
+additional_methods <- read_csv(
+  "at_risk_atlas_additional_methods_results.csv",
+  col_types = cols(.default = col_character())
+)
+
+additional_methods
+```
+
+The Word-compatible version of these alternative estimates is written to `at_risk_atlas_additional_methods_AER.rtf`.

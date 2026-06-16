@@ -1,0 +1,46 @@
+model,grade,subject,method,estimate,se,n,outcome,baseline
+GK ELA,K,ELA,Overlap-weighted baseline-adjusted ANCOVA,-1.147,1.702,166,ELA Sum 2026,ELA Winter 2025
+GK ELA,K,ELA,Nearest-neighbor matching,1.385,1.938,166,ELA Sum 2026,ELA Winter 2025
+GK ELA,K,ELA,Covariate-adjusted DiD/gain score,-3.122,2.866,166,ELA Sum 2026,ELA Winter 2025
+GK Math,K,Math,Overlap-weighted baseline-adjusted ANCOVA,2.238,1.556,163,Math Sum 2026,Math Winter 2025
+GK Math,K,Math,Nearest-neighbor matching,2.154,2.151,163,Math Sum 2026,Math Winter 2025
+GK Math,K,Math,Covariate-adjusted DiD/gain score,2.382,1.833,163,Math Sum 2026,Math Winter 2025
+G1 ELA,1,ELA,Overlap-weighted baseline-adjusted ANCOVA,2.225,2.293,151,ELA Sum 2026,ELA Sum 2025
+G1 ELA,1,ELA,Nearest-neighbor matching,-3.540,2.255,151,ELA Sum 2026,ELA Sum 2025
+G1 ELA,1,ELA,Covariate-adjusted DiD/gain score,-2.888,4.388,151,ELA Sum 2026,ELA Sum 2025
+G1 Math,1,Math,Overlap-weighted baseline-adjusted ANCOVA,0.598,1.758,151,Math Sum 2026,Math Sum 2025
+G1 Math,1,Math,Nearest-neighbor matching,-1.820,2.483,151,Math Sum 2026,Math Sum 2025
+G1 Math,1,Math,Covariate-adjusted DiD/gain score,0.181,2.216,151,Math Sum 2026,Math Sum 2025
+G2 ELA,2,ELA,Overlap-weighted baseline-adjusted ANCOVA,2.953,2.840,151,ELA Sum 2026,ELA Sum 2025
+G2 ELA,2,ELA,Nearest-neighbor matching,5.484,3.454,151,ELA Sum 2026,ELA Sum 2025
+G2 ELA,2,ELA,Covariate-adjusted DiD/gain score,5.496,3.565,151,ELA Sum 2026,ELA Sum 2025
+G2 Math,2,Math,Overlap-weighted baseline-adjusted ANCOVA,1.384,1.601,150,Math Sum 2026,Math Sum 2025
+G2 Math,2,Math,Nearest-neighbor matching,1.000,1.740,150,Math Sum 2026,Math Sum 2025
+G2 Math,2,Math,Covariate-adjusted DiD/gain score,1.704,1.823,150,Math Sum 2026,Math Sum 2025
+G3 ELA,3,ELA,Overlap-weighted baseline-adjusted ANCOVA,6.736,1.703,188,ELA Sum 2026,ELA Sum 2025
+G3 ELA,3,ELA,Nearest-neighbor matching,6.173,1.658,188,ELA Sum 2026,ELA Sum 2025
+G3 ELA,3,ELA,Covariate-adjusted DiD/gain score,6.038,2.518,188,ELA Sum 2026,ELA Sum 2025
+G3 Math,3,Math,Overlap-weighted baseline-adjusted ANCOVA,6.847,1.670,188,Math Sum 2026,Math Sum 2025
+G3 Math,3,Math,Nearest-neighbor matching,7.853,2.199,188,Math Sum 2026,Math Sum 2025
+G3 Math,3,Math,Covariate-adjusted DiD/gain score,7.035,1.890,188,Math Sum 2026,Math Sum 2025
+G3 Science,3,Science,Overlap-weighted baseline-adjusted ANCOVA,2.658,1.239,198,Science Sum 2026,Science Winter 2025
+G3 Science,3,Science,Nearest-neighbor matching,6.062,1.592,198,Science Sum 2026,Science Winter 2025
+G3 Science,3,Science,Covariate-adjusted DiD/gain score,-0.914,1.487,198,Science Sum 2026,Science Winter 2025
+G4 ELA,4,ELA,Overlap-weighted baseline-adjusted ANCOVA,2.959,1.249,187,ELA Sum 2026,ELA Winter 2025
+G4 ELA,4,ELA,Nearest-neighbor matching,7.110,1.736,187,ELA Sum 2026,ELA Winter 2025
+G4 ELA,4,ELA,Covariate-adjusted DiD/gain score,0.857,1.581,187,ELA Sum 2026,ELA Winter 2025
+G4 Math,4,Math,Overlap-weighted baseline-adjusted ANCOVA,5.779,1.297,185,Math Sum 2026,Math Winter 2025
+G4 Math,4,Math,Nearest-neighbor matching,7.384,1.729,185,Math Sum 2026,Math Winter 2025
+G4 Math,4,Math,Covariate-adjusted DiD/gain score,4.579,1.482,185,Math Sum 2026,Math Winter 2025
+G4 Science,4,Science,Overlap-weighted baseline-adjusted ANCOVA,1.946,1.318,185,Science Sum 2026,Science Winter 2025
+G4 Science,4,Science,Nearest-neighbor matching,4.319,1.770,185,Science Sum 2026,Science Winter 2025
+G4 Science,4,Science,Covariate-adjusted DiD/gain score,-0.623,1.499,185,Science Sum 2026,Science Winter 2025
+G5 ELA,5,ELA,Overlap-weighted baseline-adjusted ANCOVA,0.005,1.362,145,ELA Sum 2026,ELA Winter 2025
+G5 ELA,5,ELA,Nearest-neighbor matching,2.538,1.772,145,ELA Sum 2026,ELA Winter 2025
+G5 ELA,5,ELA,Covariate-adjusted DiD/gain score,-1.775,1.823,145,ELA Sum 2026,ELA Winter 2025
+G5 Math,5,Math,Overlap-weighted baseline-adjusted ANCOVA,-1.502,1.463,148,Math Sum 2026,Math Winter 2025
+G5 Math,5,Math,Nearest-neighbor matching,-2.827,1.794,148,Math Sum 2026,Math Winter 2025
+G5 Math,5,Math,Covariate-adjusted DiD/gain score,-2.458,1.949,148,Math Sum 2026,Math Winter 2025
+G5 Science,5,Science,Overlap-weighted baseline-adjusted ANCOVA,4.655,1.542,145,Science Sum 2026,Science Winter 2025
+G5 Science,5,Science,Nearest-neighbor matching,5.442,1.900,145,Science Sum 2026,Science Winter 2025
+G5 Science,5,Science,Covariate-adjusted DiD/gain score,3.842,1.899,145,Science Sum 2026,Science Winter 2025
