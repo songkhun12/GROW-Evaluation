@@ -1,0 +1,170 @@
+---
+title: "Descriptive Statistics for Attendance Outcomes"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+  word_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 5.5)
+options(width = 120, scipen = 999)
+library(ggplot2)
+```
+
+# Descriptive statistics
+
+Table 3 presents descriptive statistics for the three attendance outcomes by school, showing mean absence rates, difference-in-means, and medians between JMTES and JES.
+
+```{r load-data}
+attendance_file <- "jmtes_jes_overlap_weighted_attendance_student_data.csv"
+if (!file.exists(attendance_file)) {
+  stop("Missing required file: ", attendance_file)
+}
+
+attendance <- read.csv(attendance_file, stringsAsFactors = FALSE, check.names = FALSE)
+attendance$school <- factor(attendance$school, levels = c("JMTES", "JES"))
+
+outcomes <- data.frame(
+  outcome = c("Unexcused absence %", "Excused absence %", "Total absence %"),
+  variable = c("unexcused_pct", "excused_pct", "total_pct"),
+  stringsAsFactors = FALSE
+)
+
+summarize_school <- function(variable, school_name) {
+  values <- attendance[attendance$school == school_name, variable]
+  c(
+    n = length(values),
+    mean = mean(values, na.rm = TRUE),
+    sd = sd(values, na.rm = TRUE),
+    median = median(values, na.rm = TRUE)
+  )
+}
+
+summary_rows <- do.call(rbind, lapply(seq_len(nrow(outcomes)), function(i) {
+  jmtes <- summarize_school(outcomes$variable[i], "JMTES")
+  jes <- summarize_school(outcomes$variable[i], "JES")
+  data.frame(
+    Outcome = outcomes$outcome[i],
+    `JMTES mean (SD)` = sprintf("%.3f\n(%.3f)", jmtes["mean"], jmtes["sd"]),
+    `JES mean (SD)` = sprintf("%.3f\n(%.3f)", jes["mean"], jes["sd"]),
+    `Difference-in-mean (JMTES - JES)` = sprintf("%.3f", jmtes["mean"] - jes["mean"]),
+    `JMTES median` = sprintf("%.3f", jmtes["median"]),
+    `JES median` = sprintf("%.3f", jes["median"]),
+    check.names = FALSE
+  )
+}))
+
+observations_row <- data.frame(
+  Outcome = "Observations",
+  `JMTES mean (SD)` = as.character(sum(attendance$school == "JMTES")),
+  `JES mean (SD)` = as.character(sum(attendance$school == "JES")),
+  `Difference-in-mean (JMTES - JES)` = "",
+  `JMTES median` = as.character(sum(attendance$school == "JMTES")),
+  `JES median` = as.character(sum(attendance$school == "JES")),
+  check.names = FALSE
+)
+
+table3 <- rbind(summary_rows, observations_row)
+
+# Guardrails to ensure this table continues to match the reported results.
+reported <- data.frame(
+  outcome = outcomes$outcome,
+  jmtes_mean = c(6.070, 1.739, 7.809),
+  jmtes_sd = c(4.711, 2.496, 5.612),
+  jes_mean = c(9.009, 1.287, 10.296),
+  jes_sd = c(10.074, 2.180, 10.747),
+  difference = c(-2.939, 0.452, -2.487),
+  jmtes_median = c(5.294, 1.176, 7.059),
+  jes_median = c(5.882, 0.588, 6.471)
+)
+computed <- do.call(rbind, lapply(seq_len(nrow(outcomes)), function(i) {
+  jmtes <- summarize_school(outcomes$variable[i], "JMTES")
+  jes <- summarize_school(outcomes$variable[i], "JES")
+  data.frame(
+    outcome = outcomes$outcome[i],
+    jmtes_mean = round(jmtes["mean"], 3),
+    jmtes_sd = round(jmtes["sd"], 3),
+    jes_mean = round(jes["mean"], 3),
+    jes_sd = round(jes["sd"], 3),
+    difference = round(jmtes["mean"] - jes["mean"], 3),
+    jmtes_median = round(jmtes["median"], 3),
+    jes_median = round(jes["median"], 3),
+    row.names = NULL
+  )
+}))
+stopifnot(isTRUE(all.equal(computed[-1], reported[-1], tolerance = 0)))
+```
+
+**Table 3**  
+*Descriptive Statistics for Attendance Outcomes*
+
+```{r table3}
+knitr::kable(table3, align = c("l", "r", "r", "r", "r", "r"))
+```
+
+*Notes:* The table reports unweighted descriptive statistics by school. Attendance outcomes are percentages of enrolled days missed. Absence percentages were calculated using 170 report school days for both JMTES and JES. Standard deviations are reported in parentheses below means. The difference-in-mean column is JMTES minus JES.
+
+# Overlapped bar charts
+
+The following overlapped bar charts show the distribution of attendance outcomes between the two schools. Bars are percentage-point bins of students' absence rates, and the y-axis reports the percentage of students within each school who fall in each bin. Transparency is used so overlapping portions of the JMTES and JES distributions remain visible. The y-axis is zoomed to 60 percent to focus on the range where most distributional differences are visible.
+
+```{r reshape-for-plot}
+plot_data <- rbind(
+  data.frame(school = attendance$school, outcome = "Unexcused absence %", absence_pct = attendance$unexcused_pct),
+  data.frame(school = attendance$school, outcome = "Excused absence %", absence_pct = attendance$excused_pct),
+  data.frame(school = attendance$school, outcome = "Total absence %", absence_pct = attendance$total_pct)
+)
+plot_data$outcome <- factor(plot_data$outcome, levels = outcomes$outcome)
+
+bin_width <- 2.5
+plot_data$bin_left <- floor(plot_data$absence_pct / bin_width) * bin_width
+plot_data$bin_midpoint <- plot_data$bin_left + bin_width / 2
+
+plot_bins <- aggregate(
+  absence_pct ~ school + outcome + bin_left + bin_midpoint,
+  data = plot_data,
+  FUN = length
+)
+names(plot_bins)[names(plot_bins) == "absence_pct"] <- "students_in_bin"
+plot_bins$school_total <- ave(plot_bins$students_in_bin, plot_bins$school, plot_bins$outcome, FUN = sum)
+plot_bins$percent_students <- 100 * plot_bins$students_in_bin / plot_bins$school_total
+```
+
+```{r overlapped-bar-charts}
+ggplot(plot_bins, aes(x = bin_midpoint, y = percent_students, fill = school)) +
+  geom_col(position = "identity", alpha = 0.55, color = "white", linewidth = 0.2, width = bin_width) +
+  facet_wrap(~ outcome, ncol = 1) +
+  scale_fill_manual(values = c("JMTES" = "#1f78b4", "JES" = "#e31a1c")) +
+  scale_x_continuous(breaks = seq(0, 110, by = 10), limits = c(0, 110), expand = c(0, 0)) +
+  scale_y_continuous(breaks = seq(0, 60, by = 10), labels = function(x) paste0(x, "%"), expand = c(0, 0)) +
+  coord_cartesian(ylim = c(0, 60)) +
+  labs(
+    title = "Distribution of Attendance Outcomes by School",
+    subtitle = "Overlapped bars show the percentage of students within each school in each absence-rate bin",
+    x = "Absence percentage of 170 report school days",
+    y = "Students in bin (% of school)",
+    fill = "School"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "top",
+    panel.grid.minor = element_blank(),
+    strip.text = element_text(face = "bold")
+  )
+```
+
+# Interpretation
+
+Descriptively, JMTES students had a lower mean unexcused absence percentage than JES students. The mean unexcused absence rate was 6.07 percent at JMTES compared with 9.01 percent at JES, a difference of -2.94 percentage points. The median unexcused absence rate was also lower at JMTES, at 5.29 percent compared with 5.88 percent at JES. The large difference between the mean and median for JES suggests that the JES distribution is right-skewed, with a subset of students having very high unexcused absence rates that pull the mean upward.
+
+Excused absences moved in the opposite direction. The mean excused absence percentage was 1.74 percent at JMTES and 1.29 percent at JES, so JMTES was higher by 0.45 percentage points. The median excused absence percentage was also higher at JMTES, at 1.18 percent compared with 0.59 percent at JES. This suggests that JMTES students had somewhat higher documented or approved absences than JES students.
+
+For total absences, the lower unexcused absence rate at JMTES more than offsets the higher excused absence rate in the mean comparison. The mean total absence percentage was 7.81 percent at JMTES compared with 10.30 percent at JES, a difference-in-mean of -2.49 percentage points. However, the median total absence percentage was slightly higher at JMTES, at 7.06 percent compared with 6.47 percent at JES. This pattern suggests that the lower mean total absence rate at JMTES is partly influenced by the JES distribution having more students with very high absence rates, while the middle of the total absence distribution is relatively similar across schools.
+
+These descriptive statistics are unadjusted, meaning that they do not account for differences in student characteristics or other factors that may vary between the two schools. This means that the difference in means may be caused by factors other than GROW. Therefore, the descriptive results should be interpreted as raw comparisons between JMTES and JES, not as direct evidence that GROW caused the observed attendance differences.
