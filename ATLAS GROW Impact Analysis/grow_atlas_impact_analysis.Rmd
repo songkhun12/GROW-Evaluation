@@ -1,0 +1,64 @@
+---
+title: "Impact of GROW on Academic Performance: Comparing the ATLAS Assessment Scores Between JMTES and JES"
+author: "CSIC Evaluation Team"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Purpose
+
+This R Markdown file is the reproducibility notebook for the Kindergarten through Grade 5 merged at-risk ATLAS impact analysis. It runs the repository analysis driver `../run_atlas_grow_impact.py`, which reads each grade's merged at-risk files and produces three requested regression analyses.
+
+# Analytic Design
+
+The preferred estimate uses an overlap-weighted propensity score approach with a baseline-adjusted and covariate-adjusted outcome regression. The propensity score is estimated from baseline same-subject ATLAS score, gender, race/ethnicity, age, meal-status code, and entry code. JMTES students receive weight `1 - p_i`; JES students receive weight `p_i`. The weighted outcome model regresses 2026 summative ATLAS score on the JMTES indicator, baseline score, gender, race/ethnicity, age, meal status, and entry code.
+
+Two robustness analyses are also produced:
+
+1. **Propensity-score matching plus adjusted regression.** Students are matched using calipered nearest-neighbor matching on the estimated propensity score. The matched sample is then analyzed with a baseline-adjusted and covariate-adjusted regression.
+2. **DiD-style gain-score regression.** The dependent variable is the change from baseline ATLAS score to 2026 summative ATLAS score. The model adjusts for baseline score, gender, race/ethnicity, age, meal status, and entry code.
+
+# Run the Analysis
+
+```{r run-analysis}
+# This call produces all regression tables, the combined CSV, and the Word-compatible report.
+system2("python3", "../run_atlas_grow_impact.py")
+```
+
+# Generated Outputs
+
+The analysis creates these primary outputs in this folder:
+
+* `overlap_weighted_ps_aer_regression_table.md`
+* `matching_aer_regression_table.md`
+* `did_aer_regression_table.md`
+* `grow_atlas_impact_regression_results.csv`
+* `grow_atlas_impact_results.md`
+* `grow_atlas_impact_results.doc`
+
+# Balance and Common-Support Diagnostics
+
+Because the preferred academic, attendance, and behavior designs rely on propensity-score overlap weighting, the diagnostic appendix checks whether weighting improves comparability and whether common support is plausible. The diagnostic script computes standardized mean differences before and after weighting for baseline ATLAS score (academic models), gender, race/ethnicity, age, meal-status disadvantage, entry-code indicators, and grade indicators for the attendance and behavior models. It also creates propensity-score overlap histograms by school.
+
+```{r run-diagnostics}
+# This call produces the balance appendix tables and propensity-score overlap figures.
+system2("python3", "../run_overlap_diagnostics.py")
+```
+
+The diagnostic outputs are:
+
+* `overlap_balance_diagnostics.csv`
+* `overlap_balance_summary.csv`
+* `overlap_balance_diagnostics.md`
+* `propensity_score_values.csv`
+* `propensity_overlap_academic.svg`
+* `propensity_overlap_attendance.svg`
+* `propensity_overlap_behavior.svg`

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430">
+<rect width="100%" height="100%" fill="white"/>
+<text x="450.0" y="25" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold">Academic ATLAS propensity-score overlap</text>
+<line x1="60" y1="375" x2="870" y2="375" stroke="black"/>
+<line x1="60" y1="55" x2="60" y2="375" stroke="black"/>
+<rect x="60.0" y="373.7" width="17.6" height="1.3" fill="#4C78A8" opacity="0.78"/>
+<rect x="77.6" y="375.0" width="17.6" height="0.0" fill="#F58518" opacity="0.78"/>
+<rect x="100.5" y="337.4" width="17.6" height="37.6" fill="#4C78A8" opacity="0.78"/>
+<rect x="118.1" y="372.4" width="17.6" height="2.6" fill="#F58518" opacity="0.78"/>
+<rect x="141.0" y="264.9" width="17.6" height="110.1" fill="#4C78A8" opacity="0.78"/>
+<rect x="158.6" y="367.2" width="17.6" height="7.8" fill="#F58518" opacity="0.78"/>
+<rect x="181.5" y="209.2" width="17.6" height="165.8" fill="#4C78A8" opacity="0.78"/>
+<rect x="199.1" y="341.3" width="17.6" height="33.7" fill="#F58518" opacity="0.78"/>
+<rect x="222.0" y="184.6" width="17.6" height="190.4" fill="#4C78A8" opacity="0.78"/>
+<rect x="239.6" y="316.7" width="17.6" height="58.3" fill="#F58518" opacity="0.78"/>
+<rect x="262.5" y="95.2" width="17.6" height="279.8" fill="#4C78A8" opacity="0.78"/>
+<rect x="280.1" y="259.7" width="17.6" height="115.3" fill="#F58518" opacity="0.78"/>
+<rect x="303.0" y="55.0" width="17.6" height="320.0" fill="#4C78A8" opacity="0.78"/>
+<rect x="320.6" y="250.6" width="17.6" height="124.4" fill="#F58518" opacity="0.78"/>
+<rect x="343.5" y="65.4" width="17.6" height="309.6" fill="#4C78A8" opacity="0.78"/>
+<rect x="361.1" y="187.1" width="17.6" height="187.9" fill="#F58518" opacity="0.78"/>
+<rect x="384.0" y="135.3" width="17.6" height="239.7" fill="#4C78A8" opacity="0.78"/>
+<rect x="401.6" y="182.0" width="17.6" height="193.0" fill="#F58518" opacity="0.78"/>
+<rect x="424.5" y="201.4" width="17.6" height="173.6" fill="#4C78A8" opacity="0.78"/>
+<rect x="442.1" y="210.5" width="17.6" height="164.5" fill="#F58518" opacity="0.78"/>
+<rect x="465.0" y="264.9" width="17.6" height="110.1" fill="#4C78A8" opacity="0.78"/>
+<rect x="482.6" y="257.1" width="17.6" height="117.9" fill="#F58518" opacity="0.78"/>
+<rect x="505.5" y="293.4" width="17.6" height="81.6" fill="#4C78A8" opacity="0.78"/>
+<rect x="523.1" y="272.7" width="17.6" height="102.3" fill="#F58518" opacity="0.78"/>
+<rect x="546.0" y="336.1" width="17.6" height="38.9" fill="#4C78A8" opacity="0.78"/>
+<rect x="563.6" y="299.9" width="17.6" height="75.1" fill="#F58518" opacity="0.78"/>
+<rect x="586.5" y="363.3" width="17.6" height="11.7" fill="#4C78A8" opacity="0.78"/>
+<rect x="604.1" y="325.8" width="17.6" height="49.2" fill="#F58518" opacity="0.78"/>
+<rect x="627.0" y="359.5" width="17.6" height="15.5" fill="#4C78A8" opacity="0.78"/>
+<rect x="644.6" y="347.8" width="17.6" height="27.2" fill="#F58518" opacity="0.78"/>
+<rect x="667.5" y="369.8" width="17.6" height="5.2" fill="#4C78A8" opacity="0.78"/>
+<rect x="685.1" y="364.6" width="17.6" height="10.4" fill="#F58518" opacity="0.78"/>
+<rect x="708.0" y="373.7" width="17.6" height="1.3" fill="#4C78A8" opacity="0.78"/>
+<rect x="725.6" y="368.5" width="17.6" height="6.5" fill="#F58518" opacity="0.78"/>
+<rect x="748.5" y="375.0" width="17.6" height="0.0" fill="#4C78A8" opacity="0.78"/>
+<rect x="766.1" y="371.1" width="17.6" height="3.9" fill="#F58518" opacity="0.78"/>
+<rect x="789.0" y="375.0" width="17.6" height="0.0" fill="#4C78A8" opacity="0.78"/>
+<rect x="806.6" y="373.7" width="17.6" height="1.3" fill="#F58518" opacity="0.78"/>
+<rect x="829.5" y="375.0" width="17.6" height="0.0" fill="#4C78A8" opacity="0.78"/>
+<rect x="847.1" y="375.0" width="17.6" height="0.0" fill="#F58518" opacity="0.78"/>
+<line x1="60" y1="375" x2="60" y2="380" stroke="black"/>
+<text x="60" y="397" text-anchor="middle" font-family="Arial" font-size="12">0.00</text>
+<line x1="262.5" y1="375" x2="262.5" y2="380" stroke="black"/>
+<text x="262.5" y="397" text-anchor="middle" font-family="Arial" font-size="12">0.25</text>
+<line x1="465.0" y1="375" x2="465.0" y2="380" stroke="black"/>
+<text x="465.0" y="397" text-anchor="middle" font-family="Arial" font-size="12">0.50</text>
+<line x1="667.5" y1="375" x2="667.5" y2="380" stroke="black"/>
+<text x="667.5" y="397" text-anchor="middle" font-family="Arial" font-size="12">0.75</text>
+<line x1="870.0" y1="375" x2="870.0" y2="380" stroke="black"/>
+<text x="870.0" y="397" text-anchor="middle" font-family="Arial" font-size="12">1.00</text>
+<text x="465.0" y="420" text-anchor="middle" font-family="Arial" font-size="13">Estimated propensity score</text>
+<text x="18" y="215.0" transform="rotate(-90 18,215.0)" text-anchor="middle" font-family="Arial" font-size="13">Count</text>
+<rect x="730" y="45" width="14" height="14" fill="#4C78A8" opacity="0.78"/><text x="750" y="57" font-family="Arial" font-size="13">JES</text>
+<rect x="730" y="67" width="14" height="14" fill="#F58518" opacity="0.78"/><text x="750" y="79" font-family="Arial" font-size="13">JMTES</text>
+</svg>
