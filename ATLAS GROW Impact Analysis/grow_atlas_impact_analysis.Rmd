@@ -48,7 +48,7 @@ The analysis creates these primary outputs in this folder:
 
 # Preferred-Model Coefficient Plot
 
-The coefficient plot below visualizes the preferred overlap-weighted, baseline-adjusted, and covariate-adjusted JMTES coefficients for every available grade-by-subject ATLAS model. Points show the adjusted difference in 2026 Summative ATLAS scale scores between JMTES and comparable JES students; error bars show 95 percent confidence intervals calculated from the model standard errors. Positive values favor JMTES, and the dashed vertical line marks no adjusted difference. Filled points identify estimates that are statistically significant at the 5 percent level. This visual matches the main results table and discussion: estimates are generally small and not statistically significant in Kindergarten through Grade 2, become consistently positive and statistically significant in Grades 3 and 4, and are mixed in Grade 5, with Science remaining statistically significant.
+The coefficient plot below visualizes the preferred overlap-weighted, baseline-adjusted, and covariate-adjusted JMTES coefficients for every available grade-by-subject ATLAS model. Points show the adjusted difference in 2026 Summative ATLAS scale scores between JMTES and comparable JES students; error bars show 95 percent confidence intervals calculated from the model standard errors. Positive values favor JMTES, and the dashed vertical line marks no adjusted difference. Point shapes and coefficient labels use the same significance-star convention as Table 2 (* p < 0.10, ** p < 0.05, *** p < 0.01), so Grade 5 Science is shown as statistically significant just as it is in the table. This visual matches the main results table and discussion: estimates are generally small and not statistically significant in Kindergarten through Grade 2, become consistently positive and statistically significant in Grades 3 and 4, and are mixed in Grade 5, with Science remaining statistically significant.
 
 ```{r preferred-coefficient-plot, fig.width=10, fig.height=6, dpi=300}
 library(ggplot2)
@@ -73,12 +73,22 @@ preferred_results$subject <- factor(
 )
 preferred_results$ci_lower <- preferred_results$estimate - 1.96 * preferred_results$std_error
 preferred_results$ci_upper <- preferred_results$estimate + 1.96 * preferred_results$std_error
-preferred_results$significant_05 <- ifelse(preferred_results$p_value < 0.05, "p < 0.05", "n.s.")
-preferred_results$estimate_label <- sprintf("%.2f", preferred_results$estimate)
+preferred_results$significance <- cut(
+  preferred_results$p_value,
+  breaks = c(-Inf, 0.01, 0.05, 0.10, Inf),
+  labels = c("*** p < 0.01", "** p < 0.05", "* p < 0.10", "n.s."),
+  right = FALSE
+)
+preferred_results$stars <- ifelse(
+  preferred_results$p_value < 0.01,
+  "***",
+  ifelse(preferred_results$p_value < 0.05, "**", ifelse(preferred_results$p_value < 0.10, "*", ""))
+)
+preferred_results$estimate_label <- paste0(sprintf("%.2f", preferred_results$estimate), preferred_results$stars)
 
 coefficient_plot <- ggplot(
   preferred_results,
-  aes(x = estimate, y = grade, color = subject, shape = significant_05)
+  aes(x = estimate, y = grade, color = subject, shape = significance)
 ) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray55", linewidth = 0.5) +
   geom_errorbarh(
@@ -97,7 +107,7 @@ coefficient_plot <- ggplot(
   ) +
   scale_y_discrete(limits = rev(levels(preferred_results$grade))) +
   scale_color_manual(values = c("ELA" = "#1b9e77", "Math" = "#d95f02", "Science" = "#7570b3")) +
-  scale_shape_manual(values = c("p < 0.05" = 16, "n.s." = 1)) +
+  scale_shape_manual(values = c("*** p < 0.01" = 16, "** p < 0.05" = 17, "* p < 0.10" = 15, "n.s." = 1), drop = FALSE) +
   coord_cartesian(xlim = c(-6, 14), clip = "off") +
   labs(
     title = "GROW-Associated Differences in 2026 Summative ATLAS Scores",
@@ -105,7 +115,7 @@ coefficient_plot <- ggplot(
     x = "Adjusted JMTES coefficient in ATLAS scale-score points",
     y = NULL,
     color = "Subject",
-    shape = "Statistical significance"
+    shape = "Table 2 significance"
   ) +
   theme_minimal(base_size = 12) +
   theme(
