@@ -76,4 +76,13 @@ The matching results are a robustness check using calipered nearest-neighbor mat
 
 The DiD-style results are implemented as gain-score regressions. The dependent variable is the change from baseline ATLAS score to 2026 summative ATLAS score, and the model adjusts for baseline score plus the same covariates. This estimates whether JMTES students gained more or less than comparable JES students from the pre-outcome baseline to 2026.
 
-Positive JMTES coefficients indicate higher adjusted performance or growth for JMTES students relative to comparable JES students. Negative coefficients indicate lower adjusted performance or growth. Because students were not randomly assigned to schools, the estimates should still be interpreted as adjusted associations based on observed covariates rather than as definitive causal effects.</pre></body></html>
+Positive JMTES coefficients indicate higher adjusted performance or growth for JMTES students relative to comparable JES students. Negative coefficients indicate lower adjusted performance or growth. Because students were not randomly assigned to schools, the estimates should still be interpreted as adjusted associations based on observed covariates rather than as definitive causal effects.
+
+# Appendix: Balance and Common-Support Diagnostics
+
+The overlap-weighted design requires evidence that JMTES and JES students are comparable on observed pre-outcome characteristics after weighting. The diagnostic appendix adds standardized mean differences before and after overlap weighting for baseline ATLAS score, gender, race/ethnicity, age, meal-status disadvantage, entry code, and grade-level indicators for the attendance and behavior models. It also adds propensity-score overlap histograms for the academic, attendance, and behavior analyses.
+
+The detailed balance appendix is saved in `overlap_balance_diagnostics.md`, with machine-readable outputs in `overlap_balance_diagnostics.csv` and `overlap_balance_summary.csv`. The common-support figures are saved as `propensity_overlap_academic.svg`, `propensity_overlap_attendance.svg`, and `propensity_overlap_behavior.svg`.
+
+These diagnostics speak directly to validity. If the weighted standardized mean differences are smaller than the unweighted differences and the histograms show common support, the overlap-weighted estimates rely more on comparisons among students who looked similar before the outcome year. This strengthens the credibility of the adjusted comparisons, although the results remain non-randomized estimates and cannot rule out unobserved confounding.
+</pre></body></html>

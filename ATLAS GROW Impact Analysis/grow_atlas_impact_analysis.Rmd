@@ -43,3 +43,22 @@ The analysis creates these primary outputs in this folder:
 * `grow_atlas_impact_regression_results.csv`
 * `grow_atlas_impact_results.md`
 * `grow_atlas_impact_results.doc`
+
+# Balance and Common-Support Diagnostics
+
+Because the preferred academic, attendance, and behavior designs rely on propensity-score overlap weighting, the diagnostic appendix checks whether weighting improves comparability and whether common support is plausible. The diagnostic script computes standardized mean differences before and after weighting for baseline ATLAS score (academic models), gender, race/ethnicity, age, meal-status disadvantage, entry-code indicators, and grade indicators for the attendance and behavior models. It also creates propensity-score overlap histograms by school.
+
+```{r run-diagnostics}
+# This call produces the balance appendix tables and propensity-score overlap figures.
+system2("python3", "../run_overlap_diagnostics.py")
+```
+
+The diagnostic outputs are:
+
+* `overlap_balance_diagnostics.csv`
+* `overlap_balance_summary.csv`
+* `overlap_balance_diagnostics.md`
+* `propensity_score_values.csv`
+* `propensity_overlap_academic.svg`
+* `propensity_overlap_attendance.svg`
+* `propensity_overlap_behavior.svg`
