@@ -46,10 +46,10 @@ The analysis creates these primary outputs in this folder:
 
 # Balance and Common-Support Diagnostics
 
-Because the preferred academic, attendance, and behavior designs rely on propensity-score overlap weighting, the diagnostic appendix checks whether weighting improves comparability and whether common support is plausible. The diagnostic script computes standardized mean differences before and after weighting for baseline ATLAS score (academic models), gender, race/ethnicity, age, meal-status disadvantage, entry-code indicators, and grade indicators for the attendance and behavior models. It also creates propensity-score overlap histograms by school.
+Because the preferred academic, attendance, and behavior designs rely on propensity-score overlap weighting, Appendix A checks whether weighting improves comparability and whether common support is plausible. The diagnostic script computes standardized mean differences before and after weighting for baseline ATLAS score (academic models), gender, race/ethnicity, age, meal-status disadvantage, entry-code indicators, and grade indicators for the attendance and behavior models. It also creates propensity-score overlap histograms by school.
 
 ```{r run-diagnostics}
-# This call produces the balance appendix tables and propensity-score overlap figures.
+# This call produces the Appendix A balance tables and propensity-score overlap figures.
 system2("python3", "../run_overlap_diagnostics.py")
 ```
 
