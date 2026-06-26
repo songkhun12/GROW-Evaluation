@@ -139,9 +139,39 @@ kable(
 # Build grade-level line plot data using one baseline score column and the
 # subject-specific 2026 summative score column. Baseline columns are selected
 # without pooling multiple waves: use the common 2025 summative baseline when
-# available, otherwise use the documented same-subject baseline available in
-# the file (for example, Winter 2025 for Kindergarten and Grade 3 Science).
-select_baseline_col <- function(dat, grade, subject) {
+# available. Grade 4 and Grade 5 are forced to use 2025 Summative
+# rather than Winter 2025. For JMTES Grade 4 and Grade 5, the 2025
+# summative baseline is read from the previous/current merged file because
+# the current-year ATLAS file only contains Fall/Winter 2025 and Sum 2026
+# columns. Otherwise,
+# use the documented same-subject baseline available in the file (for example,
+# Winter 2025 for Kindergarten and Grade 3 Science).
+find_grade45_jmtes_baseline_file <- function(grade) {
+  if (!grade %in% c("Grade 4", "Grade 5")) return(NA_character_)
+  baseline_file <- file.path(grade, paste0("JMTES ", grade, " Previous Current Merged.csv"))
+  if (file.exists(baseline_file)) baseline_file else NA_character_
+}
+
+read_grade45_jmtes_baseline <- function(grade, default_dat) {
+  baseline_file <- find_grade45_jmtes_baseline_file(grade)
+  if (is.na(baseline_file)) return(default_dat)
+  read_csv(baseline_file, show_col_types = FALSE)
+}
+
+select_baseline_col <- function(dat, grade, subject, school) {
+  if (school == "JMTES" && grade %in% c("Grade 4", "Grade 5")) {
+    baseline_col <- grep(paste0("Previous Year ", subject, " Sum 2025"), names(dat), value = TRUE)[1]
+    if (!is.na(baseline_col)) return(baseline_col)
+  }
+
+  if (grade %in% c("Grade 4", "Grade 5")) {
+    baseline_col <- paste(subject, "Sum 2025")
+    if (!baseline_col %in% names(dat)) {
+      stop("Grade 4/5 baseline must be 2025 Summative, but missing column: ", baseline_col, " at ", school)
+    }
+    return(baseline_col)
+  }
+
   preferred_cols <- if (grade == "Kindergarten" || (grade == "Grade 3" && subject == "Science")) {
     c(paste(subject, "Winter 2025"), paste(subject, "Sum 2025"))
   } else {
@@ -155,7 +185,7 @@ select_baseline_col <- function(dat, grade, subject) {
 
   baseline_col <- preferred_cols[preferred_cols %in% names(dat)][1]
   if (is.na(baseline_col)) {
-    stop("Missing baseline score column for ", grade, " ", subject)
+    stop("Missing baseline score column for ", grade, " ", subject, " at ", school)
   }
   baseline_col
 }
@@ -168,11 +198,12 @@ mean_for_col <- function(dat, col) {
 plot_data <- bind_rows(lapply(grade_folders, function(grade) {
   jmtes <- read_atlas_file(find_atlas_file(grade, "JMTES"))
   jes <- read_atlas_file(find_atlas_file(grade, "JES"))
+  jmtes_baseline <- read_grade45_jmtes_baseline(grade, jmtes)
 
   bind_rows(lapply(subjects_by_grade[[grade]], function(subject) {
     outcome_col <- paste(subject, "Sum 2026")
-    jmtes_baseline_col <- select_baseline_col(jmtes, grade, subject)
-    jes_baseline_col <- select_baseline_col(jes, grade, subject)
+    jmtes_baseline_col <- select_baseline_col(jmtes_baseline, grade, subject, "JMTES")
+    jes_baseline_col <- select_baseline_col(jes, grade, subject, "JES")
 
     tibble(
       Grade = rep(grade, 4),
@@ -181,7 +212,7 @@ plot_data <- bind_rows(lapply(grade_folders, function(grade) {
       Wave = rep(c("Baseline", "2026 Summative"), 2),
       Wave_order = rep(c(1, 2), 2),
       Score_mean = c(
-        mean_for_col(jmtes, jmtes_baseline_col),
+        mean_for_col(jmtes_baseline, jmtes_baseline_col),
         mean_for_col(jmtes, outcome_col),
         mean_for_col(jes, jes_baseline_col),
         mean_for_col(jes, outcome_col)

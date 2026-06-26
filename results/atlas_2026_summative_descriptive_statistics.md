@@ -1,3 +1,5 @@
+For the baseline line plots, Grade 4 and Grade 5 use the 2025 summative ATLAS wave as the baseline, not Winter 2025. For JMTES, those Grade 4/5 baseline values come from the previous/current merged files (`Previous Year ... Sum 2025` columns); for JES, they come from the `... Sum 2025` columns in the grade files.
+
 Median values are included in the `JMTES median` and `JES median` columns and are calculated from the non-missing student-level 2026 Summative ATLAS scores. The table uses only the subject-specific `Sum 2026` columns; Fall, Winter, and 2025 score columns are not pooled into these statistics.
 
 | Grade | Subject | JMTES<br> mean<br> (SD) | JES<br> mean<br> (SD) | Difference-in-mean<br> (JMTES - JES) | JMTES<br> median | JES<br> median | Observations<br> (JMTES/JES) |
