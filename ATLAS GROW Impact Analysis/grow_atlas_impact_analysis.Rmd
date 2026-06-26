@@ -43,6 +43,98 @@ The analysis creates these primary outputs in this folder:
 * `grow_atlas_impact_regression_results.csv`
 * `grow_atlas_impact_results.md`
 * `grow_atlas_impact_results.doc`
+* `grow_atlas_preferred_coefficient_plot.png`
+
+
+# Preferred-Model Coefficient Plot
+
+The coefficient plot below visualizes the preferred overlap-weighted, baseline-adjusted, and covariate-adjusted JMTES coefficients for every available grade-by-subject ATLAS model. Points show the adjusted difference in 2026 Summative ATLAS scale scores between JMTES and comparable JES students; error bars show 95 percent confidence intervals calculated from the model standard errors. Positive values favor JMTES, and the dashed vertical line marks no adjusted difference. Point shapes and coefficient labels use the same significance-star convention as Table 2 (* p < 0.10, ** p < 0.05, *** p < 0.01), so Grade 5 Science is shown as statistically significant just as it is in the table. This visual matches the main results table and discussion: estimates are generally small and not statistically significant in Kindergarten through Grade 2, become consistently positive and statistically significant in Grades 3 and 4, and are mixed in Grade 5, with Science remaining statistically significant.
+
+```{r preferred-coefficient-plot, fig.width=10, fig.height=6, dpi=300}
+library(ggplot2)
+
+results_path <- "grow_atlas_impact_regression_results.csv"
+if (!file.exists(results_path)) {
+  results_path <- file.path("ATLAS GROW Impact Analysis", results_path)
+}
+
+preferred_results <- read.csv(results_path, stringsAsFactors = FALSE)
+preferred_results <- preferred_results[
+  preferred_results$analysis == "overlap_weighted_ps_covariate_baseline_regression",
+]
+
+preferred_results$grade <- factor(
+  preferred_results$grade,
+  levels = c("Kindergarten", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5")
+)
+preferred_results$subject <- factor(
+  preferred_results$subject,
+  levels = c("ELA", "Math", "Science")
+)
+preferred_results$ci_lower <- preferred_results$estimate - 1.96 * preferred_results$std_error
+preferred_results$ci_upper <- preferred_results$estimate + 1.96 * preferred_results$std_error
+preferred_results$significance <- cut(
+  preferred_results$p_value,
+  breaks = c(-Inf, 0.01, 0.05, 0.10, Inf),
+  labels = c("*** p < 0.01", "** p < 0.05", "* p < 0.10", "n.s."),
+  right = FALSE
+)
+preferred_results$stars <- ifelse(
+  preferred_results$p_value < 0.01,
+  "***",
+  ifelse(preferred_results$p_value < 0.05, "**", ifelse(preferred_results$p_value < 0.10, "*", ""))
+)
+preferred_results$estimate_label <- paste0(sprintf("%.2f", preferred_results$estimate), preferred_results$stars)
+
+coefficient_plot <- ggplot(
+  preferred_results,
+  aes(x = estimate, y = grade, color = subject, shape = significance)
+) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray55", linewidth = 0.5) +
+  geom_errorbarh(
+    aes(xmin = ci_lower, xmax = ci_upper),
+    height = 0.18,
+    linewidth = 0.75,
+    position = position_dodge(width = 0.55)
+  ) +
+  geom_point(size = 3.2, position = position_dodge(width = 0.55)) +
+  geom_text(
+    aes(label = estimate_label),
+    position = position_dodge(width = 0.55),
+    hjust = -0.65,
+    size = 3.1,
+    show.legend = FALSE
+  ) +
+  scale_y_discrete(limits = rev(levels(preferred_results$grade))) +
+  scale_color_manual(values = c("ELA" = "#1b9e77", "Math" = "#d95f02", "Science" = "#7570b3")) +
+  scale_shape_manual(values = c("*** p < 0.01" = 16, "** p < 0.05" = 17, "* p < 0.10" = 15, "n.s." = 1), drop = FALSE) +
+  coord_cartesian(xlim = c(-6, 14), clip = "off") +
+  labs(
+    title = "GROW-Associated Differences in 2026 Summative ATLAS Scores",
+    subtitle = "Preferred overlap-weighted, baseline- and covariate-adjusted models; error bars show 95% CIs",
+    x = "Adjusted JMTES coefficient in ATLAS scale-score points",
+    y = NULL,
+    color = "Subject",
+    shape = "Table 2 significance"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom",
+    plot.margin = margin(10, 35, 10, 10)
+  )
+
+coefficient_plot
+
+ggsave(
+  filename = file.path(dirname(results_path), "grow_atlas_preferred_coefficient_plot.png"),
+  plot = coefficient_plot,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+```
 
 # Balance and Common-Support Diagnostics
 
