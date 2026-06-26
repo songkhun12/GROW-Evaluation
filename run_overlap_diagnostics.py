@@ -229,10 +229,14 @@ def append_diagnostics_to_main_report():
     if not report.exists():
         return
     text = report.read_text()
-    marker = "# Appendix: Balance and Common-Support Diagnostics"
-    if marker in text:
-        text = text.split(marker)[0].rstrip() + "\n\n"
-    appendix = """# Appendix: Balance and Common-Support Diagnostics
+    markers = ["# Appendix A: Balance and Common-Support Diagnostics", "# Appendix: Balance and Common-Support Diagnostics"]
+    for marker in markers:
+        if marker in text:
+            text = text.split(marker)[0].rstrip() + "\n\n"
+            break
+    callout = """Balance diagnostics (see Appendix A) support the use of propensity-score overlap weighting in the GROW comparison-school analyses. Across the academic models, overlap weighting reduced the mean absolute standardized mean difference from 0.103-0.222 before weighting to 0.013-0.046 after weighting, and the maximum weighted imbalance was generally modest; all weighted covariates were below 0.10 in the Grade 3 ELA, Grade 3 Math, Grade 3 Science, and Grade 4 Math models, while most other academic models had 75.0% to 88.9% of weighted covariates below 0.10. The attendance and behavior models showed essentially exact balance after weighting, with mean and maximum weighted absolute SMDs of 0.000 and all checked covariates below 0.10. The remaining weighted imbalances are concentrated in sparse entry-code categories rather than in baseline ATLAS scores, gender, race/ethnicity, age, meal-status disadvantage, or grade-level composition. Propensity-score overlap histograms also show meaningful common support between JMTES and JES, especially in the central propensity-score ranges that receive the greatest overlap-weighted influence; therefore, the preferred estimates are based primarily on students who are empirically comparable across schools, while still requiring the standard caution that unobserved differences may remain in a non-randomized design.
+"""
+    appendix = """# Appendix A: Balance and Common-Support Diagnostics
 
 The overlap-weighted design requires evidence that JMTES and JES students are comparable on observed pre-outcome characteristics after weighting. The diagnostic appendix adds standardized mean differences before and after overlap weighting for baseline ATLAS score, gender, race/ethnicity, age, meal-status disadvantage, entry code, and grade-level indicators for the attendance and behavior models. It also adds propensity-score overlap histograms for the academic, attendance, and behavior analyses.
 
@@ -240,7 +244,7 @@ The detailed balance appendix is saved in `overlap_balance_diagnostics.md`, with
 
 These diagnostics speak directly to validity. If the weighted standardized mean differences are smaller than the unweighted differences and the histograms show common support, the overlap-weighted estimates rely more on comparisons among students who looked similar before the outcome year. This strengthens the credibility of the adjusted comparisons, although the results remain non-randomized estimates and cannot rule out unobserved confounding.
 """
-    updated = text.rstrip() + "\n\n" + appendix
+    updated = text.rstrip() + "\n\n" + callout.strip() + "\n\n" + appendix
     report.write_text(updated)
     # Keep the Word-compatible report in sync without importing analysis code.
     import html as _html
@@ -267,7 +271,7 @@ def main():
 
     worst = sorted(balance, key=lambda r: r["abs_smd_weighted"], reverse=True)[:15]
     md = [
-        "# Balance and Common-Support Diagnostics for GROW Overlap-Weighted Analyses",
+        "# Appendix A: Balance and Common-Support Diagnostics for GROW Overlap-Weighted Analyses",
         "",
         "This appendix reports standardized mean differences (SMDs) before and after overlap weighting. Smaller absolute SMDs indicate better balance; values below 0.10 are commonly treated as evidence of adequate balance on an observed covariate.",
         "",
