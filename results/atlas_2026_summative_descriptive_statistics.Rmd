@@ -15,6 +15,7 @@ library(dplyr)
 library(readr)
 library(readxl)
 library(knitr)
+library(ggplot2)
 ```
 
 ```{r helper-functions}
@@ -131,6 +132,113 @@ kable(
     "Observations\n (JMTES/JES)"
   )
 )
+```
+
+
+```{r line-plot-data}
+# Build grade-level line plot data using one baseline score column and the
+# subject-specific 2026 summative score column. Baseline columns are selected
+# without pooling multiple waves: use the common 2025 summative baseline when
+# available, otherwise use the documented same-subject baseline available in
+# the file (for example, Winter 2025 for Kindergarten and Grade 3 Science).
+select_baseline_col <- function(dat, grade, subject) {
+  preferred_cols <- if (grade == "Kindergarten" || (grade == "Grade 3" && subject == "Science")) {
+    c(paste(subject, "Winter 2025"), paste(subject, "Sum 2025"))
+  } else {
+    c(
+      paste(subject, "Sum 2025"),
+      paste(subject, "Winter 2025"),
+      paste(subject, "Fall 2025"),
+      paste(subject, "Sum 2024")
+    )
+  }
+
+  baseline_col <- preferred_cols[preferred_cols %in% names(dat)][1]
+  if (is.na(baseline_col)) {
+    stop("Missing baseline score column for ", grade, " ", subject)
+  }
+  baseline_col
+}
+
+mean_for_col <- function(dat, col) {
+  values <- suppressWarnings(as.numeric(dat[[col]]))
+  mean(values, na.rm = TRUE)
+}
+
+plot_data <- bind_rows(lapply(grade_folders, function(grade) {
+  jmtes <- read_atlas_file(find_atlas_file(grade, "JMTES"))
+  jes <- read_atlas_file(find_atlas_file(grade, "JES"))
+
+  bind_rows(lapply(subjects_by_grade[[grade]], function(subject) {
+    outcome_col <- paste(subject, "Sum 2026")
+    jmtes_baseline_col <- select_baseline_col(jmtes, grade, subject)
+    jes_baseline_col <- select_baseline_col(jes, grade, subject)
+
+    tibble(
+      Grade = rep(grade, 4),
+      School = rep(c("JMTES", "JES"), each = 2),
+      Subject = subject,
+      Wave = rep(c("Baseline", "2026 Summative"), 2),
+      Wave_order = rep(c(1, 2), 2),
+      Score_mean = c(
+        mean_for_col(jmtes, jmtes_baseline_col),
+        mean_for_col(jmtes, outcome_col),
+        mean_for_col(jes, jes_baseline_col),
+        mean_for_col(jes, outcome_col)
+      ),
+      Score_column = c(jmtes_baseline_col, outcome_col, jes_baseline_col, outcome_col)
+    )
+  }))
+}))
+
+write_csv(plot_data, "results/atlas_2026_summative_line_plot_data.csv")
+plot_data
+```
+
+```{r line-plots, fig.width=8, fig.height=5, results='asis'}
+dir.create("results/atlas_2026_summative_line_plots", showWarnings = FALSE, recursive = TRUE)
+
+for (grade in grade_folders) {
+  grade_plot_data <- plot_data %>% filter(Grade == grade)
+  p <- ggplot(
+    grade_plot_data,
+    aes(
+      x = Wave_order,
+      y = Score_mean,
+      color = Subject,
+      shape = Subject,
+      linetype = School,
+      group = interaction(School, Subject)
+    )
+  ) +
+    geom_line(linewidth = 0.9) +
+    geom_point(size = 3) +
+    scale_x_continuous(
+      breaks = c(1, 2),
+      labels = c("Baseline", "2026 Summative")
+    ) +
+    scale_linetype_manual(values = c("JMTES" = "solid", "JES" = "dashed")) +
+    labs(
+      title = paste0(grade, ": Baseline and 2026 Summative ATLAS Mean Scores"),
+      subtitle = "Color and point shape identify subject; line type identifies school",
+      x = NULL,
+      y = "Mean ATLAS scale score",
+      color = "Subject",
+      shape = "Subject",
+      linetype = "School"
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(legend.position = "bottom")
+
+  print(p)
+  ggsave(
+    filename = file.path("results/atlas_2026_summative_line_plots", paste0(gsub(" ", "_", tolower(grade)), "_atlas_line_plot.svg")),
+    plot = p,
+    width = 8,
+    height = 5,
+    units = "in"
+  )
+}
 ```
 
 Notes: The table reports unweighted descriptive statistics for the 2026 Summative ATLAS test wave only by grade, subject, and school. Standard deviations are reported in parentheses below means. The difference-in-mean column is JMTES minus JES, so positive values indicate higher average scores at JMTES. Median values are reported separately for each school. Because the number of observations varies across grade-subject cells, observations are reported in the final column as JMTES/JES.
