@@ -1,0 +1,61 @@
+Grade,School,Subject,Wave,Wave_order,Score_mean,Score_column
+Kindergarten,JMTES,ELA,Baseline,1,1049.96,ELA Winter 2025
+Kindergarten,JMTES,ELA,2026 Summative,2,1059.37,ELA Sum 2026
+Kindergarten,JMTES,Math,Baseline,1,1046.29,Math Winter 2025
+Kindergarten,JMTES,Math,2026 Summative,2,1058.02,Math Sum 2026
+Kindergarten,JES,ELA,Baseline,1,1045.64,ELA Winter 2025
+Kindergarten,JES,ELA,2026 Summative,2,1057.74,ELA Sum 2026
+Kindergarten,JES,Math,Baseline,1,1049.06,Math Winter 2025
+Kindergarten,JES,Math,2026 Summative,2,1057.05,Math Sum 2026
+Grade 1,JMTES,ELA,Baseline,1,1044.75,ELA Sum 2025
+Grade 1,JMTES,ELA,2026 Summative,2,1056.77,ELA Sum 2026
+Grade 1,JMTES,Math,Baseline,1,1051.12,Math Sum 2025
+Grade 1,JMTES,Math,2026 Summative,2,1051.48,Math Sum 2026
+Grade 1,JES,ELA,Baseline,1,1037.97,ELA Sum 2025
+Grade 1,JES,ELA,2026 Summative,2,1053.68,ELA Sum 2026
+Grade 1,JES,Math,Baseline,1,1052.13,Math Sum 2025
+Grade 1,JES,Math,2026 Summative,2,1053.63,Math Sum 2026
+Grade 2,JMTES,ELA,Baseline,1,1043.27,ELA Sum 2025
+Grade 2,JMTES,ELA,2026 Summative,2,1053.22,ELA Sum 2026
+Grade 2,JMTES,Math,Baseline,1,1048.58,Math Sum 2025
+Grade 2,JMTES,Math,2026 Summative,2,1050.90,Math Sum 2026
+Grade 2,JES,ELA,Baseline,1,1047.26,ELA Sum 2025
+Grade 2,JES,ELA,2026 Summative,2,1050.68,ELA Sum 2026
+Grade 2,JES,Math,Baseline,1,1049.55,Math Sum 2025
+Grade 2,JES,Math,2026 Summative,2,1049.37,Math Sum 2026
+Grade 3,JMTES,ELA,Baseline,1,1046.57,ELA Sum 2025
+Grade 3,JMTES,ELA,2026 Summative,2,1050.61,ELA Sum 2026
+Grade 3,JMTES,Math,Baseline,1,1047.67,Math Sum 2025
+Grade 3,JMTES,Math,2026 Summative,2,1047.96,Math Sum 2026
+Grade 3,JMTES,Science,Baseline,1,1047.30,Science Winter 2025
+Grade 3,JMTES,Science,2026 Summative,2,1052.82,Science Sum 2026
+Grade 3,JES,ELA,Baseline,1,1044.12,ELA Sum 2025
+Grade 3,JES,ELA,2026 Summative,2,1041.85,ELA Sum 2026
+Grade 3,JES,Math,Baseline,1,1047.19,Math Sum 2025
+Grade 3,JES,Math,2026 Summative,2,1041.48,Math Sum 2026
+Grade 3,JES,Science,Baseline,1,1036.58,Science Winter 2025
+Grade 3,JES,Science,2026 Summative,2,1043.99,Science Sum 2026
+Grade 4,JMTES,ELA,Baseline,1,1051.83,Previous Year ELA Sum 2025 (3rd Grade)
+Grade 4,JMTES,ELA,2026 Summative,2,1054.91,ELA Sum 2026
+Grade 4,JMTES,Math,Baseline,1,1046.02,Previous Year Math Sum 2025 (3rd Grade)
+Grade 4,JMTES,Math,2026 Summative,2,1052.55,Math Sum 2026
+Grade 4,JMTES,Science,Baseline,1,1055.47,Previous Year Science Sum 2025 (3rd Grade)
+Grade 4,JMTES,Science,2026 Summative,2,1053.78,Science Sum 2026
+Grade 4,JES,ELA,Baseline,1,1041.55,ELA Sum 2025
+Grade 4,JES,ELA,2026 Summative,2,1044.08,ELA Sum 2026
+Grade 4,JES,Math,Baseline,1,1037.57,Math Sum 2025
+Grade 4,JES,Math,2026 Summative,2,1039.65,Math Sum 2026
+Grade 4,JES,Science,Baseline,1,1043.79,Science Sum 2025
+Grade 4,JES,Science,2026 Summative,2,1044.61,Science Sum 2026
+Grade 5,JMTES,ELA,Baseline,1,1055.14,Previous Year ELA Sum 2025 (4th Grade)
+Grade 5,JMTES,ELA,2026 Summative,2,1050.43,ELA Sum 2026
+Grade 5,JMTES,Math,Baseline,1,1050.91,Previous Year Math Sum 2025 (4th Grade)
+Grade 5,JMTES,Math,2026 Summative,2,1046.08,Math Sum 2026
+Grade 5,JMTES,Science,Baseline,1,1054.14,Previous Year Science Sum 2025 (4th Grade)
+Grade 5,JMTES,Science,2026 Summative,2,1052.92,Science Sum 2026
+Grade 5,JES,ELA,Baseline,1,1041.66,ELA Sum 2025
+Grade 5,JES,ELA,2026 Summative,2,1045.03,ELA Sum 2026
+Grade 5,JES,Math,Baseline,1,1038.43,Math Sum 2025
+Grade 5,JES,Math,2026 Summative,2,1040.29,Math Sum 2026
+Grade 5,JES,Science,Baseline,1,1041.40,Science Sum 2025
+Grade 5,JES,Science,2026 Summative,2,1042.55,Science Sum 2026
