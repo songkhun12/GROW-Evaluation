@@ -112,7 +112,7 @@ knitr::kable(table3, align = c("l", "r", "r", "r", "r", "r"))
 
 # Overlapped bar charts
 
-The following overlapped bar charts show the distribution of attendance outcomes between the two schools. Bars are percentage-point bins of students' absence rates, and transparency is used so overlapping portions of the JMTES and JES distributions remain visible.
+The following overlapped bar charts show the distribution of attendance outcomes between the two schools. Bars are percentage-point bins of students' absence rates, and the y-axis reports the percentage of students within each school who fall in each bin. Transparency is used so overlapping portions of the JMTES and JES distributions remain visible. The y-axis is zoomed to 60 percent to focus on the range where most distributional differences are visible.
 
 ```{r reshape-for-plot}
 plot_data <- rbind(
@@ -121,19 +121,34 @@ plot_data <- rbind(
   data.frame(school = attendance$school, outcome = "Total absence %", absence_pct = attendance$total_pct)
 )
 plot_data$outcome <- factor(plot_data$outcome, levels = outcomes$outcome)
+
+bin_width <- 2.5
+plot_data$bin_left <- floor(plot_data$absence_pct / bin_width) * bin_width
+plot_data$bin_midpoint <- plot_data$bin_left + bin_width / 2
+
+plot_bins <- aggregate(
+  absence_pct ~ school + outcome + bin_left + bin_midpoint,
+  data = plot_data,
+  FUN = length
+)
+names(plot_bins)[names(plot_bins) == "absence_pct"] <- "students_in_bin"
+plot_bins$school_total <- ave(plot_bins$students_in_bin, plot_bins$school, plot_bins$outcome, FUN = sum)
+plot_bins$percent_students <- 100 * plot_bins$students_in_bin / plot_bins$school_total
 ```
 
 ```{r overlapped-bar-charts}
-ggplot(plot_data, aes(x = absence_pct, fill = school)) +
-  geom_histogram(binwidth = 2.5, boundary = 0, position = "identity", alpha = 0.55, color = "white", linewidth = 0.2) +
-  facet_wrap(~ outcome, scales = "free_y", ncol = 1) +
+ggplot(plot_bins, aes(x = bin_midpoint, y = percent_students, fill = school)) +
+  geom_col(position = "identity", alpha = 0.55, color = "white", linewidth = 0.2, width = bin_width) +
+  facet_wrap(~ outcome, ncol = 1) +
   scale_fill_manual(values = c("JMTES" = "#1f78b4", "JES" = "#e31a1c")) +
   scale_x_continuous(breaks = seq(0, 110, by = 10), limits = c(0, 110), expand = c(0, 0)) +
+  scale_y_continuous(breaks = seq(0, 60, by = 10), labels = function(x) paste0(x, "%"), expand = c(0, 0)) +
+  coord_cartesian(ylim = c(0, 60)) +
   labs(
     title = "Distribution of Attendance Outcomes by School",
-    subtitle = "Overlapped bars compare student absence percentages for JMTES and JES",
+    subtitle = "Overlapped bars show the percentage of students within each school in each absence-rate bin",
     x = "Absence percentage of 170 report school days",
-    y = "Number of students",
+    y = "Students in bin (% of school)",
     fill = "School"
   ) +
   theme_minimal(base_size = 12) +
