@@ -1,4 +1,4 @@
-# Balance and Common-Support Diagnostics for GROW Overlap-Weighted Analyses
+# Appendix A: Balance and Common-Support Diagnostics for GROW Overlap-Weighted Analyses
 
 This appendix reports standardized mean differences (SMDs) before and after overlap weighting. Smaller absolute SMDs indicate better balance; values below 0.10 are commonly treated as evidence of adequate balance on an observed covariate.
 
