@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="664" viewBox="0 0 1200 664">
+<rect width="100%" height="100%" fill="white"/>
+<text x="600.0" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700">Bus Referral Distributions by School</text>
+<rect x="985" y="17" width="14" height="14" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4"/>
+<text x="1005" y="29" font-family="Arial, sans-serif" font-size="13">JMTES</text>
+<rect x="1065" y="17" width="14" height="14" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e"/>
+<text x="1085" y="29" font-family="Arial, sans-serif" font-size="13">JES</text>
+<text x="258.0" y="82" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700">Total bus referrals</text>
+<line x1="116" y1="268.0" x2="400" y2="268.0" stroke="#e6e6e6"/>
+<text x="108" y="272.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0%</text>
+<line x1="116" y1="251.6" x2="400" y2="251.6" stroke="#e6e6e6"/>
+<text x="108" y="255.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">10%</text>
+<line x1="116" y1="235.2" x2="400" y2="235.2" stroke="#e6e6e6"/>
+<text x="108" y="239.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">20%</text>
+<line x1="116" y1="218.8" x2="400" y2="218.8" stroke="#e6e6e6"/>
+<text x="108" y="222.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">30%</text>
+<line x1="116" y1="202.4" x2="400" y2="202.4" stroke="#e6e6e6"/>
+<text x="108" y="206.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">40%</text>
+<line x1="116" y1="186.0" x2="400" y2="186.0" stroke="#e6e6e6"/>
+<text x="108" y="190.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">50%</text>
+<line x1="116" y1="169.6" x2="400" y2="169.6" stroke="#e6e6e6"/>
+<text x="108" y="173.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">60%</text>
+<line x1="116" y1="153.2" x2="400" y2="153.2" stroke="#e6e6e6"/>
+<text x="108" y="157.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">70%</text>
+<line x1="116" y1="136.8" x2="400" y2="136.8" stroke="#e6e6e6"/>
+<text x="108" y="140.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">80%</text>
+<line x1="116" y1="120.4" x2="400" y2="120.4" stroke="#e6e6e6"/>
+<text x="108" y="124.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">90%</text>
+<line x1="116" y1="104.0" x2="400" y2="104.0" stroke="#e6e6e6"/>
+<text x="108" y="108.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">100%</text>
+<line x1="116" y1="104" x2="116" y2="268" stroke="#333"/>
+<line x1="116" y1="268" x2="400" y2="268" stroke="#333"/>
+<rect x="119.7" y="108.3" width="33.3" height="159.7" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="119.7" y="118.3" width="33.3" height="149.7" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="136.3" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">0</text>
+<rect x="160.2" y="263.7" width="33.3" height="4.3" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="160.2" y="261.7" width="33.3" height="6.3" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="176.9" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">1</text>
+<rect x="200.8" y="268.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="200.8" y="262.9" width="33.3" height="5.1" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="217.4" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">2</text>
+<rect x="241.4" y="268.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="241.4" y="266.1" width="33.3" height="1.9" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="258.0" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">3</text>
+<rect x="281.9" y="268.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="281.9" y="267.3" width="33.3" height="0.7" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="298.6" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">4</text>
+<rect x="322.5" y="268.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="322.5" y="268.0" width="33.3" height="0.0" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="339.1" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">5</text>
+<rect x="363.1" y="268.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="363.1" y="267.8" width="33.3" height="0.2" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="379.7" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">6</text>
+<text x="258.0" y="308" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Referral count</text>
+<text transform="translate(73,186.0) rotate(-90)" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Students in bin</text>
+<text x="652.0" y="82" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700">Bus Level I referrals</text>
+<line x1="510" y1="268.0" x2="794" y2="268.0" stroke="#e6e6e6"/>
+<text x="502" y="272.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0%</text>
+<line x1="510" y1="251.6" x2="794" y2="251.6" stroke="#e6e6e6"/>
+<text x="502" y="255.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">10%</text>
+<line x1="510" y1="235.2" x2="794" y2="235.2" stroke="#e6e6e6"/>
+<text x="502" y="239.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">20%</text>
+<line x1="510" y1="218.8" x2="794" y2="218.8" stroke="#e6e6e6"/>
+<text x="502" y="222.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">30%</text>
+<line x1="510" y1="202.4" x2="794" y2="202.4" stroke="#e6e6e6"/>
+<text x="502" y="206.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">40%</text>
+<line x1="510" y1="186.0" x2="794" y2="186.0" stroke="#e6e6e6"/>
+<text x="502" y="190.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">50%</text>
+<line x1="510" y1="169.6" x2="794" y2="169.6" stroke="#e6e6e6"/>
+<text x="502" y="173.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">60%</text>
+<line x1="510" y1="153.2" x2="794" y2="153.2" stroke="#e6e6e6"/>
+<text x="502" y="157.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">70%</text>
+<line x1="510" y1="136.8" x2="794" y2="136.8" stroke="#e6e6e6"/>
+<text x="502" y="140.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">80%</text>
+<line x1="510" y1="120.4" x2="794" y2="120.4" stroke="#e6e6e6"/>
+<text x="502" y="124.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">90%</text>
+<line x1="510" y1="104.0" x2="794" y2="104.0" stroke="#e6e6e6"/>
+<text x="502" y="108.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">100%</text>
+<line x1="510" y1="104" x2="510" y2="268" stroke="#333"/>
+<line x1="510" y1="268" x2="794" y2="268" stroke="#333"/>
+<rect x="522.8" y="104.4" width="116.4" height="163.6" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="522.8" y="104.0" width="116.4" height="164.0" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="581.0" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">0</text>
+<rect x="664.8" y="267.6" width="116.4" height="0.4" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="664.8" y="268.0" width="116.4" height="0.0" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="723.0" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">1</text>
+<text x="652.0" y="308" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Referral count</text>
+<text transform="translate(467,186.0) rotate(-90)" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Students in bin</text>
+<text x="258.0" y="404" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700">Bus Level II referrals</text>
+<line x1="116" y1="590.0" x2="400" y2="590.0" stroke="#e6e6e6"/>
+<text x="108" y="594.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0%</text>
+<line x1="116" y1="573.6" x2="400" y2="573.6" stroke="#e6e6e6"/>
+<text x="108" y="577.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">10%</text>
+<line x1="116" y1="557.2" x2="400" y2="557.2" stroke="#e6e6e6"/>
+<text x="108" y="561.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">20%</text>
+<line x1="116" y1="540.8" x2="400" y2="540.8" stroke="#e6e6e6"/>
+<text x="108" y="544.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">30%</text>
+<line x1="116" y1="524.4" x2="400" y2="524.4" stroke="#e6e6e6"/>
+<text x="108" y="528.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">40%</text>
+<line x1="116" y1="508.0" x2="400" y2="508.0" stroke="#e6e6e6"/>
+<text x="108" y="512.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">50%</text>
+<line x1="116" y1="491.6" x2="400" y2="491.6" stroke="#e6e6e6"/>
+<text x="108" y="495.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">60%</text>
+<line x1="116" y1="475.2" x2="400" y2="475.2" stroke="#e6e6e6"/>
+<text x="108" y="479.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">70%</text>
+<line x1="116" y1="458.8" x2="400" y2="458.8" stroke="#e6e6e6"/>
+<text x="108" y="462.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">80%</text>
+<line x1="116" y1="442.4" x2="400" y2="442.4" stroke="#e6e6e6"/>
+<text x="108" y="446.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">90%</text>
+<line x1="116" y1="426.0" x2="400" y2="426.0" stroke="#e6e6e6"/>
+<text x="108" y="430.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">100%</text>
+<line x1="116" y1="426" x2="116" y2="590" stroke="#333"/>
+<line x1="116" y1="590" x2="400" y2="590" stroke="#333"/>
+<rect x="119.7" y="429.1" width="33.3" height="160.9" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="119.7" y="439.8" width="33.3" height="150.2" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="136.3" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">0</text>
+<rect x="160.2" y="586.9" width="33.3" height="3.1" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="160.2" y="583.9" width="33.3" height="6.1" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="176.9" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">1</text>
+<rect x="200.8" y="590.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="200.8" y="585.1" width="33.3" height="4.9" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="217.4" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">2</text>
+<rect x="241.4" y="590.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="241.4" y="588.1" width="33.3" height="1.9" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="258.0" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">3</text>
+<rect x="281.9" y="590.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="281.9" y="589.3" width="33.3" height="0.7" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="298.6" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">4</text>
+<rect x="322.5" y="590.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="322.5" y="590.0" width="33.3" height="0.0" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="339.1" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">5</text>
+<rect x="363.1" y="590.0" width="33.3" height="0.0" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="363.1" y="589.8" width="33.3" height="0.2" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="379.7" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">6</text>
+<text x="258.0" y="630" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Referral count</text>
+<text transform="translate(73,508.0) rotate(-90)" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Students in bin</text>
+<text x="652.0" y="404" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700">Bus Level III referrals</text>
+<line x1="510" y1="590.0" x2="794" y2="590.0" stroke="#e6e6e6"/>
+<text x="502" y="594.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">0%</text>
+<line x1="510" y1="573.6" x2="794" y2="573.6" stroke="#e6e6e6"/>
+<text x="502" y="577.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">10%</text>
+<line x1="510" y1="557.2" x2="794" y2="557.2" stroke="#e6e6e6"/>
+<text x="502" y="561.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">20%</text>
+<line x1="510" y1="540.8" x2="794" y2="540.8" stroke="#e6e6e6"/>
+<text x="502" y="544.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">30%</text>
+<line x1="510" y1="524.4" x2="794" y2="524.4" stroke="#e6e6e6"/>
+<text x="502" y="528.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">40%</text>
+<line x1="510" y1="508.0" x2="794" y2="508.0" stroke="#e6e6e6"/>
+<text x="502" y="512.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">50%</text>
+<line x1="510" y1="491.6" x2="794" y2="491.6" stroke="#e6e6e6"/>
+<text x="502" y="495.6" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">60%</text>
+<line x1="510" y1="475.2" x2="794" y2="475.2" stroke="#e6e6e6"/>
+<text x="502" y="479.2" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">70%</text>
+<line x1="510" y1="458.8" x2="794" y2="458.8" stroke="#e6e6e6"/>
+<text x="502" y="462.8" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">80%</text>
+<line x1="510" y1="442.4" x2="794" y2="442.4" stroke="#e6e6e6"/>
+<text x="502" y="446.4" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">90%</text>
+<line x1="510" y1="426.0" x2="794" y2="426.0" stroke="#e6e6e6"/>
+<text x="502" y="430.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">100%</text>
+<line x1="510" y1="426" x2="510" y2="590" stroke="#333"/>
+<line x1="510" y1="590" x2="794" y2="590" stroke="#333"/>
+<rect x="522.8" y="426.8" width="116.4" height="163.2" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="522.8" y="426.7" width="116.4" height="163.3" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="581.0" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">0</text>
+<rect x="664.8" y="589.2" width="116.4" height="0.8" fill="#1f77b4" fill-opacity="0.45" stroke="#1f77b4" stroke-width="1"/>
+<rect x="664.8" y="589.3" width="116.4" height="0.7" fill="#ff7f0e" fill-opacity="0.45" stroke="#ff7f0e" stroke-width="1"/>
+<text x="723.0" y="607" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">1</text>
+<text x="652.0" y="630" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Referral count</text>
+<text transform="translate(467,508.0) rotate(-90)" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Students in bin</text>
+</svg>

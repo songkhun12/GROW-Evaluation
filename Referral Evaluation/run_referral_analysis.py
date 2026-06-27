@@ -241,10 +241,103 @@ def write_csv(path, rows):
         writer.writerows(rows)
 
 
+
+def write_overlap_histogram_svg(path, data, outcomes, title):
+    """Write faceted overlapped histograms with percentages on the y-axis."""
+    width = 1200
+    panel_w = 360
+    panel_h = 260
+    margin_left = 58
+    margin_right = 18
+    margin_top = 42
+    margin_bottom = 54
+    gap_x = 34
+    gap_y = 62
+    cols = 2
+    rows = math.ceil(len(outcomes) / cols)
+    height = 82 + rows * panel_h + (rows - 1) * gap_y
+    colors = {"JMTES": "#1f77b4", "JES": "#ff7f0e"}
+
+    def esc(text):
+        return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        '<rect width="100%" height="100%" fill="white"/>',
+        f'<text x="{width/2}" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700">{esc(title)}</text>',
+        f'<rect x="{width-215}" y="17" width="14" height="14" fill="{colors["JMTES"]}" fill-opacity="0.45" stroke="{colors["JMTES"]}"/>',
+        f'<text x="{width-195}" y="29" font-family="Arial, sans-serif" font-size="13">JMTES</text>',
+        f'<rect x="{width-135}" y="17" width="14" height="14" fill="{colors["JES"]}" fill-opacity="0.45" stroke="{colors["JES"]}"/>',
+        f'<text x="{width-115}" y="29" font-family="Arial, sans-serif" font-size="13">JES</text>',
+    ]
+    for idx, (var, label) in enumerate(outcomes):
+        col = idx % cols
+        row = idx // cols
+        x0 = margin_left + col * (panel_w + gap_x)
+        y0 = 62 + row * (panel_h + gap_y)
+        plot_w = panel_w - margin_left - margin_right
+        plot_h = panel_h - margin_top - margin_bottom
+        max_count = int(max(d[var] for d in data))
+        bins = list(range(max_count + 1))
+        pct_by_school = {}
+        for school in ["JMTES", "JES"]:
+            vals = [int(d[var]) for d in data if d["school"] == school]
+            n = len(vals) or 1
+            pct_by_school[school] = [100 * vals.count(b) / n for b in bins]
+        ymax = max(max(v) for v in pct_by_school.values())
+        ymax = max(10, math.ceil(ymax / 10) * 10)
+        bar_slot = plot_w / len(bins)
+        bar_w = max(6, bar_slot * 0.82)
+        parts.append(f'<text x="{x0 + margin_left + plot_w/2}" y="{y0 + 20}" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700">{esc(label)}</text>')
+        # grid and y labels
+        for t in range(0, int(ymax) + 1, 10):
+            yy = y0 + margin_top + plot_h - (t / ymax) * plot_h
+            parts.append(f'<line x1="{x0+margin_left}" y1="{yy:.1f}" x2="{x0+margin_left+plot_w}" y2="{yy:.1f}" stroke="#e6e6e6"/>')
+            parts.append(f'<text x="{x0+margin_left-8}" y="{yy+4:.1f}" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#555">{t}%</text>')
+        parts.append(f'<line x1="{x0+margin_left}" y1="{y0+margin_top}" x2="{x0+margin_left}" y2="{y0+margin_top+plot_h}" stroke="#333"/>')
+        parts.append(f'<line x1="{x0+margin_left}" y1="{y0+margin_top+plot_h}" x2="{x0+margin_left+plot_w}" y2="{y0+margin_top+plot_h}" stroke="#333"/>')
+        for bi, b in enumerate(bins):
+            cx = x0 + margin_left + bi * bar_slot + bar_slot / 2
+            for school in ["JMTES", "JES"]:
+                h = pct_by_school[school][bi] / ymax * plot_h
+                parts.append(f'<rect x="{cx-bar_w/2:.1f}" y="{y0+margin_top+plot_h-h:.1f}" width="{bar_w:.1f}" height="{h:.1f}" fill="{colors[school]}" fill-opacity="0.45" stroke="{colors[school]}" stroke-width="1"/>')
+            if len(bins) <= 13 or bi % 2 == 0:
+                parts.append(f'<text x="{cx:.1f}" y="{y0+margin_top+plot_h+17}" text-anchor="middle" font-family="Arial, sans-serif" font-size="11">{b}</text>')
+        parts.append(f'<text x="{x0+margin_left+plot_w/2}" y="{y0+panel_h-14}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Referral count</text>')
+        parts.append(f'<text transform="translate({x0+15},{y0+margin_top+plot_h/2}) rotate(-90)" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">Students in bin</text>')
+    parts.append('</svg>')
+    with open(path, "w") as f:
+        f.write("\n".join(parts))
+
 def main():
     jmtes = load_school(JMTES, "JMTES", 1)
     jes = load_school(JES, "JES", 0)
     data = jmtes + jes
+    school_histograms = [
+        ("classroom_total", "Total school referrals"),
+        ("classroom_l1", "School Level I referrals"),
+        ("classroom_l2", "School Level II referrals"),
+        ("classroom_l3", "School Level III referrals"),
+        ("classroom_l4", "School Level IV referrals"),
+    ]
+    bus_histograms = [
+        ("bus_total", "Total bus referrals"),
+        ("bus_l1", "Bus Level I referrals"),
+        ("bus_l2", "Bus Level II referrals"),
+        ("bus_l3", "Bus Level III referrals"),
+    ]
+    write_overlap_histogram_svg(
+        os.path.join(BASE, "jmtes_jes_school_referral_overlap_histograms.svg"),
+        data,
+        school_histograms,
+        "School Referral Distributions by School",
+    )
+    write_overlap_histogram_svg(
+        os.path.join(BASE, "jmtes_jes_bus_referral_overlap_histograms.svg"),
+        data,
+        bus_histograms,
+        "Bus Referral Distributions by School",
+    )
     source_audit = [
         {"school": "JMTES", "source_file": os.path.basename(JMTES), "source_report_date": "2026-06-15", "students_loaded": len(jmtes), "workbook_title": jmtes[0]["source_title"] if jmtes else ""},
         {"school": "JES", "source_file": os.path.basename(JES), "source_report_date": "2026-06-15", "students_loaded": len(jes), "workbook_title": jes[0]["source_title"] if jes else ""},
@@ -310,7 +403,7 @@ def main():
         logit_results.append({"outcome": y, "label": label, "coefficient": coef, "robust_se": se, "p_value": p, "stars": stars(p), "odds_ratio": math.exp(coef), "jes_weighted_probability": weighted_probability(0.0), "jmtes_weighted_probability": weighted_probability(1.0), "observations": len(data), "events": sum(d[y] for d in data)})
     write_csv(os.path.join(BASE, "jmtes_jes_referral_any_referral_logit_robustness_results.csv"), logit_results)
     write_csv(os.path.join(BASE, "jmtes_jes_referral_student_data.csv"), data)
-    print(f"Loaded {len(jmtes)} JMTES and {len(jes)} JES students; wrote overlap-weighted covariate-adjusted outputs.")
+    print(f"Loaded {len(jmtes)} JMTES and {len(jes)} JES students; wrote overlap-weighted covariate-adjusted outputs and referral histogram SVGs.")
 
 
 if __name__ == "__main__":
