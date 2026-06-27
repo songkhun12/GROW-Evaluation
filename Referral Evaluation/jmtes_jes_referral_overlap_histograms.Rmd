@@ -1,0 +1,158 @@
+---
+title: "Referral Overlap Histograms"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(width = 120, scipen = 999)
+```
+
+# Purpose
+
+This report creates overlapped histograms for referral-count distributions at JMTES and JES. The y-axis is the percentage of students within each school who fall in each referral-count bin, so the two school distributions can be compared even though the schools have different sample sizes.
+
+The school referral figure includes total school referrals and Levels I-IV. The bus referral figure includes total bus referrals and Levels I-III.
+
+# Packages and data
+
+```{r packages-data}
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  stop("The ggplot2 package is required to render these histograms.")
+}
+
+library(ggplot2)
+
+student_data_file <- "jmtes_jes_referral_student_data.csv"
+if (!file.exists(student_data_file)) {
+  stop("Missing ", student_data_file, ". Run run_referral_analysis.py first, then render this R Markdown file from the Referral Evaluation folder.")
+}
+
+referral_data <- read.csv(student_data_file, stringsAsFactors = FALSE, check.names = FALSE)
+referral_data$school <- factor(referral_data$school, levels = c("JMTES", "JES"))
+```
+
+# Helper functions
+
+```{r helpers}
+make_histogram_data <- function(data, outcomes) {
+  pieces <- lapply(seq_len(nrow(outcomes)), function(i) {
+    variable <- outcomes$variable[i]
+    label <- outcomes$label[i]
+    max_count <- max(data[[variable]], na.rm = TRUE)
+    bins <- 0:max_count
+
+    do.call(rbind, lapply(levels(data$school), function(school_name) {
+      values <- data[[variable]][data$school == school_name]
+      values <- values[!is.na(values)]
+      counts <- tabulate(match(values, bins), nbins = length(bins))
+      data.frame(
+        outcome = label,
+        count_bin = bins,
+        students = counts,
+        percent_students = 100 * counts / length(values),
+        school = school_name,
+        stringsAsFactors = FALSE
+      )
+    }))
+  })
+
+  histogram_data <- do.call(rbind, pieces)
+  histogram_data$outcome <- factor(histogram_data$outcome, levels = outcomes$label)
+  histogram_data$school <- factor(histogram_data$school, levels = c("JMTES", "JES"))
+  histogram_data
+}
+
+plot_overlap_histograms <- function(histogram_data, title) {
+  ggplot(
+    histogram_data,
+    aes(x = count_bin, y = percent_students, fill = school, color = school)
+  ) +
+    geom_col(position = "identity", alpha = 0.45, width = 0.85) +
+    facet_wrap(~ outcome, scales = "free_x") +
+    scale_x_continuous(breaks = function(x) seq(floor(x[1]), ceiling(x[2]), by = 1)) +
+    scale_y_continuous(labels = function(x) paste0(x, "%"), expand = expansion(mult = c(0, 0.08))) +
+    scale_fill_manual(values = c("JMTES" = "#1f77b4", "JES" = "#ff7f0e")) +
+    scale_color_manual(values = c("JMTES" = "#1f77b4", "JES" = "#ff7f0e")) +
+    labs(
+      title = title,
+      x = "Referral count",
+      y = "Students in bin",
+      fill = "School",
+      color = "School"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5),
+      strip.text = element_text(face = "bold"),
+      legend.position = "top",
+      panel.grid.minor = element_blank()
+    )
+}
+```
+
+# School referral histograms
+
+```{r school-histograms, fig.width=12, fig.height=8}
+school_outcomes <- data.frame(
+  variable = c("classroom_total", "classroom_l1", "classroom_l2", "classroom_l3", "classroom_l4"),
+  label = c(
+    "Total school referrals",
+    "School Level I referrals",
+    "School Level II referrals",
+    "School Level III referrals",
+    "School Level IV referrals"
+  ),
+  stringsAsFactors = FALSE
+)
+
+school_histogram_data <- make_histogram_data(referral_data, school_outcomes)
+school_histogram_plot <- plot_overlap_histograms(
+  school_histogram_data,
+  "School Referral Distributions by School"
+)
+school_histogram_plot
+
+ggsave(
+  "jmtes_jes_school_referral_overlap_histograms_ggplot.svg",
+  school_histogram_plot,
+  width = 12,
+  height = 8,
+  units = "in"
+)
+```
+
+# Bus referral histograms
+
+```{r bus-histograms, fig.width=12, fig.height=7}
+bus_outcomes <- data.frame(
+  variable = c("bus_total", "bus_l1", "bus_l2", "bus_l3"),
+  label = c(
+    "Total bus referrals",
+    "Bus Level I referrals",
+    "Bus Level II referrals",
+    "Bus Level III referrals"
+  ),
+  stringsAsFactors = FALSE
+)
+
+bus_histogram_data <- make_histogram_data(referral_data, bus_outcomes)
+bus_histogram_plot <- plot_overlap_histograms(
+  bus_histogram_data,
+  "Bus Referral Distributions by School"
+)
+bus_histogram_plot
+
+ggsave(
+  "jmtes_jes_bus_referral_overlap_histograms_ggplot.svg",
+  bus_histogram_plot,
+  width = 12,
+  height = 7,
+  units = "in"
+)
+```
