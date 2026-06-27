@@ -1,0 +1,175 @@
+---
+title: "Figure D1. Robustness Test of the Impact of GROW on Attendance Outcomes"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: false
+    number_sections: false
+  word_document:
+    toc: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(width = 120, scipen = 999)
+```
+
+# Purpose
+
+This R Markdown file creates Figure D1, a coefficient plot for Appendix D's robustness test of the impact of GROW exposure on attendance outcomes. The robustness test trims students whose unexcused absence percentage was above the pooled 95th percentile of the JMTES/JES analytic sample. The cutoff was 23.53 percent, removing 55 of 1,093 students: 2 from JMTES and 53 from JES.
+
+The plot includes all three attendance outcomes from Table D1 and shows both overlap-weighted model specifications:
+
+* OW: overlap-weighted model without student covariates.
+* OW + covariates: overlap-weighted model with grade, gender, race/ethnicity, age, meal-status disadvantage, and entry-code controls.
+
+# Load robustness estimates
+
+```{r load-data}
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  stop("The ggplot2 package is required to create Figure D1.")
+}
+
+results_file <- "jmtes_jes_attendance_unexcused_trim_robustness_results.csv"
+if (!file.exists(results_file)) {
+  stop("Missing required file: ", results_file)
+}
+
+trimmed_results <- read.csv(results_file, stringsAsFactors = FALSE)
+
+required_columns <- c(
+  "outcome", "model", "estimate", "std_error", "p_value", "conf_low", "conf_high"
+)
+missing_columns <- setdiff(required_columns, names(trimmed_results))
+if (length(missing_columns) > 0) {
+  stop("Missing required column(s): ", paste(missing_columns, collapse = ", "))
+}
+
+trimmed_results
+```
+
+# Figure D1
+
+The coefficient plot below displays the JMTES coefficient for all six trimmed-sample models: three attendance outcomes crossed with OW and OW + covariates specifications. Points are coefficient estimates and horizontal bars are 95 percent confidence intervals. Negative estimates indicate lower absence percentages at JMTES relative to comparable JES students after trimming high-end unexcused absence values.
+
+```{r figure-d1, fig.width=10, fig.height=6}
+coef_plot_data <- trimmed_results
+coef_plot_data$outcome <- factor(
+  coef_plot_data$outcome,
+  levels = c(
+    "Unexcused absence percentage",
+    "Excused absence percentage",
+    "Total absence percentage"
+  ),
+  labels = c(
+    "Unexcused absence %",
+    "Excused absence %",
+    "Total absence %"
+  )
+)
+coef_plot_data$model <- factor(
+  coef_plot_data$model,
+  levels = c("OW", "OW + covariates")
+)
+coef_plot_data$significance <- cut(
+  coef_plot_data$p_value,
+  breaks = c(-Inf, 0.01, 0.05, Inf),
+  labels = c("*** p < 0.01", "** p < 0.05", "n.s."),
+  right = FALSE
+)
+coef_plot_data$point_fill <- ifelse(
+  coef_plot_data$significance == "n.s.",
+  "n.s.",
+  as.character(coef_plot_data$model)
+)
+coef_plot_data$point_fill <- factor(
+  coef_plot_data$point_fill,
+  levels = c("OW", "OW + covariates", "n.s.")
+)
+
+model_colors <- c("OW" = "#1b9e77", "OW + covariates" = "#d95f02")
+point_fills <- c(model_colors, "n.s." = "white")
+
+figure_d1 <- ggplot2::ggplot(
+  coef_plot_data,
+  ggplot2::aes(
+    x = estimate,
+    y = outcome,
+    xmin = conf_low,
+    xmax = conf_high,
+    color = model,
+    shape = significance,
+    fill = point_fill
+  )
+) +
+  ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  ggplot2::geom_errorbarh(
+    position = ggplot2::position_dodge(width = 0.55),
+    height = 0.18,
+    linewidth = 0.9
+  ) +
+  ggplot2::geom_point(
+    position = ggplot2::position_dodge(width = 0.55),
+    size = 3.6,
+    stroke = 1.1
+  ) +
+  ggplot2::scale_color_manual(
+    name = "Attendance model",
+    values = model_colors
+  ) +
+  ggplot2::scale_fill_manual(
+    values = point_fills,
+    guide = "none"
+  ) +
+  ggplot2::scale_shape_manual(
+    name = "Statistical significance",
+    values = c("*** p < 0.01" = 21, "** p < 0.05" = 24, "n.s." = 21)
+  ) +
+  ggplot2::scale_x_continuous(
+    breaks = seq(-1.5, 1.0, by = 0.5),
+    limits = c(-1.55, 1.0)
+  ) +
+  ggplot2::labs(
+    title = "GROW-Associated Differences in Attendance Outcomes After Trimming",
+    subtitle = "Students above the pooled 95th percentile of unexcused absence percentage were excluded",
+    x = "JMTES absence percentage points - JES absence percentage points",
+    y = NULL
+  ) +
+  ggplot2::guides(
+    shape = ggplot2::guide_legend(
+      order = 1,
+      override.aes = list(color = "black", fill = c("black", "black", "white"))
+    ),
+    color = ggplot2::guide_legend(order = 2)
+  ) +
+  ggplot2::theme_minimal(base_size = 14) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(face = "bold", size = 20),
+    plot.subtitle = ggplot2::element_text(size = 12),
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    panel.grid.minor = ggplot2::element_blank()
+  )
+
+figure_d1
+```
+
+# Export figure
+
+```{r export-figure-d1}
+ggplot2::ggsave(
+  filename = "figure_d1_trimmed_attendance_coefficient_plot.svg",
+  plot = figure_d1,
+  width = 10,
+  height = 6
+)
+
+ggplot2::ggsave(
+  filename = "figure_d1_trimmed_attendance_coefficient_plot.png",
+  plot = figure_d1,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+```
