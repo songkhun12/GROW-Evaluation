@@ -1,0 +1,139 @@
+---
+title: "Appendix F: Robustness Test of the Impact of GROW on Behavioral Outcomes"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(width = 120, scipen = 999)
+```
+
+# Appendix F: Robustness Test of the Impact of GROW on Behavioral Outcomes
+
+As an additional robustness check, this appendix re-estimates the behavioral referral analysis using overlap-weighted logistic regression models. Instead of modeling the number of referrals a student received, this test measures whether a student had at least one referral during the study period.
+
+The purpose of this robustness check is to assess whether the main findings are not driven only by a small number of students who received many referrals. The main Poisson models estimate differences in the number of referrals, so a student with several referrals has more influence on the count-based outcome than a student with only one referral. The any-referral logistic models use a simpler outcome that focuses on whether a student received at least one referral. This allows the analysis to test whether GROW is also associated with a lower likelihood of students entering the referral system at all, not just with fewer repeated referrals among students who already had behavioral incidents.
+
+# Load results
+
+```{r load-results}
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  stop("The ggplot2 package is required to create the coefficient plot.")
+}
+
+results_file <- "jmtes_jes_referral_any_referral_logit_robustness_results.csv"
+if (!file.exists(results_file)) {
+  stop("Missing ", results_file, ". Run run_referral_analysis.py first, then render this R Markdown file from the Referral Evaluation folder.")
+}
+
+logit_results <- read.csv(results_file, stringsAsFactors = FALSE, check.names = FALSE)
+logit_results$ci_low <- logit_results$coefficient - 1.96 * logit_results$robust_se
+logit_results$ci_high <- logit_results$coefficient + 1.96 * logit_results$robust_se
+logit_results$probability_difference <- logit_results$jmtes_weighted_probability - logit_results$jes_weighted_probability
+logit_results$significance <- cut(
+  logit_results$p_value,
+  breaks = c(-Inf, 0.01, 0.05, 0.10, Inf),
+  labels = c("*** p < 0.01", "** p < 0.05", "* p < 0.10", "n.s."),
+  right = FALSE
+)
+logit_results$label <- factor(
+  logit_results$label,
+  levels = rev(c("Any school referral", "Any bus referral", "Any school or bus referral"))
+)
+```
+
+# Table F1
+
+```{r table-f1}
+format_pct <- function(x) paste0(sprintf("%.1f", 100 * x), "%")
+format_pp <- function(x) paste0(sprintf("%.1f", 100 * x), " percentage points")
+format_p <- function(p) ifelse(p < 0.001, "<0.001", sprintf("%.3f", p))
+
+f1_table <- data.frame(
+  outcome = as.character(logit_results$label),
+  model = "OW logit + covariates",
+  jmtes_coefficient = paste0(sprintf("%.3f", logit_results$coefficient), logit_results$stars),
+  robust_se = paste0("(", sprintf("%.3f", logit_results$robust_se), ")"),
+  odds_ratio = sprintf("%.3f", logit_results$odds_ratio),
+  jes_weighted_probability = format_pct(logit_results$jes_weighted_probability),
+  jmtes_weighted_probability = format_pct(logit_results$jmtes_weighted_probability),
+  probability_difference = format_pp(logit_results$probability_difference),
+  student_covariates = "Yes",
+  overlap_weights = "Yes",
+  observations = format(logit_results$observations, big.mark = ",", scientific = FALSE),
+  students_with_referrals = format(logit_results$events, big.mark = ",", scientific = FALSE),
+  p_value = format_p(logit_results$p_value),
+  row.names = NULL
+)
+
+f1_table
+```
+
+Notes: The table reports overlap-weighted logistic regression estimates for whether a student had at least one referral. The JMTES coefficient is a log-odds difference. Robust standard errors are in parentheses. Odds ratios below 1 indicate lower odds of receiving at least one referral at JMTES than at JES. Weighted probabilities are model-adjusted predicted probabilities. The difference in weighted probability row reports JMTES minus JES in percentage points, so negative values indicate lower predicted referral probabilities at JMTES. Student covariates include grade, gender, race/ethnicity, age, meal-status disadvantage, and entry-code controls. *** p<0.01, ** p<0.05, * p<0.10.
+
+# Coefficient plot
+
+The coefficient plot below displays the JMTES coefficient for the three overlap-weighted logistic robustness models. Points are log-odds coefficient estimates and horizontal bars are 95 percent confidence intervals. Estimates to the left of zero indicate lower odds of receiving at least one referral at JMTES relative to comparable JES students.
+
+```{r coefficient-plot, fig.width=10, fig.height=5.5}
+appendix_f_coefficient_plot <- ggplot2::ggplot(
+  logit_results,
+  ggplot2::aes(
+    x = coefficient,
+    y = label,
+    xmin = ci_low,
+    xmax = ci_high,
+    shape = significance,
+    fill = significance
+  )
+) +
+  ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  ggplot2::geom_errorbarh(height = 0.18, linewidth = 0.9, color = "#2C7FB8") +
+  ggplot2::geom_point(size = 3.6, stroke = 1.1, color = "#2C7FB8") +
+  ggplot2::scale_shape_manual(
+    name = "Statistical significance",
+    values = c("*** p < 0.01" = 21, "** p < 0.05" = 24, "* p < 0.10" = 22, "n.s." = 21)
+  ) +
+  ggplot2::scale_fill_manual(
+    name = "Statistical significance",
+    values = c("*** p < 0.01" = "black", "** p < 0.05" = "black", "* p < 0.10" = "gray40", "n.s." = "white")
+  ) +
+  ggplot2::labs(
+    title = "Appendix F: Any-Referral Logistic Robustness Estimates",
+    subtitle = "Overlap-weighted logit models with student covariates; bars are 95% confidence intervals",
+    x = "JMTES coefficient (log-odds difference relative to JES)",
+    y = NULL
+  ) +
+  ggplot2::guides(
+    shape = ggplot2::guide_legend(order = 1, override.aes = list(color = "black")),
+    fill = "none"
+  ) +
+  ggplot2::theme_minimal(base_size = 14) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(face = "bold", size = 18),
+    legend.position = "bottom",
+    panel.grid.minor = ggplot2::element_blank()
+  )
+
+appendix_f_coefficient_plot
+```
+
+# Export outputs
+
+```{r export}
+write.csv(f1_table, "jmtes_jes_referral_any_referral_logit_table_f1.csv", row.names = FALSE)
+
+ggplot2::ggsave(
+  filename = "jmtes_jes_referral_any_referral_logit_coefficient_plot.svg",
+  plot = appendix_f_coefficient_plot,
+  width = 10,
+  height = 5.5
+)
+```
+
+As shown in Columns 1 through 3 of Table F1, the JMTES coefficient is negative and statistically significant for any school referral, any bus referral, and any school or bus referral. The predicted probabilities make the results easier to interpret. These results are consistent with the main findings in Tables 7 and 8, suggesting that JMTES, the school that implemented GROW, was associated not only with fewer referrals overall, but also with a lower likelihood that students received at least one referral during the study period.
