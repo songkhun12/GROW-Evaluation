@@ -1,0 +1,175 @@
+---
+title: "GROW Referral Coefficient Plots"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: false
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(width = 120, scipen = 999)
+```
+
+# Purpose
+
+This RMarkdown file creates publication-style coefficient plots for the overlap-weighted Poisson referral results reported in Tables 2 and 3. The plotted points are JMTES coefficients from Poisson models on the log incidence-rate-ratio scale. Horizontal bars show 95 percent confidence intervals computed as `coefficient +/- 1.96 * robust_se`. The dashed vertical line marks zero, meaning no difference between JMTES and JES.
+
+```{r packages}
+required_packages <- c("ggplot2")
+missing_packages <- required_packages[!vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)]
+if (length(missing_packages) > 0) {
+  stop("Missing required package(s): ", paste(missing_packages, collapse = ", "))
+}
+```
+
+```{r load-results}
+results_file <- "jmtes_jes_referral_poisson_results.csv"
+if (!file.exists(results_file)) {
+  stop("Missing results file: ", results_file)
+}
+
+referral_results <- read.csv(results_file, stringsAsFactors = FALSE, check.names = FALSE)
+
+referral_results$coefficient_ci_low <- referral_results$coefficient - 1.96 * referral_results$robust_se
+referral_results$coefficient_ci_high <- referral_results$coefficient + 1.96 * referral_results$robust_se
+referral_results$plot_label <- referral_results$label
+referral_results$plot_label[referral_results$outcome == "bus_total"] <- "Bus referrals"
+referral_results$plot_label[referral_results$outcome == "bus_severity_points"] <- "Bus severity-weighted frequency"
+referral_results$plot_label[referral_results$outcome == "bus_l1"] <- "Bus L-I"
+
+referral_results$significance <- ifelse(
+  is.na(referral_results$p_value),
+  "n/a",
+  ifelse(referral_results$p_value < 0.01, "*** p < 0.01",
+    ifelse(referral_results$p_value < 0.05, "** p < 0.05", "n.s.")
+  )
+)
+
+referral_results$setting <- ifelse(grepl("^classroom", referral_results$outcome), "Classroom", "Bus")
+```
+
+```{r plot-theme}
+referral_colors <- c(
+  "Classroom" = "#1B9E77",
+  "Bus" = "#D95F02"
+)
+
+significance_shapes <- c(
+  "*** p < 0.01" = 16,
+  "** p < 0.05" = 17,
+  "n.s." = 1,
+  "n/a" = 4
+)
+
+coefficient_plot_theme <- ggplot2::theme_minimal(base_size = 15) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(face = "bold", size = 20, hjust = 0),
+    plot.subtitle = ggplot2::element_text(size = 12, color = "gray35"),
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color = "gray88"),
+    panel.grid.major.x = ggplot2::element_line(color = "gray88"),
+    axis.title.y = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_text(size = 13, color = "gray20"),
+    axis.text.x = ggplot2::element_text(size = 12, color = "gray20"),
+    axis.title.x = ggplot2::element_text(size = 14, margin = ggplot2::margin(t = 8)),
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    legend.title = ggplot2::element_text(size = 13),
+    legend.text = ggplot2::element_text(size = 12),
+    plot.margin = ggplot2::margin(12, 18, 12, 12)
+  )
+
+make_referral_coefficient_plot <- function(plot_data, title, x_limits, x_breaks) {
+  ggplot2::ggplot(
+    plot_data,
+    ggplot2::aes(
+      x = coefficient,
+      y = plot_label,
+      xmin = coefficient_ci_low,
+      xmax = coefficient_ci_high,
+      color = setting,
+      shape = significance
+    )
+  ) +
+    ggplot2::geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.7, color = "gray45") +
+    ggplot2::geom_errorbarh(height = 0.08, linewidth = 1.0, na.rm = TRUE) +
+    ggplot2::geom_point(size = 3.8, stroke = 1.1, na.rm = TRUE) +
+    ggplot2::geom_text(
+      data = plot_data[is.na(plot_data$coefficient), ],
+      ggplot2::aes(x = 0, y = plot_label, label = "n/a"),
+      inherit.aes = FALSE,
+      color = "gray30",
+      size = 4.2
+    ) +
+    ggplot2::scale_color_manual(values = referral_colors, breaks = c("Classroom", "Bus")) +
+    ggplot2::scale_shape_manual(
+      values = significance_shapes,
+      breaks = c("*** p < 0.01", "** p < 0.05", "n.s.", "n/a")
+    ) +
+    ggplot2::scale_x_continuous(limits = x_limits, breaks = x_breaks) +
+    ggplot2::labs(
+      title = title,
+      subtitle = "Points are JMTES log incidence-rate-ratio coefficients; bars are 95% confidence intervals",
+      x = "JMTES coefficient (log incidence-rate ratio) relative to JES",
+      color = "Referral setting",
+      shape = "Statistical significance"
+    ) +
+    coefficient_plot_theme
+}
+```
+
+# Figure 2. Total and severity-weighted referral outcomes
+
+```{r figure-2-total-severity, fig.width=11, fig.height=6}
+figure2_outcomes <- c("classroom_total", "classroom_severity_points", "bus_total", "bus_severity_points")
+figure2_data <- referral_results[match(figure2_outcomes, referral_results$outcome), ]
+figure2_data$plot_label <- factor(figure2_data$plot_label, levels = rev(figure2_data$plot_label))
+
+figure2 <- make_referral_coefficient_plot(
+  figure2_data,
+  title = "GROW-Associated Differences in Behavioral Referral Rates",
+  x_limits = c(-2.8, 0.3),
+  x_breaks = seq(-2.5, 0, by = 0.5)
+)
+
+figure2
+```
+
+# Figure 3. Referral outcomes by severity level
+
+```{r figure-3-severity-level, fig.width=11, fig.height=7}
+figure3_outcomes <- c("classroom_l1", "classroom_l2", "classroom_l3", "classroom_l4", "bus_l1", "bus_l2", "bus_l3")
+figure3_data <- referral_results[match(figure3_outcomes, referral_results$outcome), ]
+figure3_data$plot_label <- factor(figure3_data$plot_label, levels = rev(figure3_data$plot_label))
+
+figure3 <- make_referral_coefficient_plot(
+  figure3_data,
+  title = "GROW-Associated Differences in Behavioral Referrals by Severity Level",
+  x_limits = c(-5.5, 2.3),
+  x_breaks = seq(-5, 2, by = 1)
+)
+
+figure3
+```
+
+# Export plot files
+
+```{r export-plots}
+ggplot2::ggsave(
+  "jmtes_jes_referral_total_severity_coefficient_plot.svg",
+  figure2,
+  width = 11,
+  height = 6,
+  device = grDevices::svg
+)
+ggplot2::ggsave(
+  "jmtes_jes_referral_by_severity_coefficient_plot.svg",
+  figure3,
+  width = 11,
+  height = 7,
+  device = grDevices::svg
+)
+```
