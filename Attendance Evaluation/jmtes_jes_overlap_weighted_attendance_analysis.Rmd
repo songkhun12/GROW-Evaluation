@@ -400,7 +400,14 @@ coef_plot_data$outcome <- factor(
 )
 coef_plot_data$model <- factor(
   coef_plot_data$model,
-  levels = c("Overlap weighted", "Overlap weighted + covariates")
+  levels = c("Overlap weighted", "Overlap weighted + covariates"),
+  labels = c("OW", "OW + covariates")
+)
+coef_plot_data$significance <- cut(
+  coef_plot_data$p_value,
+  breaks = c(-Inf, 0.01, 0.05, Inf),
+  labels = c("*** p < 0.01", "** p < 0.05", "n.s."),
+  right = FALSE
 )
 
 coefficient_plot <- ggplot2::ggplot(
@@ -411,30 +418,48 @@ coefficient_plot <- ggplot2::ggplot(
     xmin = conf_low,
     xmax = conf_high,
     color = model,
-    shape = model
+    shape = significance,
+    fill = significance
   )
 ) +
   ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
   ggplot2::geom_errorbarh(
     position = ggplot2::position_dodge(width = 0.55),
     height = 0.18,
-    linewidth = 0.8
+    linewidth = 0.9
   ) +
   ggplot2::geom_point(
     position = ggplot2::position_dodge(width = 0.55),
-    size = 3
+    size = 3.6,
+    stroke = 1.1
+  ) +
+  ggplot2::scale_color_manual(
+    name = "Attendance model",
+    values = c("OW" = "#1b9e77", "OW + covariates" = "#d95f02")
+  ) +
+  ggplot2::scale_shape_manual(
+    name = "Statistical significance",
+    values = c("*** p < 0.01" = 21, "** p < 0.05" = 24, "n.s." = 21)
+  ) +
+  ggplot2::scale_fill_manual(
+    name = "Statistical significance",
+    values = c("*** p < 0.01" = "black", "** p < 0.05" = "black", "n.s." = "white")
   ) +
   ggplot2::labs(
-    title = "Overlap-weighted JMTES coefficients for attendance outcomes",
-    subtitle = "Points are estimated percentage-point differences; bars are 95% confidence intervals",
-    x = "JMTES coefficient in absence percentage points",
-    y = NULL,
-    color = "Model",
-    shape = "Model"
+    title = "GROW-Associated Differences in Attendance Outcomes",
+    x = "JMTES absence percentage points - JES absence percentage points",
+    y = NULL
   ) +
-  ggplot2::theme_minimal(base_size = 12) +
+  ggplot2::guides(
+    shape = ggplot2::guide_legend(order = 1, override.aes = list(color = "black")),
+    fill = "none",
+    color = ggplot2::guide_legend(order = 2)
+  ) +
+  ggplot2::theme_minimal(base_size = 14) +
   ggplot2::theme(
+    plot.title = ggplot2::element_text(face = "bold", size = 20),
     legend.position = "bottom",
+    legend.box = "horizontal",
     panel.grid.minor = ggplot2::element_blank()
   )
 
