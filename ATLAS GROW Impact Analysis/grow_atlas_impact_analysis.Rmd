@@ -259,6 +259,8 @@ ggsave(
 
 
 
+
+
 # Balance and Common-Support Diagnostics
 
 Because the preferred academic, attendance, and behavior designs rely on propensity-score overlap weighting, Appendix A checks whether weighting improves comparability and whether common support is plausible. The diagnostic script computes standardized mean differences before and after weighting for baseline ATLAS score (academic models), gender, race/ethnicity, age, meal-status disadvantage, entry-code indicators, and grade indicators for the attendance and behavior models. It also creates propensity-score overlap histograms by school.

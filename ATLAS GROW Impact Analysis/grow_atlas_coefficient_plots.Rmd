@@ -15,11 +15,10 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 # Purpose
 
-This R Markdown file creates coefficient plots for the ATLAS GROW impact analysis. The plots use `grow_atlas_impact_regression_results.csv` and visualize the JMTES coefficient for every available grade-by-subject model. Coefficient labels use the same significance-star convention as the report tables: * p < 0.10, ** p < 0.05, and *** p < 0.01.
+This R Markdown file creates the two Appendix B robustness coefficient plots for the ATLAS GROW impact analysis. The plots use `grow_atlas_impact_regression_results.csv` and visualize the JMTES coefficient for every available grade-by-subject model. Coefficient labels use the same significance-star convention as the Appendix B tables: * p < 0.10, ** p < 0.05, and *** p < 0.01.
 
 The generated plot files are:
 
-* `grow_atlas_preferred_coefficient_plot.png`
 * `grow_atlas_matching_coefficient_plot.png`
 * `grow_atlas_did_coefficient_plot.png`
 
@@ -101,39 +100,11 @@ make_coefficient_plot <- function(plot_data, plot_title, plot_subtitle, legend_t
 }
 ```
 
-# Preferred Overlap-Weighted Model Coefficient Plot
-
-This plot visualizes the preferred overlap-weighted, baseline-adjusted, and covariate-adjusted estimates from Table 2. It matches the main discussion by showing generally small and non-significant estimates in Kindergarten through Grade 2, consistently positive and statistically significant estimates in Grades 3 and 4, and mixed Grade 5 results with Science statistically significant.
-
-```{r preferred-coefficient-plot, fig.width=10, fig.height=6, dpi=300}
-preferred_results <- prepare_coefficient_data(
-  all_results,
-  "overlap_weighted_ps_covariate_baseline_regression"
-)
-
-preferred_coefficient_plot <- make_coefficient_plot(
-  preferred_results,
-  "GROW-Associated Differences in 2026 Summative ATLAS Scores",
-  "Preferred overlap-weighted, baseline- and covariate-adjusted models; error bars show 95% CIs",
-  "Table 2 significance"
-)
-
-preferred_coefficient_plot
-
-ggsave(
-  filename = file.path(dirname(results_path), "grow_atlas_preferred_coefficient_plot.png"),
-  plot = preferred_coefficient_plot,
-  width = 10,
-  height = 6,
-  dpi = 300
-)
-```
-
-# Matching Robustness Coefficient Plot
+# Figure B1. Matching Robustness Coefficient Plot
 
 This plot visualizes the Appendix B calipered nearest-neighbor matching estimates from Table B1. It matches the Appendix B discussion by showing strongest and most consistent positive estimates in Grades 3 and 4, statistically significant Grade 5 ELA and Grade 5 Science estimates, and mostly non-significant estimates in Kindergarten through Grade 2.
 
-```{r matching-coefficient-plot, fig.width=10, fig.height=6, dpi=300}
+```{r matching-coefficient-plot, fig.width=10, fig.height=6, dpi=300, fig.cap="Figure B1. Calipered nearest-neighbor matching coefficient plot."}
 matching_results <- prepare_coefficient_data(
   all_results,
   "propensity_score_matching_covariate_baseline_regression"
@@ -146,7 +117,7 @@ matching_coefficient_plot <- make_coefficient_plot(
   "Table B1 significance"
 )
 
-matching_coefficient_plot
+print(matching_coefficient_plot)
 
 ggsave(
   filename = file.path(dirname(results_path), "grow_atlas_matching_coefficient_plot.png"),
@@ -157,11 +128,11 @@ ggsave(
 )
 ```
 
-# Difference-in-Differences Style Coefficient Plot
+# Figure B2. Difference-in-Differences Style Coefficient Plot
 
 This plot visualizes the Appendix B difference-in-differences style gain-score estimates from Table B2. It matches the Appendix B discussion by showing significant positive estimates concentrated in Grades 3 and 4, a significant Grade 5 Science estimate, weaker evidence in Kindergarten through Grade 2, and mixed evidence in Grade 5.
 
-```{r did-coefficient-plot, fig.width=10, fig.height=6, dpi=300}
+```{r did-coefficient-plot, fig.width=10, fig.height=6, dpi=300, fig.cap="Figure B2. Difference-in-differences style gain-score coefficient plot."}
 did_results <- prepare_coefficient_data(
   all_results,
   "did_style_gain_covariate_baseline_regression"
@@ -174,7 +145,7 @@ did_coefficient_plot <- make_coefficient_plot(
   "Table B2 significance"
 )
 
-did_coefficient_plot
+print(did_coefficient_plot)
 
 ggsave(
   filename = file.path(dirname(results_path), "grow_atlas_did_coefficient_plot.png"),
