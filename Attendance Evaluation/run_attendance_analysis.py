@@ -135,6 +135,108 @@ def write_csv(path, rows):
         w=csv.DictWriter(f, rows[0].keys()); w.writeheader(); w.writerows(rows)
 
 
+
+def significance_label(p):
+    if p < 0.01:
+        return '*** p < 0.01'
+    if p < 0.05:
+        return '** p < 0.05'
+    return 'n.s.'
+
+
+def svg_escape(x):
+    return str(x).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+
+
+def make_attendance_coefficient_plot(results, path):
+    """Write a self-contained SVG coefficient plot for attendance outcomes."""
+    outcomes = ['Unexcused absence percentage', 'Excused absence percentage', 'Total absence percentage']
+    outcome_labels = {
+        'Unexcused absence percentage': 'Unexcused absence %',
+        'Excused absence percentage': 'Excused absence %',
+        'Total absence percentage': 'Total absence %',
+    }
+    model_labels = {
+        'Overlap weighted': 'OW',
+        'Overlap weighted + covariates': 'OW + covariates',
+    }
+    colors = {'Overlap weighted': '#1b9e77', 'Overlap weighted + covariates': '#d95f02'}
+    # Axis chosen to include all CIs with clean percentage-point ticks.
+    xmin, xmax = -4.5, 1.5
+    ticks = [-4, -3, -2, -1, 0, 1]
+    width, height = 1900, 920
+    left, right, top, bottom = 320, 80, 140, 230
+    plot_w, plot_h = width - left - right, height - top - bottom
+    row_gap = plot_h / (len(outcomes) - 1)
+    offsets = {'Overlap weighted': -22, 'Overlap weighted + covariates': 22}
+
+    def xmap(v):
+        return left + (float(v) - xmin) / (xmax - xmin) * plot_w
+
+    def ybase(outcome):
+        return top + outcomes.index(outcome) * row_gap
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        '<rect width="100%" height="100%" fill="white"/>',
+        '<style>text{font-family:Arial,Helvetica,sans-serif;fill:#222}.title{font-size:42px;font-weight:700}.axis{font-size:28px}.tick{font-size:24px;fill:#444}.legend{font-size:25px}.note{font-size:20px;fill:#555}</style>',
+        '<text class="title" x="320" y="62">GROW-Associated Differences in Attendance Outcomes</text>',
+    ]
+
+    # Grid and labels.
+    for t in ticks:
+        x = xmap(t)
+        parts.append(f'<line x1="{x:.1f}" y1="{top-50}" x2="{x:.1f}" y2="{top+plot_h+50}" stroke="#e5e5e5" stroke-width="3"/>')
+        parts.append(f'<text class="tick" x="{x:.1f}" y="{top+plot_h+90}" text-anchor="middle">{t}</text>')
+    parts.append(f'<line x1="{xmap(0):.1f}" y1="{top-50}" x2="{xmap(0):.1f}" y2="{top+plot_h+50}" stroke="#777" stroke-width="3" stroke-dasharray="10 10"/>')
+    for outcome in outcomes:
+        y = ybase(outcome)
+        parts.append(f'<line x1="{left}" y1="{y:.1f}" x2="{left+plot_w}" y2="{y:.1f}" stroke="#e8e8e8" stroke-width="3"/>')
+        parts.append(f'<text class="axis" x="{left-25}" y="{y+10:.1f}" text-anchor="end">{outcome_labels[outcome]}</text>')
+
+    # Coefficients.
+    for r in results:
+        outcome = r['outcome']; model = r['model']; color = colors[model]
+        y = ybase(outcome) + offsets[model]
+        x, lo, hi = xmap(r['estimate']), xmap(r['conf_low']), xmap(r['conf_high'])
+        sig = significance_label(float(r['p_value']))
+        fill = color if sig != 'n.s.' else 'white'
+        parts.append(f'<line x1="{lo:.1f}" y1="{y:.1f}" x2="{hi:.1f}" y2="{y:.1f}" stroke="{color}" stroke-width="5"/>')
+        parts.append(f'<line x1="{lo:.1f}" y1="{y-9:.1f}" x2="{lo:.1f}" y2="{y+9:.1f}" stroke="{color}" stroke-width="5"/>')
+        parts.append(f'<line x1="{hi:.1f}" y1="{y-9:.1f}" x2="{hi:.1f}" y2="{y+9:.1f}" stroke="{color}" stroke-width="5"/>')
+        if sig == '** p < 0.05':
+            pts = f'{x:.1f},{y-14:.1f} {x-13:.1f},{y+11:.1f} {x+13:.1f},{y+11:.1f}'
+            parts.append(f'<polygon points="{pts}" fill="{fill}" stroke="{color}" stroke-width="3"/>')
+        else:
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="13" fill="{fill}" stroke="{color}" stroke-width="3"/>')
+
+    parts.append(f'<text class="axis" x="{left+plot_w/2:.1f}" y="{height-95}" text-anchor="middle">JMTES absence percentage points - JES absence percentage points</text>')
+
+    # Legend modeled after supplied plot: significance then attendance model.
+    ly = height - 42
+    x0 = 285
+    parts.append(f'<text class="legend" x="{x0}" y="{ly}">Statistical significance</text>')
+    x = x0 + 335
+    parts.append(f'<circle cx="{x}" cy="{ly-8}" r="11" fill="black"/><text class="legend" x="{x+35}" y="{ly}">*** p &lt; 0.01</text>')
+    x += 205
+    parts.append(f'<polygon points="{x},{ly-22} {x-13},{ly+3} {x+13},{ly+3}" fill="black"/><text class="legend" x="{x+35}" y="{ly}">** p &lt; 0.05</text>')
+    x += 190
+    parts.append(f'<circle cx="{x}" cy="{ly-8}" r="11" fill="white" stroke="black" stroke-width="3"/><text class="legend" x="{x+35}" y="{ly}">n.s.</text>')
+    x += 160
+    parts.append(f'<text class="legend" x="{x}" y="{ly}">Attendance model</text>')
+    x += 245
+    for model in ['Overlap weighted', 'Overlap weighted + covariates']:
+        color = colors[model]
+        parts.append(f'<line x1="{x}" y1="{ly-8}" x2="{x+48}" y2="{ly-8}" stroke="{color}" stroke-width="5"/>')
+        parts.append(f'<circle cx="{x+24}" cy="{ly-8}" r="11" fill="{color}" stroke="{color}" stroke-width="3"/>')
+        parts.append(f'<text class="legend" x="{x+62}" y="{ly}">{svg_escape(model_labels[model])}</text>')
+        x += 225
+
+    parts.append('</svg>')
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(parts))
+
+
 def main():
     jmtes=load_school(JMTES,'JMTES',1); jes=load_school(JES,'JES',0); data=jmtes+jes
     audit=[{'school':'JMTES','source_file':os.path.basename(JMTES),'source_report_date':'2026-06-15','students_loaded':len(jmtes),'workbook_title':jmtes[0]['source_title']}, {'school':'JES','source_file':os.path.basename(JES),'source_report_date':'2026-06-15','students_loaded':len(jes),'workbook_title':jes[0]['source_title']}]
@@ -157,6 +259,7 @@ def main():
     write_csv(os.path.join(BASE,'jmtes_jes_attendance_data_source_audit.csv'),audit)
     write_csv(os.path.join(BASE,'jmtes_jes_overlap_weighted_attendance_results.csv'),[{k:v for k,v in r.items() if k!='estimate_label'} for r in results])
     write_csv(os.path.join(BASE,'jmtes_jes_overlap_weighted_attendance_regression_table.csv'),results)
+    make_attendance_coefficient_plot(results, os.path.join(BASE, 'jmtes_jes_overlap_weighted_attendance_coefficient_plot.svg'))
     write_csv(os.path.join(BASE,'jmtes_jes_attendance_descriptive_statistics.csv'),desc)
     write_csv(os.path.join(BASE,'jmtes_jes_overlap_weighted_attendance_student_data.csv'),data)
 
