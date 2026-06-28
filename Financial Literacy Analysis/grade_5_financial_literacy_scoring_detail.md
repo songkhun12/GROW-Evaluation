@@ -18,6 +18,28 @@
 
 ## Student 6.00404981E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 6825213355 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Female |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 4.0 |
+| at_risk_excused | 2.0 |
+| at_risk_l_1 | 0.0 |
+| at_risk_l_2 | 0.0 |
+| at_risk_l_3 | 0.0 |
+| at_risk_l_4 | 0.0 |
+| at_risk_local | 0.0 |
+| at_risk_transportation_1 | 0.0 |
+| at_risk_transportation_2 | 1.0 |
+| at_risk_transportation_3 | 0.0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -44,6 +66,28 @@
 | post | B | Q11 | 2 | 1, 2, 5 | 1 | 1 |
 
 ## Student 6.00403464E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 2303270314 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 02 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 5.0 |
+| at_risk_excused | 0.0 |
+| at_risk_l_1 | 0.0 |
+| at_risk_l_2 | 0.0 |
+| at_risk_l_3 | 1.0 |
+| at_risk_l_4 | 0.0 |
+| at_risk_local | 0.0 |
+| at_risk_transportation_1 | 0.0 |
+| at_risk_transportation_2 | 0.0 |
+| at_risk_transportation_3 | 0.0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -72,6 +116,28 @@
 
 ## Student 6.00405711E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 1410687146 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Female |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 04 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 4.0 |
+| at_risk_excused | 4.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -98,6 +164,28 @@
 | post | B | Q11 | 2 | 1, 2, 5 | 1 | 1 |
 
 ## Student 6.00410733E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 1037325713 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 4.0 |
+| at_risk_excused | 2.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -126,6 +214,28 @@
 
 ## Student 6.0040572E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 3744142374 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 04 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 31.0 |
+| at_risk_excused | 0.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -152,6 +262,28 @@
 | post | B | Q11 | 2 | 1, 2, 5 | 1 | 1 |
 
 ## Student 6.00406303E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 8447470584 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Female |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 1.0 |
+| at_risk_excused | 1.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -180,6 +312,28 @@
 
 ## Student 6.00402254E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 3408302264 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 12 |
+| at_risk_meal_status_code | 04 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 17.0 |
+| at_risk_excused | 2.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -206,6 +360,28 @@
 | post | B | Q11 | 2 | 1, 2, 5 | 1 | 1 |
 
 ## Student 6.00406503E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 1355848166 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | NonBlack |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 1.0 |
+| at_risk_excused | 2.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -234,6 +410,28 @@
 
 ## Student 6.00405163E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 3326816702 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Female |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 10.0 |
+| at_risk_excused | 6.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -260,6 +458,28 @@
 | post | B | Q11 | 2 | 1, 2, 5 | 1 | 1 |
 
 ## Student 6.00406404E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 6267083013 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 5.0 |
+| at_risk_excused | 0.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -288,6 +508,28 @@
 
 ## Student 6.00405076E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 6582245565 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | NonBlack |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 2.0 |
+| at_risk_excused | 3.0 |
+| at_risk_l_1 | 0.0 |
+| at_risk_l_2 | 0.0 |
+| at_risk_l_3 | 1.0 |
+| at_risk_l_4 | 0.0 |
+| at_risk_local | 0.0 |
+| at_risk_transportation_1 | 0.0 |
+| at_risk_transportation_2 | 0.0 |
+| at_risk_transportation_3 | 0.0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -314,6 +556,28 @@
 | post | B | Q11 | 3 | 1, 2, 5 | 0 | 0 |
 
 ## Student 6.00405055E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 3500358682 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 04 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 14.0 |
+| at_risk_excused | 12.0 |
+| at_risk_l_1 | 0.0 |
+| at_risk_l_2 | 0.0 |
+| at_risk_l_3 | 1.0 |
+| at_risk_l_4 | 0.0 |
+| at_risk_local | 0.0 |
+| at_risk_transportation_1 | 0.0 |
+| at_risk_transportation_2 | 0.0 |
+| at_risk_transportation_3 | 0.0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -342,6 +606,28 @@
 
 ## Student 6.00405162E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 3450865264 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Female |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 0.0 |
+| at_risk_excused | 4.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -368,6 +654,28 @@
 | post | B | Q11 | 6 | 1, 2, 5 | 2 | 0 |
 
 ## Student 6.00412747E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 4547170126 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Female |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | C |
+| at_risk_unexcused | 3.0 |
+| at_risk_excused | 1.0 |
+| at_risk_l_1 | 0.0 |
+| at_risk_l_2 | 0.0 |
+| at_risk_l_3 | 1.0 |
+| at_risk_l_4 | 0.0 |
+| at_risk_local | 0.0 |
+| at_risk_transportation_1 | 0.0 |
+| at_risk_transportation_2 | 0.0 |
+| at_risk_transportation_3 | 0.0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -396,6 +704,28 @@
 
 ## Student 6.00411535E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 4084433684 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | NonBlack |
+| at_risk_student_age | 12 |
+| at_risk_meal_status_code | 04 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45937.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 12.0 |
+| at_risk_excused | 12.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -422,6 +752,28 @@
 | post | B | Q11 | 6 | 1, 2, 5 | 2 | 0 |
 
 ## Student 6.00406749E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 2503244207 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 9.0 |
+| at_risk_excused | 0.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -450,6 +802,28 @@
 
 ## Student 6.00407156E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 5776473107 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 10.0 |
+| at_risk_excused | 11.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -476,6 +850,28 @@
 | post | B | Q11 | 2 | 1, 2, 5 | 1 | 1 |
 
 ## Student 6.00406727E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 2310280208 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 04 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 32.0 |
+| at_risk_excused | 0.0 |
+| at_risk_l_1 | 0.0 |
+| at_risk_l_2 | 0.0 |
+| at_risk_l_3 | 1.0 |
+| at_risk_l_4 | 0.0 |
+| at_risk_local | 0.0 |
+| at_risk_transportation_1 | 0.0 |
+| at_risk_transportation_2 | 0.0 |
+| at_risk_transportation_3 | 1.0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -504,6 +900,28 @@
 
 ## Student 6.00406403E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 4883524245 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Female |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 04 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 10.0 |
+| at_risk_excused | 2.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -531,6 +949,28 @@
 
 ## Student 6.00403765E8
 
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 7482660341 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Female |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 04 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 16.0 |
+| at_risk_excused | 0.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
+
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
 | pre | A | Q1 | 1 | 1 | 1 | 1 |
@@ -557,6 +997,28 @@
 | post | B | Q11 | 2 | 1, 2, 5 | 1 | 1 |
 
 ## Student 6.00408634E8
+
+| At-risk report field | Value |
+|---|---|
+| at_risk_state_report_id | 3713274858 |
+| at_risk_student_grade | 05 |
+| at_risk_gender | Male |
+| at_risk_ethnic_name | Black |
+| at_risk_student_age | 11 |
+| at_risk_meal_status_code | 05 |
+| at_risk_student_status_current | A |
+| at_risk_entry_date_e_w | 45887.0 |
+| at_risk_entry_code_e_w | R |
+| at_risk_unexcused | 22.0 |
+| at_risk_excused | 6.0 |
+| at_risk_l_1 | 0 |
+| at_risk_l_2 | 0 |
+| at_risk_l_3 | 0 |
+| at_risk_l_4 | 0 |
+| at_risk_local | 0 |
+| at_risk_transportation_1 | 0 |
+| at_risk_transportation_2 | 0 |
+| at_risk_transportation_3 | 0 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|

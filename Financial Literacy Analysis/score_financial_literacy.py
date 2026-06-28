@@ -85,6 +85,41 @@ def norm_answer(value: str) -> str:
         return m.group(1) if m else value
 
 
+def normalize_student_id(value: str) -> str:
+    value = str(value).strip()
+    if not value:
+        return ""
+    try:
+        return str(int(float(value)))
+    except ValueError:
+        return re.sub(r"\D", "", value)
+
+
+def clean_header(value: str) -> str:
+    value = re.sub(r"[^0-9A-Za-z]+", "_", str(value).strip().lower()).strip("_")
+    return value or "unnamed"
+
+
+def load_at_risk_report():
+    report_path = BASE.parent / "JMTES At Risk Report_Updated 6.15.26 (PW_ #MTE2026).xlsx"
+    rows, _ = load_xlsx(report_path, 0)
+    header = [str(x).strip() for x in rows[1]]
+    safe_headers = [f"at_risk_{clean_header(x)}" for x in header]
+    id_idx = header.index("Student Id")
+    info_by_id = {}
+    for row in rows[2:]:
+        student_id = normalize_student_id(cell(row, id_idx + 1))
+        if not student_id:
+            continue
+        info_by_id[student_id] = {
+            safe_headers[i]: str(cell(row, i + 1)).strip()
+            for i in range(len(header))
+            if i != id_idx
+        }
+    personal_fields = [safe_headers[i] for i in range(len(header)) if i != id_idx]
+    return info_by_id, personal_fields
+
+
 def answers_from_bold(bold_parts: list[str]) -> set[str]:
     text = "\n".join(bold_parts)
     answers = set(re.findall(r"(?m)^\s*(\d+)\s*=", text))
@@ -144,7 +179,7 @@ def recode_response(response: str, correct_answers: set[str], dont_know: set[str
     return "0"
 
 
-def score_grade(grade: int):
+def score_grade(grade: int, at_risk_by_id: dict[str, dict[str, str]]):
     key = get_key(grade)
     rows, _ = load_xlsx(BASE / f"Grade {grade} Pre_Post Tests (Cleaned_De-Identified).xlsx", 0)
     cmap = build_column_map(rows)
@@ -162,9 +197,17 @@ def score_grade(grade: int):
         consent = str(cell(row, 1)).strip()
         if not sid:
             continue
-        rec = {"grade": grade, "student_id": sid, "parental_consent": consent}
-        recoded = {"grade": grade, "student_id": sid, "parental_consent": consent}
-        detail_lines += [f"## Student {sid}", "", "| Test | Part | Question | Response | Correct answer(s) | Recode | Score |", "|---|---|---:|---:|---:|---:|---:|"]
+        match_id = normalize_student_id(sid)
+        personal_info = at_risk_by_id.get(match_id, {})
+        rec = {"grade": grade, "student_id": sid, "parental_consent": consent, **personal_info}
+        recoded = {"grade": grade, "student_id": sid, "parental_consent": consent, **personal_info}
+        detail_lines += [f"## Student {sid}", ""]
+        if personal_info:
+            detail_lines += ["| At-risk report field | Value |", "|---|---|"]
+            for field, value in personal_info.items():
+                detail_lines.append(f"| {field} | {value} |")
+            detail_lines.append("")
+        detail_lines += ["| Test | Part | Question | Response | Correct answer(s) | Recode | Score |", "|---|---|---:|---:|---:|---:|---:|"]
         for test in ("pre", "post"):
             test_total = 0
             for part in ("A", "B"):
@@ -190,14 +233,15 @@ def score_grade(grade: int):
 
 def main():
     combined = []
+    at_risk_by_id, personal_fields = load_at_risk_report()
     fields = [
-        "grade", "student_id", "parental_consent",
+        "grade", "student_id", "parental_consent", *personal_fields,
         "pre_part_A_correct", "pre_part_B_correct", "pre_total_correct",
         "post_part_A_correct", "post_part_B_correct", "post_total_correct",
     ]
     detail_documents = []
     for grade in (3, 4, 5):
-        rows, recoded_rows, detail = score_grade(grade)
+        rows, recoded_rows, detail = score_grade(grade, at_risk_by_id)
         combined.extend(rows)
         detail_documents.append(detail)
         with (BASE / f"grade_{grade}_financial_literacy_scores.csv").open("w", newline="") as f:
