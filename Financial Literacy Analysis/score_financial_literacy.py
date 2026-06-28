@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""Score financial literacy Part A/B pre/post tests from Excel workbooks."""
+from __future__ import annotations
+
+import csv
+import re
+from pathlib import Path
+from zipfile import ZipFile
+import xml.etree.ElementTree as ET
+
+NS = {"a": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+BASE = Path(__file__).resolve().parent
+
+
+def colnum(ref: str) -> int:
+    m = re.match(r"([A-Z]+)", ref)
+    n = 0
+    for ch in m.group(1):
+        n = n * 26 + ord(ch) - 64
+    return n
+
+
+def load_xlsx(path: Path, sheet_index: int = 0):
+    """Return rows as values plus parallel rows of bold substrings for each cell."""
+    with ZipFile(path) as z:
+        shared: list[tuple[str, list[str]]] = []
+        if "xl/sharedStrings.xml" in z.namelist():
+            root = ET.fromstring(z.read("xl/sharedStrings.xml"))
+            for si in root.findall("a:si", NS):
+                pieces, bold_pieces = [], []
+                runs = si.findall("a:r", NS)
+                if runs:
+                    for run in runs:
+                        text_el = run.find("a:t", NS)
+                        text = text_el.text or "" if text_el is not None else ""
+                        pieces.append(text)
+                        rpr = run.find("a:rPr", NS)
+                        if rpr is not None and rpr.find("a:b", NS) is not None:
+                            bold_pieces.append(text)
+                else:
+                    text_el = si.find("a:t", NS)
+                    pieces.append(text_el.text or "" if text_el is not None else "")
+                shared.append(("".join(pieces), bold_pieces))
+
+        sheet_name = f"xl/worksheets/sheet{sheet_index + 1}.xml"
+        root = ET.fromstring(z.read(sheet_name))
+        rows, bold_rows = [], []
+        for row in root.findall(".//a:row", NS):
+            vals, bolds = {}, {}
+            for cell in row.findall("a:c", NS):
+                cn = colnum(cell.attrib["r"])
+                typ = cell.attrib.get("t")
+                value, bold = "", []
+                if typ == "s":
+                    v = cell.find("a:v", NS)
+                    if v is not None and v.text is not None:
+                        value, bold = shared[int(v.text)]
+                elif typ == "inlineStr":
+                    is_el = cell.find("a:is", NS)
+                    if is_el is not None:
+                        value = "".join(t.text or "" for t in is_el.findall(".//a:t", NS))
+                else:
+                    v = cell.find("a:v", NS)
+                    value = v.text or "" if v is not None else ""
+                vals[cn], bolds[cn] = value, bold
+            if vals:
+                mx = max(vals)
+                rows.append([vals.get(i, "") for i in range(1, mx + 1)])
+                bold_rows.append([bolds.get(i, []) for i in range(1, mx + 1)])
+        return rows, bold_rows
+
+
+def cell(row, idx):
+    return row[idx - 1] if idx - 1 < len(row) else ""
+
+
+def norm_answer(value: str) -> str:
+    value = str(value).strip()
+    if not value:
+        return ""
+    try:
+        return str(int(float(value)))
+    except ValueError:
+        m = re.match(r"\s*(\d+)", value)
+        return m.group(1) if m else value
+
+
+def correct_from_bold(bold_parts: list[str]) -> str:
+    text = "\n".join(bold_parts)
+    m = re.search(r"(?m)^\s*(\d+)\s*=", text)
+    if not m:
+        raise ValueError(f"Could not identify bold correct answer from {bold_parts!r}")
+    return m.group(1)
+
+
+def get_key(grade: int):
+    rows, bolds = load_xlsx(BASE / f"Grade {grade} Codebook.xlsx", 0)
+    key = {}
+    for row, brow in zip(rows, bolds):
+        q = str(cell(row, 2)).strip()
+        bold_answer = cell(brow, 4)
+        if re.fullmatch(r"Q\d+", q) and bold_answer:
+            key[q] = correct_from_bold(bold_answer)
+    return key
+
+
+def build_column_map(rows):
+    top, section, qs = rows[0], rows[1], rows[2]
+    current_test = current_section = None
+    mapping = {}
+    for i in range(1, max(len(top), len(section), len(qs)) + 1):
+        t, s, q = str(cell(top, i)).strip(), str(cell(section, i)).strip(), str(cell(qs, i)).strip()
+        if t in {"Pre-Test", "Post-Test"}:
+            current_test = "pre" if t == "Pre-Test" else "post"
+        if s in {"Section A", "Section B", "Section C"}:
+            current_section = s[-1]
+        qm = re.match(r"Q\d+", q)
+        if current_test and current_section in {"A", "B"} and qm:
+            mapping[(current_test, current_section, qm.group(0))] = i
+    return mapping
+
+
+def score_grade(grade: int):
+    key = get_key(grade)
+    rows, _ = load_xlsx(BASE / f"Grade {grade} Pre_Post Tests (Cleaned_De-Identified).xlsx", 0)
+    cmap = build_column_map(rows)
+    sections = {q: part for (_test, part, q) in cmap if q in key}
+    out_rows, detail_lines = [], [f"# Grade {grade} financial literacy scoring detail", ""]
+    detail_lines += ["## Answer key", "", "| Part | Question | Correct answer |", "|---|---:|---:|"]
+    for q in sorted(key, key=lambda x: int(x[1:])):
+        detail_lines.append(f"| {sections[q]} | {q} | {key[q]} |")
+    detail_lines.append("")
+
+    for row in rows[3:]:
+        sid = str(cell(row, 2)).strip()
+        consent = str(cell(row, 1)).strip()
+        if not sid:
+            continue
+        rec = {"grade": grade, "student_id": sid, "parental_consent": consent}
+        detail_lines += [f"## Student {sid}", "", "| Test | Part | Question | Response | Correct answer | Score |", "|---|---|---:|---:|---:|---:|"]
+        for test in ("pre", "post"):
+            for part in ("A", "B"):
+                total = 0
+                for q in sorted([x for x, p in sections.items() if p == part], key=lambda x: int(x[1:])):
+                    response = norm_answer(cell(row, cmap[(test, part, q)]))
+                    score = int(response == key[q])
+                    total += score
+                    detail_lines.append(f"| {test} | {part} | {q} | {response or 'Missing'} | {key[q]} | {score} |")
+                rec[f"{test}_part_{part}_correct"] = total
+        out_rows.append(rec)
+        detail_lines.append("")
+    return out_rows, "\n".join(detail_lines)
+
+
+def main():
+    combined = []
+    fields = ["grade", "student_id", "parental_consent", "pre_part_A_correct", "pre_part_B_correct", "post_part_A_correct", "post_part_B_correct"]
+    detail_documents = []
+    for grade in (3, 4, 5):
+        rows, detail = score_grade(grade)
+        combined.extend(rows)
+        detail_documents.append(detail)
+        with (BASE / f"grade_{grade}_financial_literacy_scores.csv").open("w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fields)
+            writer.writeheader(); writer.writerows(rows)
+        (BASE / f"grade_{grade}_financial_literacy_scoring_detail.md").write_text(detail + "\n")
+    with (BASE / "all_grades_financial_literacy_scores.csv").open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader(); writer.writerows(combined)
+    (BASE / "financial_literacy_scoring_detail.md").write_text("\n".join(detail_documents) + "\n")
+
+
+if __name__ == "__main__":
+    main()
