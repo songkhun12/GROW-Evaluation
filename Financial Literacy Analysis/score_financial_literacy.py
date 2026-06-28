@@ -85,12 +85,22 @@ def norm_answer(value: str) -> str:
         return m.group(1) if m else value
 
 
-def correct_from_bold(bold_parts: list[str]) -> str:
+def answers_from_bold(bold_parts: list[str]) -> set[str]:
     text = "\n".join(bold_parts)
-    m = re.search(r"(?m)^\s*(\d+)\s*=", text)
-    if not m:
+    answers = set(re.findall(r"(?m)^\s*(\d+)\s*=", text))
+    if not answers:
         raise ValueError(f"Could not identify bold correct answer from {bold_parts!r}")
-    return m.group(1)
+    return answers
+
+
+def dont_know_answers(option_text: str) -> set[str]:
+    answers = set()
+    for line in str(option_text).splitlines():
+        if re.search(r"don[’']?t know|not sure", line, flags=re.IGNORECASE):
+            m = re.match(r"\s*(\d+)\s*=", line)
+            if m:
+                answers.add(m.group(1))
+    return answers
 
 
 def get_key(grade: int):
@@ -99,8 +109,12 @@ def get_key(grade: int):
     for row, brow in zip(rows, bolds):
         q = str(cell(row, 2)).strip()
         bold_answer = cell(brow, 4)
+        option_text = cell(row, 4)
         if re.fullmatch(r"Q\d+", q) and bold_answer:
-            key[q] = correct_from_bold(bold_answer)
+            key[q] = {
+                "correct": answers_from_bold(bold_answer),
+                "dont_know": dont_know_answers(option_text),
+            }
     return key
 
 
@@ -120,15 +134,27 @@ def build_column_map(rows):
     return mapping
 
 
+def recode_response(response: str, correct_answers: set[str], dont_know: set[str]) -> str:
+    if response in {"", "."}:
+        return "."
+    if response in correct_answers:
+        return "1"
+    if response in dont_know:
+        return "2"
+    return "0"
+
+
 def score_grade(grade: int):
     key = get_key(grade)
     rows, _ = load_xlsx(BASE / f"Grade {grade} Pre_Post Tests (Cleaned_De-Identified).xlsx", 0)
     cmap = build_column_map(rows)
     sections = {q: part for (_test, part, q) in cmap if q in key}
-    out_rows, detail_lines = [], [f"# Grade {grade} financial literacy scoring detail", ""]
-    detail_lines += ["## Answer key", "", "| Part | Question | Correct answer |", "|---|---:|---:|"]
-    for q in sorted(key, key=lambda x: int(x[1:])):
-        detail_lines.append(f"| {sections[q]} | {q} | {key[q]} |")
+    out_rows, recoded_rows, detail_lines = [], [], [f"# Grade {grade} financial literacy scoring detail", ""]
+    detail_lines += ["## Answer key", "", "| Part | Question | Correct answer(s) | Don't know/not sure answer(s) |", "|---|---:|---:|---:|"]
+    for q in sorted(sections, key=lambda x: int(x[1:])):
+        correct = ", ".join(sorted(key[q]["correct"], key=int))
+        dont_know = ", ".join(sorted(key[q]["dont_know"], key=int)) or "None"
+        detail_lines.append(f"| {sections[q]} | {q} | {correct} | {dont_know} |")
     detail_lines.append("")
 
     for row in rows[3:]:
@@ -137,32 +163,51 @@ def score_grade(grade: int):
         if not sid:
             continue
         rec = {"grade": grade, "student_id": sid, "parental_consent": consent}
-        detail_lines += [f"## Student {sid}", "", "| Test | Part | Question | Response | Correct answer | Score |", "|---|---|---:|---:|---:|---:|"]
+        recoded = {"grade": grade, "student_id": sid, "parental_consent": consent}
+        detail_lines += [f"## Student {sid}", "", "| Test | Part | Question | Response | Correct answer(s) | Recode | Score |", "|---|---|---:|---:|---:|---:|---:|"]
         for test in ("pre", "post"):
+            test_total = 0
             for part in ("A", "B"):
-                total = 0
+                part_total = 0
                 for q in sorted([x for x, p in sections.items() if p == part], key=lambda x: int(x[1:])):
                     response = norm_answer(cell(row, cmap[(test, part, q)]))
-                    score = int(response == key[q])
-                    total += score
-                    detail_lines.append(f"| {test} | {part} | {q} | {response or 'Missing'} | {key[q]} | {score} |")
-                rec[f"{test}_part_{part}_correct"] = total
+                    correct_answers = key[q]["correct"]
+                    code = recode_response(response, correct_answers, key[q]["dont_know"])
+                    score = int(code == "1")
+                    part_total += score
+                    recoded[f"{test}_part_{part}_{q}_response"] = response or "."
+                    recoded[f"{test}_part_{part}_{q}_recode"] = code
+                    correct = ", ".join(sorted(correct_answers, key=int))
+                    detail_lines.append(f"| {test} | {part} | {q} | {response or 'Missing'} | {correct} | {code} | {score} |")
+                rec[f"{test}_part_{part}_correct"] = part_total
+                test_total += part_total
+            rec[f"{test}_total_correct"] = test_total
         out_rows.append(rec)
+        recoded_rows.append(recoded)
         detail_lines.append("")
-    return out_rows, "\n".join(detail_lines)
+    return out_rows, recoded_rows, "\n".join(detail_lines)
 
 
 def main():
     combined = []
-    fields = ["grade", "student_id", "parental_consent", "pre_part_A_correct", "pre_part_B_correct", "post_part_A_correct", "post_part_B_correct"]
+    fields = [
+        "grade", "student_id", "parental_consent",
+        "pre_part_A_correct", "pre_part_B_correct", "pre_total_correct",
+        "post_part_A_correct", "post_part_B_correct", "post_total_correct",
+    ]
     detail_documents = []
     for grade in (3, 4, 5):
-        rows, detail = score_grade(grade)
+        rows, recoded_rows, detail = score_grade(grade)
         combined.extend(rows)
         detail_documents.append(detail)
         with (BASE / f"grade_{grade}_financial_literacy_scores.csv").open("w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fields)
             writer.writeheader(); writer.writerows(rows)
+        if recoded_rows:
+            recoded_fields = list(recoded_rows[0])
+            with (BASE / f"grade_{grade}_financial_literacy_recoded.csv").open("w", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=recoded_fields)
+                writer.writeheader(); writer.writerows(recoded_rows)
         (BASE / f"grade_{grade}_financial_literacy_scoring_detail.md").write_text(detail + "\n")
     with (BASE / "all_grades_financial_literacy_scores.csv").open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
