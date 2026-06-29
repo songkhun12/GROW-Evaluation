@@ -187,20 +187,58 @@ def update_grade_financial_literacy_files(lookup: dict[str, tuple[str, str]]) ->
         print(f"Updated {path.name}: {len(rows) - 1} retained grade-file students")
 
 
-def score_percent(record: dict[str, str], prefix: str) -> str:
+def score_summary(record: dict[str, str], prefix: str) -> tuple[str, str, str]:
     recode_values = [
         value.strip()
         for key, value in record.items()
         if key.startswith(f"{prefix}_") and key.endswith("_recode")
     ]
     if not recode_values:
-        return ""
+        return "", "", ""
     correct = sum(value == "1" for value in recode_values)
-    return f"{100 * correct / len(recode_values):.6f}"
+    denominator = len(recode_values)
+    return str(correct), str(denominator), f"{100 * correct / denominator:.6f}"
+
+
+def long_file_columns() -> tuple[list[str], list[str]]:
+    control_columns: list[str] = []
+    assessment_columns: list[str] = []
+    for path in GRADE_RECODED_FILES:
+        rows = read_csv(path)
+        if not rows:
+            continue
+        for column in rows[0]:
+            if column in {
+                "grade",
+                "student_id",
+                INCENTIVE_1_PARTICIPATION_COLUMN,
+                INCENTIVE_2_PARTICIPATION_COLUMN,
+            }:
+                continue
+            if column.startswith("pre_") or column.startswith("post_"):
+                generic_column = column.split("_", 1)[1]
+                if generic_column not in assessment_columns:
+                    assessment_columns.append(generic_column)
+            elif column not in control_columns:
+                control_columns.append(column)
+    return control_columns, assessment_columns
 
 
 def write_difference_in_differences_long_file() -> None:
-    output_rows = [["Student", "Time", "Score %", "Online module", "Activities", "Grade"]]
+    control_columns, assessment_columns = long_file_columns()
+    output_header = [
+        "Student",
+        "student_id_original",
+        "Time",
+        "Score %",
+        "Score correct",
+        "Score denominator",
+        "Online module",
+        "Activities",
+        "Grade",
+    ] + control_columns + assessment_columns
+    output_rows = [output_header]
+
     for path in GRADE_RECODED_FILES:
         rows = read_csv(path)
         if len(rows) < 2:
@@ -212,8 +250,24 @@ def write_difference_in_differences_long_file() -> None:
             grade = record["grade"]
             online_module = record.get(INCENTIVE_2_PARTICIPATION_COLUMN, "0") or "0"
             activities = record.get(INCENTIVE_1_PARTICIPATION_COLUMN, "0") or "0"
-            output_rows.append([student_id, "Pre", score_percent(record, "pre"), online_module, activities, grade])
-            output_rows.append([student_id, "Post", score_percent(record, "post"), online_module, activities, grade])
+            control_values = [record.get(column, "") for column in control_columns]
+
+            for prefix, time_label in [("pre", "Pre"), ("post", "Post")]:
+                correct, denominator, pct = score_summary(record, prefix)
+                assessment_values = [record.get(f"{prefix}_{column}", "") for column in assessment_columns]
+                output_rows.append([
+                    student_id,
+                    record["student_id"],
+                    time_label,
+                    pct,
+                    correct,
+                    denominator,
+                    online_module,
+                    activities,
+                    grade,
+                    *control_values,
+                    *assessment_values,
+                ])
     write_csv(LONG_DID_OUTPUT, output_rows)
     print(f"Wrote {LONG_DID_OUTPUT.name}: {len(output_rows) - 1} student-time rows")
 
