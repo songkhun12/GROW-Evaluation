@@ -26,14 +26,18 @@ local input_csv  "results/atlas_2026_summative_student_scores.csv"
 local output_csv "results/atlas_2026_summative_descriptive_statistics_stata.csv"
 local output_dta "results/atlas_2026_summative_descriptive_statistics_stata.dta"
 
-capture confirm file "`input_csv'"
-if _rc {
-    di as error "Input file not found: `input_csv'"
-    di as error "Run this do-file from the repository root."
-    exit 601
-}
+        capture confirm numeric variable `score_col'
+        if _rc destring `score_col', replace force
 
-import delimited using "`input_csv'", clear varnames(1)
+        keep `score_col'
+        rename `score_col' score
+        keep if !missing(score)
+        gen str20 grade = "`grade'"
+        gen str10 school = "`school'"
+        gen str10 subject = "`subject'"
+        append using `one_file'
+        save `one_file', replace
+    }
 
 label variable grade      "Grade"
 label variable subject    "Subject"
