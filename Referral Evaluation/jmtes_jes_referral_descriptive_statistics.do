@@ -69,19 +69,68 @@ preserve
 
     gen one = 1
     reshape wide m_* sd_* p_* n, i(one) j(school) string
+    local obs_jmtes = nJMTES[1]
+    local obs_jes = nJES[1]
 
-    di as text _newline "Compact checks: JMTES mean (SD), JES mean (SD), difference, JMTES median, JES median"
-    di as text "Unexcused absence %: " %9.3f m_unexJMTES[1] " (" %9.3f sd_unexJMTES[1] ") | " %9.3f m_unexJES[1] " (" %9.3f sd_unexJES[1] ") | " %9.3f (m_unexJMTES[1]-m_unexJES[1]) " | " %9.3f p_unexJMTES[1] " | " %9.3f p_unexJES[1]
-    di as text "Excused absence %:   " %9.3f m_exJMTES[1] " (" %9.3f sd_exJMTES[1] ") | " %9.3f m_exJES[1] " (" %9.3f sd_exJES[1] ") | " %9.3f (m_exJMTES[1]-m_exJES[1]) " | " %9.3f p_exJMTES[1] " | " %9.3f p_exJES[1]
-    di as text "Total absence %:     " %9.3f m_totabsJMTES[1] " (" %9.3f sd_totabsJMTES[1] ") | " %9.3f m_totabsJES[1] " (" %9.3f sd_totabsJES[1] ") | " %9.3f (m_totabsJMTES[1]-m_totabsJES[1]) " | " %9.3f p_totabsJMTES[1] " | " %9.3f p_totabsJES[1]
-    di as text "Total school referrals: " %9.3f m_schtotJMTES[1] " (" %9.3f sd_schtotJMTES[1] ") | " %9.3f m_schtotJES[1] " (" %9.3f sd_schtotJES[1] ") | " %9.3f (m_schtotJMTES[1]-m_schtotJES[1]) " | " %9.3f p_schtotJMTES[1] " | " %9.3f p_schtotJES[1]
-    di as text "School Level I referrals: " %9.3f m_schl1JMTES[1] " (" %9.3f sd_schl1JMTES[1] ") | " %9.3f m_schl1JES[1] " (" %9.3f sd_schl1JES[1] ") | " %9.3f (m_schl1JMTES[1]-m_schl1JES[1]) " | " %9.3f p_schl1JMTES[1] " | " %9.3f p_schl1JES[1]
-    di as text "School Level II referrals: " %9.3f m_schl2JMTES[1] " (" %9.3f sd_schl2JMTES[1] ") | " %9.3f m_schl2JES[1] " (" %9.3f sd_schl2JES[1] ") | " %9.3f (m_schl2JMTES[1]-m_schl2JES[1]) " | " %9.3f p_schl2JMTES[1] " | " %9.3f p_schl2JES[1]
-    di as text "School Level III referrals: " %9.3f m_schl3JMTES[1] " (" %9.3f sd_schl3JMTES[1] ") | " %9.3f m_schl3JES[1] " (" %9.3f sd_schl3JES[1] ") | " %9.3f (m_schl3JMTES[1]-m_schl3JES[1]) " | " %9.3f p_schl3JMTES[1] " | " %9.3f p_schl3JES[1]
-    di as text "School Level IV referrals: " %9.3f m_schl4JMTES[1] " (" %9.3f sd_schl4JMTES[1] ") | " %9.3f m_schl4JES[1] " (" %9.3f sd_schl4JES[1] ") | " %9.3f (m_schl4JMTES[1]-m_schl4JES[1]) " | " %9.3f p_schl4JMTES[1] " | " %9.3f p_schl4JES[1]
-    di as text "Total bus referrals: " %9.3f m_bustotJMTES[1] " (" %9.3f sd_bustotJMTES[1] ") | " %9.3f m_bustotJES[1] " (" %9.3f sd_bustotJES[1] ") | " %9.3f (m_bustotJMTES[1]-m_bustotJES[1]) " | " %9.3f p_bustotJMTES[1] " | " %9.3f p_bustotJES[1]
-    di as text "Bus Level I referrals: " %9.3f m_busl1JMTES[1] " (" %9.3f sd_busl1JMTES[1] ") | " %9.3f m_busl1JES[1] " (" %9.3f sd_busl1JES[1] ") | " %9.3f (m_busl1JMTES[1]-m_busl1JES[1]) " | " %9.3f p_busl1JMTES[1] " | " %9.3f p_busl1JES[1]
-    di as text "Bus Level II referrals: " %9.3f m_busl2JMTES[1] " (" %9.3f sd_busl2JMTES[1] ") | " %9.3f m_busl2JES[1] " (" %9.3f sd_busl2JES[1] ") | " %9.3f (m_busl2JMTES[1]-m_busl2JES[1]) " | " %9.3f p_busl2JMTES[1] " | " %9.3f p_busl2JES[1]
-    di as text "Bus Level III referrals: " %9.3f m_busl3JMTES[1] " (" %9.3f sd_busl3JMTES[1] ") | " %9.3f m_busl3JES[1] " (" %9.3f sd_busl3JES[1] ") | " %9.3f (m_busl3JMTES[1]-m_busl3JES[1]) " | " %9.3f p_busl3JMTES[1] " | " %9.3f p_busl3JES[1]
-    di as text "Observations: JMTES=" %9.0f nJMTES[1] " JES=" %9.0f nJES[1]
+    tempfile compact_checks
+    postfile compact str12 table str28 outcome ///
+        double jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median ///
+        using `compact_checks', replace
+
+    post compact ("Attendance") ("Unexcused absence %") ///
+        (m_unexJMTES[1]) (sd_unexJMTES[1]) (m_unexJES[1]) (sd_unexJES[1]) ///
+        (m_unexJMTES[1] - m_unexJES[1]) (p_unexJMTES[1]) (p_unexJES[1])
+    post compact ("Attendance") ("Excused absence %") ///
+        (m_exJMTES[1]) (sd_exJMTES[1]) (m_exJES[1]) (sd_exJES[1]) ///
+        (m_exJMTES[1] - m_exJES[1]) (p_exJMTES[1]) (p_exJES[1])
+    post compact ("Attendance") ("Total absence %") ///
+        (m_totabsJMTES[1]) (sd_totabsJMTES[1]) (m_totabsJES[1]) (sd_totabsJES[1]) ///
+        (m_totabsJMTES[1] - m_totabsJES[1]) (p_totabsJMTES[1]) (p_totabsJES[1])
+
+    post compact ("School") ("Total school referrals") ///
+        (m_schtotJMTES[1]) (sd_schtotJMTES[1]) (m_schtotJES[1]) (sd_schtotJES[1]) ///
+        (m_schtotJMTES[1] - m_schtotJES[1]) (p_schtotJMTES[1]) (p_schtotJES[1])
+    post compact ("School") ("School Level I") ///
+        (m_schl1JMTES[1]) (sd_schl1JMTES[1]) (m_schl1JES[1]) (sd_schl1JES[1]) ///
+        (m_schl1JMTES[1] - m_schl1JES[1]) (p_schl1JMTES[1]) (p_schl1JES[1])
+    post compact ("School") ("School Level II") ///
+        (m_schl2JMTES[1]) (sd_schl2JMTES[1]) (m_schl2JES[1]) (sd_schl2JES[1]) ///
+        (m_schl2JMTES[1] - m_schl2JES[1]) (p_schl2JMTES[1]) (p_schl2JES[1])
+    post compact ("School") ("School Level III") ///
+        (m_schl3JMTES[1]) (sd_schl3JMTES[1]) (m_schl3JES[1]) (sd_schl3JES[1]) ///
+        (m_schl3JMTES[1] - m_schl3JES[1]) (p_schl3JMTES[1]) (p_schl3JES[1])
+    post compact ("School") ("School Level IV") ///
+        (m_schl4JMTES[1]) (sd_schl4JMTES[1]) (m_schl4JES[1]) (sd_schl4JES[1]) ///
+        (m_schl4JMTES[1] - m_schl4JES[1]) (p_schl4JMTES[1]) (p_schl4JES[1])
+
+    post compact ("Bus") ("Total bus referrals") ///
+        (m_bustotJMTES[1]) (sd_bustotJMTES[1]) (m_bustotJES[1]) (sd_bustotJES[1]) ///
+        (m_bustotJMTES[1] - m_bustotJES[1]) (p_bustotJMTES[1]) (p_bustotJES[1])
+    post compact ("Bus") ("Bus Level I") ///
+        (m_busl1JMTES[1]) (sd_busl1JMTES[1]) (m_busl1JES[1]) (sd_busl1JES[1]) ///
+        (m_busl1JMTES[1] - m_busl1JES[1]) (p_busl1JMTES[1]) (p_busl1JES[1])
+    post compact ("Bus") ("Bus Level II") ///
+        (m_busl2JMTES[1]) (sd_busl2JMTES[1]) (m_busl2JES[1]) (sd_busl2JES[1]) ///
+        (m_busl2JMTES[1] - m_busl2JES[1]) (p_busl2JMTES[1]) (p_busl2JES[1])
+    post compact ("Bus") ("Bus Level III") ///
+        (m_busl3JMTES[1]) (sd_busl3JMTES[1]) (m_busl3JES[1]) (sd_busl3JES[1]) ///
+        (m_busl3JMTES[1] - m_busl3JES[1]) (p_busl3JMTES[1]) (p_busl3JES[1])
+    postclose compact
+
+    use `compact_checks', clear
+    format jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median %9.3f
+
+    di as text _newline "Compact attendance check"
+    list outcome jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median ///
+        if table == "Attendance", noobs abbreviate(24) separator(0)
+
+    di as text _newline "Compact school-referral check"
+    list outcome jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median ///
+        if table == "School", noobs abbreviate(24) separator(0)
+
+    di as text _newline "Compact bus-referral check"
+    list outcome jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median ///
+        if table == "Bus", noobs abbreviate(24) separator(0)
+
+    di as text _newline "Observations: JMTES=" %9.0f `obs_jmtes' " JES=" %9.0f `obs_jes'
 restore
