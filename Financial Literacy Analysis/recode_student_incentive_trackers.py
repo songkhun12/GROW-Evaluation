@@ -21,6 +21,7 @@ CSV_SOURCE = BASE_DIR / "Jan-May 2026 Student Incentive Tracker.csv"
 XLSX_RECODED = BASE_DIR / "2025-26 Student Incentive Tracker (1) recoded.csv"
 CSV_RECODED = BASE_DIR / "Jan-May 2026 Student Incentive Tracker recoded.csv"
 MERGED_OUTPUT = BASE_DIR / "student_incentive_tracker_2025_26_jan_may_merged_by_student_id.csv"
+LONG_DID_OUTPUT = BASE_DIR / "financial_literacy_did_long.csv"
 
 GRADE_RECODED_FILES = [
     BASE_DIR / "grade_3_financial_literacy_recoded.csv",
@@ -185,6 +186,37 @@ def update_grade_financial_literacy_files(lookup: dict[str, tuple[str, str]]) ->
         write_csv(path, rows)
         print(f"Updated {path.name}: {len(rows) - 1} retained grade-file students")
 
+
+def score_percent(record: dict[str, str], prefix: str) -> str:
+    recode_values = [
+        value.strip()
+        for key, value in record.items()
+        if key.startswith(f"{prefix}_") and key.endswith("_recode")
+    ]
+    if not recode_values:
+        return ""
+    correct = sum(value == "1" for value in recode_values)
+    return f"{100 * correct / len(recode_values):.6f}"
+
+
+def write_difference_in_differences_long_file() -> None:
+    output_rows = [["Student", "Time", "Score %", "Online module", "Activities", "Grade"]]
+    for path in GRADE_RECODED_FILES:
+        rows = read_csv(path)
+        if len(rows) < 2:
+            continue
+        header = rows[0]
+        for row in rows[1:]:
+            record = {header[idx]: row[idx] if idx < len(row) else "" for idx in range(len(header))}
+            student_id = normalize_student_id(record["student_id"])
+            grade = record["grade"]
+            online_module = record.get(INCENTIVE_2_PARTICIPATION_COLUMN, "0") or "0"
+            activities = record.get(INCENTIVE_1_PARTICIPATION_COLUMN, "0") or "0"
+            output_rows.append([student_id, "Pre", score_percent(record, "pre"), online_module, activities, grade])
+            output_rows.append([student_id, "Post", score_percent(record, "post"), online_module, activities, grade])
+    write_csv(LONG_DID_OUTPUT, output_rows)
+    print(f"Wrote {LONG_DID_OUTPUT.name}: {len(output_rows) - 1} student-time rows")
+
 def merge_records(
     left_headers: list[str],
     left_records: list[dict[str, str]],
@@ -216,6 +248,7 @@ def main() -> None:
     right_headers, right_records = rows_as_records(csv_rows, "Jan-May 2026 tracker")
     write_csv(MERGED_OUTPUT, merge_records(left_headers, left_records, right_headers, right_records))
     update_grade_financial_literacy_files(incentive_participation_lookup(xlsx_rows))
+    write_difference_in_differences_long_file()
 
     print(f"Wrote {XLSX_RECODED.name}: {len(xlsx_rows) - 2} data rows")
     print(f"Wrote {CSV_RECODED.name}: {len(csv_rows) - 2} data rows")
