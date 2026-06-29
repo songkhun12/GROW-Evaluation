@@ -27,158 +27,41 @@ version 17.0
 set more off
 
 
-* Locate the raw grade folders whether this script is run from the repo root or this analysis folder.
-local raw_prefix ""
-capture confirm file "Kindergarten/JMTES Atlas Report - Kindergarten - Merged At Risk.csv"
+* Define the merged at-risk analysis CSV when the do-file is run from the repo root.
+local merged_csv "ATLAS GROW Impact Analysis/grow_atlas_merged_at_risk_analysis_data.csv"
+
+* Fall back to the local file name when the do-file is run from inside this folder.
+capture confirm file "`merged_csv'"
 if _rc {
-    local raw_prefix "../"
+    local merged_csv "grow_atlas_merged_at_risk_analysis_data.csv"
 }
 
-* Create a temporary file that will hold student-level rows built directly from raw merged at-risk CSVs.
-tempfile raw_atlas_rows
+* Stop with a clear message if the merged raw-data analysis file cannot be found.
+capture confirm file "`merged_csv'"
+if _rc {
+    di as error "Input file not found: `merged_csv'"
+    exit 601
+}
 
-* Close any leftover raw-data posting handle so the script can be re-run in the same Stata session.
-capture postclose raw_atlas_post
+* Open the single merged at-risk analysis CSV built from all schools and all grade folders.
+import delimited using "`merged_csv'", clear varnames(1)
 
-* Open a posting handle for the raw grade-subject student records needed by the Table 2 models.
-postfile raw_atlas_post str12 grade str8 school str8 subject double post baseline female black age ///
-    str20 meal_status str20 entry_code using `raw_atlas_rows', replace
-
-* Drop the helper program if it already exists so the do-file can be re-run without r(110) errors.
-capture program drop post_raw_atlas_file
-
-* Define a helper that imports one raw merged at-risk CSV and posts analyzable rows for each subject.
-program define post_raw_atlas_file
-    * Require the raw file path, report grade, school, and optional starting row for banner headers.
-    syntax, File(string) Grade(string) School(string) [Rowrange(string)]
-
-    * Build the optional rowrange() import argument for files with a banner row before the header.
-    local rowopt ""
-    if "`rowrange'" != "" {
-        local rowopt "rowrange(`rowrange')"
+* Confirm that every raw-analysis field needed for Table 2 sample construction is present.
+foreach var in grade school jmtes subject student_id post_score baseline_score baseline_source ///
+    female black age meal_status entry_code source_file {
+    capture confirm variable `var'
+    if _rc {
+        di as error "Required variable `var' is not in `merged_csv'."
+        exit 111
     }
+}
 
-    * Import the raw merged at-risk CSV as strings so score and code fields can be cleaned consistently.
-    import delimited using "`file'", clear varnames(1) stringcols(_all) `rowopt'
-
-    * Confirm the student covariates required by the methodology are present after import.
-    foreach covar in atriskgender atriskethnicname atriskstudentage atriskmealstatuscode atriskentrycodeew {
-        capture confirm variable `covar'
-        if _rc {
-            di as error "Required raw covariate `covar' was not imported from `file'."
-            exit 111
-        }
-    }
-
-    * Convert the raw demographic and at-risk fields into the covariates used in the models.
-    gen double __female = lower(strtrim(atriskgender)) == "female"
-    gen double __black = lower(strtrim(atriskethnicname)) == "black"
-    gen double __age = real(atriskstudentage)
-    gen str20 __meal_status = cond(strtrim(atriskmealstatuscode) == "", "Missing", strtrim(atriskmealstatuscode))
-    gen str20 __entry_code = cond(strtrim(atriskentrycodeew) == "", "Missing", strtrim(atriskentrycodeew))
-
-    * Loop over the tested subjects in the raw ATLAS files.
-    foreach subj in ELA Math Science {
-        * Translate the subject label into the lower-case Stata variable-name prefix created by import delimited.
-        local prefix = lower("`subj'")
-
-        * Continue only when the 2026 summative outcome for this subject exists in the raw file.
-        capture confirm variable `prefix'sum2026
-        if _rc == 0 {
-            * Convert the 2026 summative outcome to numeric form and drop invalid scale-score values.
-            gen double __post = real(`prefix'sum2026)
-            replace __post = . if __post < 900
-
-            * Create the baseline variable from same-subject prior summative, winter, then fall scores.
-            gen double __baseline = .
-            capture confirm variable `prefix'sum2025
-            if _rc == 0 {
-                replace __baseline = real(`prefix'sum2025) if missing(__baseline)
-            }
-            capture confirm variable `prefix'winter2025
-            if _rc == 0 {
-                replace __baseline = real(`prefix'winter2025) if missing(__baseline)
-            }
-            capture confirm variable `prefix'fall2025
-            if _rc == 0 {
-                replace __baseline = real(`prefix'fall2025) if missing(__baseline)
-            }
-            replace __baseline = . if __baseline < 900
-
-            * Post one raw student-subject row for every complete analysis record.
-            forvalues i = 1/`=_N' {
-                if !missing(__post[`i']) & !missing(__baseline[`i']) & !missing(__age[`i']) {
-                    post raw_atlas_post ("`grade'") ("`school'") ("`subj'") (__post[`i']) (__baseline[`i']) ///
-                        (__female[`i']) (__black[`i']) (__age[`i']) (__meal_status[`i']) (__entry_code[`i'])
-                }
-            }
-
-            * Remove subject-specific temporary fields before moving to the next subject.
-            drop __post __baseline
-        }
-    }
-end
-
-* Read Kindergarten JMTES raw data, starting at row 2 because this file has a banner row above the header.
-post_raw_atlas_file, file("`raw_prefix'Kindergarten/JMTES Atlas Report - Kindergarten - Merged At Risk.csv") ///
-    grade("Kindergarten") school("JMTES") rowrange("2:")
-
-* Read Kindergarten JES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Kindergarten/JES Atlas Report - Kindergarten - Merged At Risk.csv") ///
-    grade("Kindergarten") school("JES")
-
-* Read Grade 1 JMTES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 1/JMTES Atlas Report - Grade 1 - Merged At Risk.csv") ///
-    grade("Grade 1") school("JMTES")
-
-* Read Grade 1 JES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 1/JES Atlas Report - Grade 1 - Merged At Risk.csv") ///
-    grade("Grade 1") school("JES")
-
-* Read Grade 2 JMTES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 2/JMTES Atlas Report - Grade 2 - Merged At Risk.csv") ///
-    grade("Grade 2") school("JMTES")
-
-* Read Grade 2 JES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 2/JES Atlas Report - Grade 2 - Merged At Risk.csv") ///
-    grade("Grade 2") school("JES")
-
-* Read Grade 3 JMTES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 3/JMTES Atlas Report - Grade 3 - Merged At Risk.csv") ///
-    grade("Grade 3") school("JMTES")
-
-* Read Grade 3 JES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 3/JES Atlas Report - Grade 3 - Merged At Risk.csv") ///
-    grade("Grade 3") school("JES")
-
-* Read Grade 4 JMTES current-year raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 4/JMTES Atlas Report - Grade 4 - Current Year - Merged At Risk.csv") ///
-    grade("Grade 4") school("JMTES")
-
-* Read Grade 4 JES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 4/JES Atlas Report - Grade 4 - Merged At Risk.csv") ///
-    grade("Grade 4") school("JES")
-
-* Read Grade 5 JMTES current-year raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 5/JMTES Atlas Report - Grade 5 - Current Year - Merged At Risk.csv") ///
-    grade("Grade 5") school("JMTES")
-
-* Read Grade 5 JES raw data from the grade folder.
-post_raw_atlas_file, file("`raw_prefix'Grade 5/JES Atlas Report - Grade 5 - Merged At Risk.csv") ///
-    grade("Grade 5") school("JES")
-
-* Close the raw-data posting handle now that every grade folder has been read.
-postclose raw_atlas_post
-
-* Open the raw student-subject analysis rows built from Kindergarten through Grade 5 folders.
-use `raw_atlas_rows', clear
-
-* Confirm the raw-data build produces the same grade-subject analytic sample size as Table 2.
+* Confirm the single merged file contains the full Kindergarten through Grade 5 analytic sample.
 count
 assert r(N) == 2604
 
-* Show the raw analysis Ns by grade, subject, and school before loading model results.
-di as text _newline "Raw ATLAS analytic rows built from Kindergarten through Grade 5 merged at-risk files"
+* Show the single-file raw analysis Ns by grade, subject, and school before loading model results.
+di as text _newline "Merged ATLAS at-risk analytic rows from all schools and grades"
 tab grade subject if school == "JMTES"
 tab grade subject if school == "JES"
 
