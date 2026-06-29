@@ -22,6 +22,7 @@ XLSX_RECODED = BASE_DIR / "2025-26 Student Incentive Tracker (1) recoded.csv"
 CSV_RECODED = BASE_DIR / "Jan-May 2026 Student Incentive Tracker recoded.csv"
 MERGED_OUTPUT = BASE_DIR / "student_incentive_tracker_2025_26_jan_may_merged_by_student_id.csv"
 LONG_DID_OUTPUT = BASE_DIR / "financial_literacy_did_long.csv"
+ALL_GRADES_SCORES = BASE_DIR / "all_grades_financial_literacy_scores.csv"
 
 GRADE_RECODED_FILES = [
     BASE_DIR / "grade_3_financial_literacy_recoded.csv",
@@ -163,28 +164,32 @@ def incentive_participation_lookup(rows: list[list[str]]) -> dict[str, tuple[str
     return lookup
 
 
-def update_grade_financial_literacy_files(lookup: dict[str, tuple[str, str]]) -> None:
-    for path in GRADE_RECODED_FILES:
-        rows = read_csv(path)
-        if not rows:
-            continue
-        header = rows[0]
-        for column_name in [INCENTIVE_1_PARTICIPATION_COLUMN, INCENTIVE_2_PARTICIPATION_COLUMN]:
-            if column_name not in header:
-                header.append(column_name)
-        incentive_1_idx = header.index(INCENTIVE_1_PARTICIPATION_COLUMN)
-        incentive_2_idx = header.index(INCENTIVE_2_PARTICIPATION_COLUMN)
-        student_id_idx = header.index("student_id")
+def update_financial_literacy_file(path: Path, lookup: dict[str, tuple[str, str]]) -> None:
+    rows = read_csv(path)
+    if not rows:
+        return
+    header = rows[0]
+    for column_name in [INCENTIVE_1_PARTICIPATION_COLUMN, INCENTIVE_2_PARTICIPATION_COLUMN]:
+        if column_name not in header:
+            header.append(column_name)
+    incentive_1_idx = header.index(INCENTIVE_1_PARTICIPATION_COLUMN)
+    incentive_2_idx = header.index(INCENTIVE_2_PARTICIPATION_COLUMN)
+    student_id_idx = header.index("student_id")
 
-        for row in rows[1:]:
-            while len(row) < len(header):
-                row.append("")
-            student_id = normalize_student_id(row[student_id_idx])
-            incentive_1, incentive_2 = lookup.get(student_id, ("0", "0"))
-            row[incentive_1_idx] = incentive_1
-            row[incentive_2_idx] = incentive_2
-        write_csv(path, rows)
-        print(f"Updated {path.name}: {len(rows) - 1} retained grade-file students")
+    for row in rows[1:]:
+        while len(row) < len(header):
+            row.append("")
+        student_id = normalize_student_id(row[student_id_idx])
+        incentive_1, incentive_2 = lookup.get(student_id, ("0", "0"))
+        row[incentive_1_idx] = incentive_1
+        row[incentive_2_idx] = incentive_2
+    write_csv(path, rows)
+    print(f"Updated {path.name}: {len(rows) - 1} retained source-file students")
+
+
+def update_financial_literacy_files(lookup: dict[str, tuple[str, str]]) -> None:
+    for path in [*GRADE_RECODED_FILES, ALL_GRADES_SCORES]:
+        update_financial_literacy_file(path, lookup)
 
 
 def score_summary(record: dict[str, str], prefix: str) -> tuple[str, str, str]:
@@ -301,7 +306,7 @@ def main() -> None:
     left_headers, left_records = rows_as_records(xlsx_rows, "2025-26 tracker")
     right_headers, right_records = rows_as_records(csv_rows, "Jan-May 2026 tracker")
     write_csv(MERGED_OUTPUT, merge_records(left_headers, left_records, right_headers, right_records))
-    update_grade_financial_literacy_files(incentive_participation_lookup(xlsx_rows))
+    update_financial_literacy_files(incentive_participation_lookup(xlsx_rows))
     write_difference_in_differences_long_file()
 
     print(f"Wrote {XLSX_RECODED.name}: {len(xlsx_rows) - 2} data rows")
