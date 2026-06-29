@@ -1,0 +1,178 @@
+---
+title: "GROW Financial Literacy Pre-Post Analysis"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    df_print: paged
+  word_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+options(scipen = 999, digits = 3)
+```
+
+## Introduction
+
+This report analyzes financial literacy pre- and post-test outcomes for students participating in GROW. The purpose is to estimate whether students improved from pre-test to post-test, whether gains differed by grade, and whether the substantive conclusion changes after a small set of defensible controls is included.
+
+The recommended reporting strategy is:
+
+1. Use **paired pre-post comparisons** overall and within grade as the main, easiest-to-explain evidence.
+2. Use a **combined-grade repeated-measures model** with grade and the post-by-grade interaction to test whether pre-post change differed by grade.
+3. Use a **supplemental adjusted ANCOVA model** predicting post-test score from pre-test score, grade, and attendance. This is the recommended adjusted model because it is transparent for a two-wave design and avoids overfitting a sample of only 57 students.
+
+## Data and measurement
+
+```{r load-data}
+dat <- read.csv("all_grades_financial_literacy_scores.csv", stringsAsFactors = FALSE)
+
+# Assessment score denominator: each grade-level assessment has 10 scored items.
+dat$pre_pct <- 100 * dat$pre_total_correct / 10
+dat$post_pct <- 100 * dat$post_total_correct / 10
+dat$gain_pct <- dat$post_pct - dat$pre_pct
+
+dat$grade <- factor(dat$grade, levels = c(3, 4, 5), labels = c("Grade 3", "Grade 4", "Grade 5"))
+dat$gender <- factor(dat$at_risk_gender)
+dat$race_ethnicity <- factor(dat$at_risk_ethnic_name)
+dat$attendance_absence_pct <- dat$at_risk_total_absence_pct_enrolled
+
+long <- rbind(
+  data.frame(student_id = dat$student_id, grade = dat$grade, time = "Pre",  post = 0, score_pct = dat$pre_pct),
+  data.frame(student_id = dat$student_id, grade = dat$grade, time = "Post", post = 1, score_pct = dat$post_pct)
+)
+long$time <- factor(long$time, levels = c("Pre", "Post"))
+
+n_students <- nrow(dat)
+```
+
+The analytic file contains `r n_students` students in grades 3-5. The outcome is percent correct on each student's grade-level financial literacy assessment. Raw scores were converted to percentages by dividing total correct by 10, because each assessment included 10 scored items. The main exposure is time, coded as pre-test versus post-test. Grade is included because assessments and developmental expectations differ across grades. Attendance is measured as the total absence percentage while enrolled (`at_risk_total_absence_pct_enrolled`). Gender and race/ethnicity are available as demographic descriptors and possible supplemental controls, but the preferred adjusted model keeps controls limited because the sample is small.
+
+```{r descriptive-tables}
+summary_by_grade <- aggregate(cbind(pre_pct, post_pct, gain_pct, attendance_absence_pct) ~ grade, dat,
+                              function(x) c(n = length(x), mean = mean(x, na.rm = TRUE), sd = sd(x, na.rm = TRUE)))
+summary_by_grade
+
+table(dat$grade)
+table(dat$gender)
+table(dat$race_ethnicity)
+summary(dat$attendance_absence_pct)
+```
+
+## Methodology
+
+### Main paired pre-post analysis
+
+The primary analysis uses paired t-tests comparing each student's post-test percent-correct score with that same student's pre-test percent-correct score. These tests are presented overall and separately by grade. Paired t-tests are appropriate because the pre-test and post-test are repeated measurements from the same students.
+
+```{r paired-tests}
+paired_result <- function(d) {
+  tt <- t.test(d$post_pct, d$pre_pct, paired = TRUE)
+  data.frame(
+    n = nrow(d),
+    pre_mean = mean(d$pre_pct),
+    post_mean = mean(d$post_pct),
+    gain_mean = mean(d$gain_pct),
+    gain_sd = sd(d$gain_pct),
+    t = unname(tt$statistic),
+    df = unname(tt$parameter),
+    p = tt$p.value,
+    ci_low = tt$conf.int[1],
+    ci_high = tt$conf.int[2]
+  )
+}
+
+paired_overall <- cbind(grade = "Overall", paired_result(dat))
+paired_by_grade <- do.call(rbind, lapply(split(dat, dat$grade), function(d) cbind(grade = as.character(d$grade[1]), paired_result(d))))
+paired_results <- rbind(paired_overall, paired_by_grade)
+paired_results
+```
+
+### Combined-grade repeated-measures model
+
+The combined-grade model estimates all repeated observations simultaneously. The target model is:
+
+\[
+\text{Score \%}_{it} = \beta_0 + \beta_1\text{Post}_{it} + \beta_2\text{Grade}_{i} + \beta_3(\text{Post}_{it} \times \text{Grade}_{i}) + u_i + e_{it}
+\]
+
+where \(u_i\) is a student random intercept. The coefficient for `post` estimates the pre-post gain for the reference grade, and the interaction terms test whether gains differ for other grades.
+
+```{r mixed-model}
+if (requireNamespace("lme4", quietly = TRUE) && requireNamespace("lmerTest", quietly = TRUE)) {
+  library(lme4)
+  library(lmerTest)
+  mixed_model <- lmer(score_pct ~ post * grade + (1 | student_id), data = long)
+  summary(mixed_model)
+} else if (requireNamespace("nlme", quietly = TRUE)) {
+  library(nlme)
+  mixed_model <- lme(score_pct ~ post * grade, random = ~ 1 | student_id, data = long)
+  summary(mixed_model)
+} else {
+  message("Neither lme4/lmerTest nor nlme is available. As a fallback, this fixed-effects equivalent estimates the same mean structure but does not include a random intercept.")
+  mixed_model <- lm(score_pct ~ post * grade, data = long)
+  summary(mixed_model)
+}
+```
+
+### Supplemental adjusted ANCOVA model
+
+The recommended adjusted model is an ANCOVA specification:
+
+\[
+\text{Post Score \%}_{i} = \beta_0 + \beta_1\text{Pre Score \%}_{i} + \beta_2\text{Grade}_{i} + \beta_3\text{Attendance}_{i} + e_i
+\]
+
+This model is recommended over a heavily controlled model because it directly adjusts for baseline financial literacy, grade, and exposure opportunity while preserving degrees of freedom. With only 57 students, adding many predictors (gender, race/ethnicity, age, meal status, absence categories, referral variables, transportation variables, and multiple local at-risk indicators) would risk overfitting and unstable coefficients.
+
+```{r adjusted-models}
+adj_pre_grade_attendance <- lm(post_pct ~ pre_pct + grade + attendance_absence_pct, data = dat)
+summary(adj_pre_grade_attendance)
+confint(adj_pre_grade_attendance)
+
+# Optional fuller demographic adjustment, included only as a sensitivity check.
+adj_demographic <- lm(post_pct ~ pre_pct + grade + attendance_absence_pct + gender + race_ethnicity, data = dat)
+summary(adj_demographic)
+confint(adj_demographic)
+```
+
+## Results
+
+```{r report-values, include=FALSE}
+overall <- paired_results[paired_results$grade == "Overall", ]
+g3 <- paired_results[paired_results$grade == "Grade 3", ]
+g4 <- paired_results[paired_results$grade == "Grade 4", ]
+g5 <- paired_results[paired_results$grade == "Grade 5", ]
+fmt <- function(x) format(round(x, 1), nsmall = 1)
+fmtp <- function(p) ifelse(p < .001, "< .001", as.character(round(p, 3)))
+```
+
+Overall, mean financial literacy scores increased from `r fmt(overall$pre_mean)`% at pre-test to `r fmt(overall$post_mean)`% at post-test, an average gain of `r fmt(overall$gain_mean)` percentage points. The paired t-test provides the main unadjusted estimate of change: *t*(`r overall$df`) = `r round(overall$t, 2)`, *p* = `r fmtp(overall$p)`, with a 95% confidence interval from `r fmt(overall$ci_low)` to `r fmt(overall$ci_high)` percentage points.
+
+By grade, Grade 3 changed from `r fmt(g3$pre_mean)`% to `r fmt(g3$post_mean)`% (gain = `r fmt(g3$gain_mean)` points), Grade 4 changed from `r fmt(g4$pre_mean)`% to `r fmt(g4$post_mean)`% (gain = `r fmt(g4$gain_mean)` points), and Grade 5 changed from `r fmt(g5$pre_mean)`% to `r fmt(g5$post_mean)`% (gain = `r fmt(g5$gain_mean)` points). Grade 4 and Grade 5 showed the largest average gains, while Grade 3 was essentially unchanged on average.
+
+The repeated-measures model should be used as the combined-grade inferential model. It tests whether the post-test gain differs by grade through the `post:grade` interaction terms. If these interactions are not statistically significant, the most parsimonious interpretation is that the data do not provide strong evidence that score gains differed by grade, even if the descriptive gains vary.
+
+The supplemental ANCOVA model is the recommended adjusted model. It answers a simple question: after accounting for students' baseline score, grade, and attendance, are post-test scores still meaningfully related to the intervention-period change captured by the pre-post design? This adjusted analysis should be described as supplemental because there is no non-participant comparison group and because statistical power is limited.
+
+## Discussion and conclusion: Which model is recommended?
+
+I recommend presenting the **paired t-tests as the main finding** and the **ANCOVA model as the preferred adjusted supplemental model**.
+
+The paired t-tests are best for the primary report because they directly answer the most important descriptive question: did the same students score higher after GROW than before GROW? They are easy for school and community audiences to understand, and they are appropriate for a two-wave pre-post design.
+
+The repeated-measures mixed model should be included as the main combined-grade model because it uses both waves of data and formally tests whether gains differed by grade. This is useful because grade-level assessments and developmental expectations differ.
+
+For adjusted analysis, I recommend the ANCOVA model:
+
+\[
+\text{Post Score \%} = \beta_0 + \beta_1(\text{Pre Score \%}) + \beta_2(\text{Grade}) + \beta_3(\text{Attendance}) + e_i
+\]
+
+This is the most defensible adjusted model for this dataset because it controls for baseline financial literacy, grade, and attendance while avoiding overfitting. Gender and race/ethnicity can be added in a sensitivity analysis if demographic adjustment is desired, but they should not be the headline model unless the report specifically needs demographic adjustment.
+
+The main substantive conclusion should be cautious: students showed a modest average increase in financial literacy percent-correct scores overall, with larger descriptive gains in Grade 4 and Grade 5 than Grade 3. Because the analysis uses a one-group pre-post design without a comparison group, the results should be interpreted as evidence of improvement over time among participating students, not as definitive causal proof that GROW alone caused the improvement.
