@@ -111,7 +111,15 @@ program define run_referral_poisson
     di as text _newline "Estimating `table': `label'"
 
     * Estimate the overlap-weighted Poisson model with robust standard errors and exposure.
-    poisson `outcome' jmtes $referral_covariates [pw = overlap_weight], exposure(enrollment_days) vce(robust)
+    capture noisily poisson `outcome' jmtes $referral_covariates [pw = overlap_weight], exposure(enrollment_days) vce(robust)
+
+    * Continue after Stata's nonconvergence return code when estimates are displayed.
+    if _rc == 430 {
+        di as text "Model did not meet Stata's convergence criterion; continuing with displayed estimates."
+    }
+    else if _rc {
+        exit _rc
+    }
 
     * Store the JMTES coefficient from the displayed Poisson model.
     scalar b_jmtes = _b[jmtes]
