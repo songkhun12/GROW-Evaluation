@@ -99,8 +99,14 @@ scalar analytic_n = r(N)
 * Create a temporary dataset for Table 7 and Table 8 model results.
 tempfile referral_results
 
+* Close any leftover postfile handle from a previous run in the same Stata session.
+capture postclose referral_out
+
 * Open a postfile to collect model estimates and reporting quantities.
 postfile referral_out str24 table_name str36 outcome double coefficient robust_se irr percent_difference jes_rate jmtes_rate observations events using `referral_results', replace
+
+* Drop the helper program if it exists from a previous run in the same Stata session.
+capture program drop run_referral_poisson
 
 * Define a reusable Stata program for one covariate-adjusted overlap-weighted Poisson model.
 program define run_referral_poisson
