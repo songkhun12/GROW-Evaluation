@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import datetime as dt
 import re
 from pathlib import Path
 from zipfile import ZipFile
@@ -10,6 +11,27 @@ import xml.etree.ElementTree as ET
 
 NS = {"a": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 BASE = Path(__file__).resolve().parent
+FULL_SCHOOL_YEAR_DAYS = 170
+SCHOOL_YEAR_START = dt.date(2025, 8, 18)
+SCHOOL_YEAR_END = dt.date(2026, 5, 22)
+EXCEL_ORIGIN = dt.date(1899, 12, 30)
+SCHOOL_CLOSURES = {
+    dt.date(2025, 9, 1),
+    dt.date(2025, 10, 31),
+    dt.date(2026, 1, 1),
+    dt.date(2026, 1, 2),
+    dt.date(2026, 1, 19),
+    dt.date(2026, 2, 2),
+    dt.date(2026, 4, 24),
+}
+SCHOOL_CLOSURES.update(dt.date(2025, 11, day) for day in range(24, 29))
+SCHOOL_CLOSURES.update(
+    dt.date(2025, 12, day)
+    for day in range(22, 32)
+    if dt.date(2025, 12, day).weekday() < 5
+)
+SCHOOL_CLOSURES.update(dt.date(2026, 1, day) for day in range(26, 31))
+SCHOOL_CLOSURES.update(dt.date(2026, 3, day) for day in range(23, 28))
 
 
 def colnum(ref: str) -> int:
@@ -85,6 +107,35 @@ def norm_answer(value: str) -> str:
         return m.group(1) if m else value
 
 
+def to_float(value: str) -> float:
+    text = str(value or "").strip()
+    return float(text) if text else 0.0
+
+
+def excel_date(value: str) -> dt.date:
+    return EXCEL_ORIGIN + dt.timedelta(days=int(float(str(value).strip())))
+
+
+def count_school_days(start: dt.date, end: dt.date = SCHOOL_YEAR_END) -> int:
+    start = max(start, SCHOOL_YEAR_START)
+    end = min(end, SCHOOL_YEAR_END)
+    if start > end:
+        return 0
+    days = 0
+    current = start
+    while current <= end:
+        if current.weekday() < 5 and current not in SCHOOL_CLOSURES:
+            days += 1
+        current += dt.timedelta(days=1)
+    return days
+
+
+def rate_per_enrolled_days(value: float, enrolled_days: int, scale: float = 100.0) -> float:
+    if enrolled_days <= 0:
+        return 0.0
+    return value / enrolled_days * scale
+
+
 def normalize_student_id(value: str) -> str:
     value = str(value).strip()
     if not value:
@@ -111,12 +162,54 @@ def load_at_risk_report():
         student_id = normalize_student_id(cell(row, id_idx + 1))
         if not student_id:
             continue
-        info_by_id[student_id] = {
+        info = {
             safe_headers[i]: str(cell(row, i + 1)).strip()
             for i in range(len(header))
             if i != id_idx
         }
-    personal_fields = [safe_headers[i] for i in range(len(header)) if i != id_idx]
+        raw = {header[i]: str(cell(row, i + 1)).strip() for i in range(len(header))}
+        entry_date = excel_date(raw["Entry Date - E/W"])
+        enrolled_days = count_school_days(entry_date)
+        unexcused = to_float(raw.get("Unexcused"))
+        excused = to_float(raw.get("Excused"))
+        l1 = to_float(raw.get("L-1"))
+        l2 = to_float(raw.get("L-2"))
+        l3 = to_float(raw.get("L-3"))
+        l4 = to_float(raw.get("L-4"))
+        local = to_float(raw.get("Local"))
+        bus1 = to_float(raw.get("Transportation 1"))
+        bus2 = to_float(raw.get("Transportation 2"))
+        bus3 = to_float(raw.get("Transportation 3"))
+        school_referrals = l1 + l2 + l3 + l4
+        bus_referrals = local + bus1 + bus2 + bus3
+        school_severity_points = l1 + 2 * l2 + 3 * l3 + 4 * l4
+        bus_severity_points = (local + bus1) + 2 * bus2 + 3 * bus3
+        info.update(
+            {
+                "at_risk_entry_date": entry_date.isoformat(),
+                "at_risk_enrolled_school_days": str(enrolled_days),
+                "at_risk_unexcused_absence_pct_enrolled": f"{rate_per_enrolled_days(unexcused, enrolled_days):.6f}",
+                "at_risk_excused_absence_pct_enrolled": f"{rate_per_enrolled_days(excused, enrolled_days):.6f}",
+                "at_risk_total_absence_pct_enrolled": f"{rate_per_enrolled_days(unexcused + excused, enrolled_days):.6f}",
+                "at_risk_school_referral_severity_points_170": f"{rate_per_enrolled_days(school_severity_points, enrolled_days, FULL_SCHOOL_YEAR_DAYS):.6f}",
+                "at_risk_bus_referral_severity_points_170": f"{rate_per_enrolled_days(bus_severity_points, enrolled_days, FULL_SCHOOL_YEAR_DAYS):.6f}",
+                "at_risk_total_school_referrals_170": f"{rate_per_enrolled_days(school_referrals, enrolled_days, FULL_SCHOOL_YEAR_DAYS):.6f}",
+                "at_risk_total_bus_referrals_170": f"{rate_per_enrolled_days(bus_referrals, enrolled_days, FULL_SCHOOL_YEAR_DAYS):.6f}",
+            }
+        )
+        info_by_id[student_id] = info
+    derived_fields = [
+        "at_risk_entry_date",
+        "at_risk_enrolled_school_days",
+        "at_risk_unexcused_absence_pct_enrolled",
+        "at_risk_excused_absence_pct_enrolled",
+        "at_risk_total_absence_pct_enrolled",
+        "at_risk_school_referral_severity_points_170",
+        "at_risk_bus_referral_severity_points_170",
+        "at_risk_total_school_referrals_170",
+        "at_risk_total_bus_referrals_170",
+    ]
+    personal_fields = [safe_headers[i] for i in range(len(header)) if i != id_idx] + derived_fields
     return info_by_id, personal_fields
 
 

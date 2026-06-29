@@ -38,6 +38,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-20 |
+| at_risk_enrolled_school_days | 168 |
+| at_risk_unexcused_absence_pct_enrolled | 2.976190 |
+| at_risk_excused_absence_pct_enrolled | 0.595238 |
+| at_risk_total_absence_pct_enrolled | 3.571429 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -85,6 +94,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 11.764706 |
+| at_risk_excused_absence_pct_enrolled | 2.352941 |
+| at_risk_total_absence_pct_enrolled | 14.117647 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -132,6 +150,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 10.000000 |
+| at_risk_excused_absence_pct_enrolled | 0.588235 |
+| at_risk_total_absence_pct_enrolled | 10.588235 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -179,6 +206,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 3.529412 |
+| at_risk_excused_absence_pct_enrolled | 1.176471 |
+| at_risk_total_absence_pct_enrolled | 4.705882 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -226,6 +262,15 @@
 | at_risk_transportation_1 | 0.0 |
 | at_risk_transportation_2 | 0.0 |
 | at_risk_transportation_3 | 0.0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 2.941176 |
+| at_risk_excused_absence_pct_enrolled | 0.000000 |
+| at_risk_total_absence_pct_enrolled | 2.941176 |
+| at_risk_school_referral_severity_points_170 | 3.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 1.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -273,6 +318,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 5.882353 |
+| at_risk_excused_absence_pct_enrolled | 5.882353 |
+| at_risk_total_absence_pct_enrolled | 11.764706 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -320,6 +374,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 6.470588 |
+| at_risk_excused_absence_pct_enrolled | 0.000000 |
+| at_risk_total_absence_pct_enrolled | 6.470588 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -367,6 +430,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 1.764706 |
+| at_risk_excused_absence_pct_enrolled | 0.588235 |
+| at_risk_total_absence_pct_enrolled | 2.352941 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -414,6 +486,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 6.470588 |
+| at_risk_excused_absence_pct_enrolled | 0.588235 |
+| at_risk_total_absence_pct_enrolled | 7.058824 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -461,6 +542,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 3.529412 |
+| at_risk_excused_absence_pct_enrolled | 1.176471 |
+| at_risk_total_absence_pct_enrolled | 4.705882 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -508,6 +598,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 9.411765 |
+| at_risk_excused_absence_pct_enrolled | 0.000000 |
+| at_risk_total_absence_pct_enrolled | 9.411765 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -555,6 +654,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 0.000000 |
+| at_risk_excused_absence_pct_enrolled | 0.588235 |
+| at_risk_total_absence_pct_enrolled | 0.588235 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -602,6 +710,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 6.470588 |
+| at_risk_excused_absence_pct_enrolled | 0.000000 |
+| at_risk_total_absence_pct_enrolled | 6.470588 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -649,6 +766,15 @@
 | at_risk_transportation_1 | 0.0 |
 | at_risk_transportation_2 | 0.0 |
 | at_risk_transportation_3 | 0.0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 2.941176 |
+| at_risk_excused_absence_pct_enrolled | 1.764706 |
+| at_risk_total_absence_pct_enrolled | 4.705882 |
+| at_risk_school_referral_severity_points_170 | 3.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 1.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -696,6 +822,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 7.647059 |
+| at_risk_excused_absence_pct_enrolled | 0.588235 |
+| at_risk_total_absence_pct_enrolled | 8.235294 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -743,6 +878,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 2.352941 |
+| at_risk_excused_absence_pct_enrolled | 1.176471 |
+| at_risk_total_absence_pct_enrolled | 3.529412 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -790,6 +934,15 @@
 | at_risk_transportation_1 | 0.0 |
 | at_risk_transportation_2 | 0.0 |
 | at_risk_transportation_3 | 0.0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 2.352941 |
+| at_risk_excused_absence_pct_enrolled | 0.000000 |
+| at_risk_total_absence_pct_enrolled | 2.352941 |
+| at_risk_school_referral_severity_points_170 | 6.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 2.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -837,6 +990,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 1.176471 |
+| at_risk_excused_absence_pct_enrolled | 2.352941 |
+| at_risk_total_absence_pct_enrolled | 3.529412 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -884,6 +1046,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 7.647059 |
+| at_risk_excused_absence_pct_enrolled | 2.941176 |
+| at_risk_total_absence_pct_enrolled | 10.588235 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -931,6 +1102,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 4.705882 |
+| at_risk_excused_absence_pct_enrolled | 0.000000 |
+| at_risk_total_absence_pct_enrolled | 4.705882 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
@@ -978,6 +1158,15 @@
 | at_risk_transportation_1 | 0 |
 | at_risk_transportation_2 | 0 |
 | at_risk_transportation_3 | 0 |
+| at_risk_entry_date | 2025-08-18 |
+| at_risk_enrolled_school_days | 170 |
+| at_risk_unexcused_absence_pct_enrolled | 1.764706 |
+| at_risk_excused_absence_pct_enrolled | 7.058824 |
+| at_risk_total_absence_pct_enrolled | 8.823529 |
+| at_risk_school_referral_severity_points_170 | 0.000000 |
+| at_risk_bus_referral_severity_points_170 | 0.000000 |
+| at_risk_total_school_referrals_170 | 0.000000 |
+| at_risk_total_bus_referrals_170 | 0.000000 |
 
 | Test | Part | Question | Response | Correct answer(s) | Recode | Score |
 |---|---|---:|---:|---:|---:|---:|
