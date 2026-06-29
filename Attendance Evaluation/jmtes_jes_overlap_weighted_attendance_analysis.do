@@ -113,21 +113,21 @@ foreach y of local outcomes {
     local y_label "`label_`y''"
 
     * Compute the JES overlap-weighted mean for this outcome.
-    quietly summarize `y' if jmtes == 0 [iw = overlap_weight], meanonly
+    quietly summarize `y' if jmtes == 0 [aw = overlap_weight], meanonly
     scalar jes_mean = r(mean)
 
     * Compute the JMTES overlap-weighted mean for this outcome.
-    quietly summarize `y' if jmtes == 1 [iw = overlap_weight], meanonly
+    quietly summarize `y' if jmtes == 1 [aw = overlap_weight], meanonly
     scalar jmtes_mean = r(mean)
 
     * Estimate the unadjusted overlap-weighted regression model.
-    quietly regress `y' jmtes [iw = overlap_weight]
+    quietly regress `y' jmtes [aw = overlap_weight]
 
     * Post the unadjusted model results.
     post table4 ("`y_label'") ("OW") (_b[jmtes]) (_se[jmtes]) (jes_mean) (jmtes_mean) (e(N)) (e(df_r))
 
     * Estimate the covariate-adjusted overlap-weighted regression model.
-    quietly regress `y' jmtes i.grade_cat female black age i.meal_status_cat i.entry_code_cat [iw = overlap_weight]
+    quietly regress `y' jmtes i.grade_cat female black age i.meal_status_cat i.entry_code_cat [aw = overlap_weight]
 
     * Post the adjusted model results.
     post table4 ("`y_label'") ("OW + covariates") (_b[jmtes]) (_se[jmtes]) (jes_mean) (jmtes_mean) (e(N)) (e(df_r))
