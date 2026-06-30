@@ -42,13 +42,6 @@ quietly generate post_percent_correct = 100 * post_total_correct / max_score if 
 label variable pre_percent_correct  "Pre-test percent correct"
 label variable post_percent_correct "Post-test percent correct"
 
-* Grade controls use Grade 3 as the reference group.
-capture drop grade4 grade5
-quietly generate grade4 = grade == 4 if !missing(grade)
-quietly generate grade5 = grade == 5 if !missing(grade)
-label variable grade4 "Grade 4 indicator"
-label variable grade5 "Grade 5 indicator"
-
 * Define treatment component indicators.
 capture drop online activities
 quietly generate online = incentive_2_fin_literacy_module_online_participation == 1 if !missing(incentive_2_fin_literacy_module_online_participation)
@@ -69,7 +62,7 @@ label variable student_panel_id "Student fixed-effect identifier"
 
 * Reshape from one row per student to one row per student-test period.
 preserve
-keep student_panel_id grade4 grade5 online activities pre_percent_correct post_percent_correct
+keep student_panel_id grade online activities pre_percent_correct post_percent_correct
 rename pre_percent_correct score0
 rename post_percent_correct score1
 reshape long score, i(student_panel_id) j(post)
@@ -80,7 +73,7 @@ label variable post  "Post-test indicator"
 
 * Student fixed-effects DiD model. Stata absorbs time-invariant main effects and grade.
 xtset student_panel_id post
-xtreg score i.post##i.online##i.activities grade4 grade5, fe vce(cluster student_panel_id)
+xtreg score i.post##i.online##i.activities i.grade, fe vce(cluster student_panel_id)
 
 * First-difference equivalent for the identified post interactions. Because the online-only
 * cell is empty, the post-by-online and triple interaction are not separately identified.

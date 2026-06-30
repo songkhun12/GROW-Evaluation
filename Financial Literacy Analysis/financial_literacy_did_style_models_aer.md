@@ -18,10 +18,10 @@ This American Economic Review-style table reports unadjusted and adjusted differ
 |  | (24.84) | (20.75) |
 | Post × Online × Activities | Omitted | Omitted |
 |  | — | — |
-| Grade 4 and Grade 5 indicators | No | Yes |
+| Grade controls | No | Yes |
 | Student covariates | No | Yes |
 | Student random intercept | Yes | Yes |
 | Observations | 114 | 114 |
 | Students | 57 | 57 |
 
-*Notes:* Standard errors are shown in parentheses. Percent-correct scores use grade-specific assessment lengths: Grade 3 has 10 questions, and Grades 4 and 5 have 11 questions. Model 1 includes the post-test indicator, online-module participation, Economics Arkansas activity participation, the online-by-activities interaction, and interactions between the post-test indicator and supplemental exposure variables. Model 2 adds Grade 4 and Grade 5 indicators, with Grade 3 as the reference group, plus attendance, gender, race/ethnicity, age, meal-status code, entry code, and school/bus referral severity covariates. The online-only cell is empty in the analytic dataset; therefore, the Online × Activities and Post × Online × Activities terms are collinear with the corresponding online terms and are omitted. The interaction terms involving Post describe differences in pre-post gains across supplemental exposure groups and should be interpreted as descriptive associations rather than causal effects.
+*Notes:* Standard errors are shown in parentheses. Percent-correct scores use grade-specific assessment lengths: Grade 3 has 10 questions, and Grades 4 and 5 have 11 questions. Model 1 includes the post-test indicator, online-module participation, Economics Arkansas activity participation, the online-by-activities interaction, and interactions between the post-test indicator and supplemental exposure variables. Model 2 adds grade, attendance, gender, race/ethnicity, age, meal-status code, entry code, and school/bus referral severity covariates. The online-only cell is empty in the analytic dataset; therefore, the Online × Activities and Post × Online × Activities terms are collinear with the corresponding online terms and are omitted. The interaction terms involving Post describe differences in pre-post gains across supplemental exposure groups and should be interpreted as descriptive associations rather than causal effects.

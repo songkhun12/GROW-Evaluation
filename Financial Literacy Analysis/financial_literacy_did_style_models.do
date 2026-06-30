@@ -75,13 +75,6 @@ generate post_percent_correct = 100 * post_total_correct / max_score if !missing
 label variable pre_percent_correct  "Pre-test percent correct"
 label variable post_percent_correct "Post-test percent correct"
 
-* Grade controls use Grade 3 as the reference group.
-capture drop grade4 grade5
-generate grade4 = grade == 4 if !missing(grade)
-generate grade5 = grade == 5 if !missing(grade)
-label variable grade4 "Grade 4 indicator"
-label variable grade5 "Grade 5 indicator"
-
 * Supplemental exposure indicators.
 capture drop online activities
 generate online = incentive_2_fin_literacy_module_online_participation == 1 if !missing(incentive_2_fin_literacy_module_online_participation)
@@ -96,7 +89,7 @@ label variable student_panel_id "Student random-intercept identifier"
 
 * Reshape to long format: post = 0 for pre-test, post = 1 for post-test.
 preserve
-keep student_panel_id grade4 grade5 online activities pre_percent_correct post_percent_correct ///
+keep student_panel_id grade online activities pre_percent_correct post_percent_correct ///
     at_risk_total_absence_pct_enrolled gender_id ethnicity_id at_risk_student_age ///
     meal_status_id entry_code_id at_risk_school_referral_severity_points_170 ///
     at_risk_bus_referral_severity_points_170
@@ -113,7 +106,7 @@ mixed score i.post##i.online##i.activities || student_panel_id:, mle
 estimates store did_model_1
 
 * Model 2: adjusted DiD-style model with grade and student-level covariates.
-mixed score i.post##i.online##i.activities grade4 grade5 ///
+mixed score i.post##i.online##i.activities i.grade ///
     c.at_risk_total_absence_pct_enrolled i.gender_id i.ethnicity_id ///
     c.at_risk_student_age i.meal_status_id i.entry_code_id ///
     c.at_risk_school_referral_severity_points_170 ///
