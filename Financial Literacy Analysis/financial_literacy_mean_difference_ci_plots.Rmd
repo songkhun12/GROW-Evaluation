@@ -1,0 +1,200 @@
+---
+title: "Financial Literacy Mean Difference and 95% Confidence Interval Plots"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    df_print: paged
+  word_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+options(scipen = 999, digits = 3)
+```
+
+## Purpose
+
+This R Markdown file uses `all_grades_financial_literacy_scores.csv` to visualize paired pre-post financial literacy score changes. The figure reports mean paired differences and 95% confidence intervals for two outcomes:
+
+- **Raw-score change**, shown separately for Grade 3, Grade 4, and Grade 5.
+- **Percent-correct change**, shown separately for Grade 3, Grade 4, Grade 5, and all students combined.
+
+Positive mean differences indicate higher post-test scores than pre-test scores. The confidence intervals are calculated from student-level paired change scores using the standard error of the mean difference and the appropriate two-sided *t* critical value.
+
+## Load packages and data
+
+```{r load-data}
+library(ggplot2)
+
+scores <- read.csv("all_grades_financial_literacy_scores.csv", stringsAsFactors = FALSE)
+
+scores$grade_label <- factor(
+  paste("Grade", scores$grade),
+  levels = c("Grade 3", "Grade 4", "Grade 5")
+)
+```
+
+## Create paired difference measures
+
+The raw-score paired difference is calculated as post-test total correct minus pre-test total correct. Percent-correct scores place grade-level assessments on a common scale. Grade 3 had 10 scored items, while Grades 4 and 5 had 11 scored items; therefore, percent-correct scores are calculated with grade-specific denominators.
+
+```{r create-differences}
+scores$max_score <- ifelse(scores$grade == 3, 10, 11)
+
+scores$pre_percent_correct <- 100 * scores$pre_total_correct / scores$max_score
+scores$post_percent_correct <- 100 * scores$post_total_correct / scores$max_score
+
+scores$raw_score_difference <- scores$post_total_correct - scores$pre_total_correct
+scores$percent_correct_difference <- scores$post_percent_correct - scores$pre_percent_correct
+```
+
+## Helper function for mean differences and 95% confidence intervals
+
+```{r helper-functions}
+mean_ci <- function(x) {
+  x <- x[!is.na(x)]
+  n <- length(x)
+  mean_difference <- mean(x)
+  sd_difference <- sd(x)
+  se_difference <- sd_difference / sqrt(n)
+  t_critical <- qt(0.975, df = n - 1)
+
+  data.frame(
+    n = n,
+    mean_difference = mean_difference,
+    se_difference = se_difference,
+    ci_low = mean_difference - t_critical * se_difference,
+    ci_high = mean_difference + t_critical * se_difference
+  )
+}
+```
+
+## Summarize paired changes
+
+```{r summarize-changes}
+raw_by_grade <- do.call(
+  rbind,
+  lapply(split(scores, scores$grade_label), function(dat) {
+    cbind(
+      sample = as.character(dat$grade_label[1]),
+      outcome = "Raw score",
+      mean_ci(dat$raw_score_difference)
+    )
+  })
+)
+
+percent_by_grade <- do.call(
+  rbind,
+  lapply(split(scores, scores$grade_label), function(dat) {
+    cbind(
+      sample = as.character(dat$grade_label[1]),
+      outcome = "Percent correct",
+      mean_ci(dat$percent_correct_difference)
+    )
+  })
+)
+
+percent_all <- cbind(
+  sample = "All grades",
+  outcome = "Percent correct",
+  mean_ci(scores$percent_correct_difference)
+)
+
+plot_data <- rbind(raw_by_grade, percent_by_grade, percent_all)
+
+plot_data$outcome <- factor(plot_data$outcome, levels = c("Raw score", "Percent correct"))
+plot_data$sample <- factor(
+  plot_data$sample,
+  levels = c("Grade 3", "Grade 4", "Grade 5", "All grades")
+)
+
+plot_data
+```
+
+## Paired-samples t-test table
+
+```{r paired-ttest-table}
+paired_ttest_summary <- function(dat, difference_variable) {
+  difference_scores <- dat[[difference_variable]]
+  difference_scores <- difference_scores[!is.na(difference_scores)]
+  test_result <- t.test(difference_scores, mu = 0)
+
+  data.frame(
+    n = length(difference_scores),
+    mean_difference = mean(difference_scores),
+    se_difference = sd(difference_scores) / sqrt(length(difference_scores)),
+    t_statistic = unname(test_result$statistic),
+    p_value = test_result$p.value,
+    ci_low = test_result$conf.int[1],
+    ci_high = test_result$conf.int[2]
+  )
+}
+
+raw_ttests <- do.call(
+  rbind,
+  lapply(split(scores, scores$grade_label), function(dat) {
+    cbind(
+      panel = "Panel A. Raw score paired t-test results",
+      sample = as.character(dat$grade_label[1]),
+      paired_ttest_summary(dat, "raw_score_difference")
+    )
+  })
+)
+
+percent_ttests_by_grade <- do.call(
+  rbind,
+  lapply(split(scores, scores$grade_label), function(dat) {
+    cbind(
+      panel = "Panel B. Percent-correct paired t-test results",
+      sample = as.character(dat$grade_label[1]),
+      paired_ttest_summary(dat, "percent_correct_difference")
+    )
+  })
+)
+
+percent_ttests_all <- cbind(
+  panel = "Panel B. Percent-correct paired t-test results",
+  sample = "All grades",
+  paired_ttest_summary(scores, "percent_correct_difference")
+)
+
+paired_ttests <- rbind(raw_ttests, percent_ttests_by_grade, percent_ttests_all)
+paired_ttests
+```
+
+## Visualization: mean paired differences with 95% confidence intervals
+
+```{r mean-difference-ci-plot, fig.width=10, fig.height=6}
+ggplot(plot_data, aes(x = sample, y = mean_difference)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
+  geom_errorbar(aes(ymin = ci_low, ymax = ci_high), width = 0.15, linewidth = 0.8) +
+  geom_point(size = 3, color = "#1f78b4") +
+  geom_text(
+    aes(label = sprintf("%.2f", mean_difference)),
+    nudge_y = 0.6,
+    size = 3.5,
+    color = "#1f78b4"
+  ) +
+  facet_wrap(~ outcome, scales = "free_y") +
+  labs(
+    title = "Mean Pre-Post Financial Literacy Score Differences",
+    subtitle = "Points show mean paired differences; bars show 95% confidence intervals",
+    x = NULL,
+    y = "Mean difference (post-test minus pre-test)",
+    caption = "Raw-score results are shown within grade only because grade-level assessments used different denominators. Percent-correct results include within-grade estimates and a combined all-students estimate."
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
+```
+
+## Interpretation
+
+The plotted mean differences match the paired-samples framework: each student's post-test score is compared with that same student's pre-test score, and the average student-level change is shown with a 95% confidence interval. Confidence intervals that cross zero indicate that the observed average gains are not statistically distinguishable from no mean change at the conventional 5% level. Therefore, the figure should be interpreted as descriptive evidence of positive score movement rather than statistically significant evidence of improvement.
