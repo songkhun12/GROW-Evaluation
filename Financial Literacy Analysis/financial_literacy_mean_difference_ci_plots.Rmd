@@ -1,0 +1,265 @@
+---
+title: "Financial Literacy Supplemental Participation Mean Difference Plot"
+author: "GROW Evaluation"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    df_print: paged
+  word_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+options(scipen = 999, digits = 3)
+```
+
+## Purpose
+
+This R Markdown file uses `all_grades_financial_literacy_scores.csv` to visualize paired pre-post changes in financial literacy percent-correct scores by grade level and supplemental participation group. The plot is designed to accompany Table 4 by showing the mean paired difference and 95% confidence interval for:
+
+- Grade 3 students.
+- Grade 4 students.
+- Grade 5 students.
+- All students combined.
+
+Values are reported as percentage-point changes in percent correct. Positive values indicate higher post-test performance than pre-test performance.
+
+## Load package and data
+
+```{r load-data}
+library(ggplot2)
+
+scores <- read.csv("all_grades_financial_literacy_scores.csv", stringsAsFactors = FALSE)
+
+scores$grade_label <- factor(
+  paste("Grade", scores$grade),
+  levels = c("Grade 3", "Grade 4", "Grade 5")
+)
+```
+
+## Create percent-correct paired differences
+
+Grade 3 assessments had 10 scored items, while Grade 4 and Grade 5 assessments had 11 scored items. Percent-correct scores are therefore calculated with grade-specific denominators so that all grades can be shown on a common percentage-point scale.
+
+```{r create-percent-correct-differences}
+scores$max_score <- ifelse(scores$grade == 3, 10, 11)
+
+scores$pre_percent_correct <- 100 * scores$pre_total_correct / scores$max_score
+scores$post_percent_correct <- 100 * scores$post_total_correct / scores$max_score
+scores$percent_correct_difference <- scores$post_percent_correct - scores$pre_percent_correct
+```
+
+## Define supplemental participation groups
+
+All students received the financial education curriculum. Supplemental participation groups are defined by whether students also participated in the online curriculum module and/or Economics Arkansas activities.
+
+```{r define-participation-groups}
+scores$online_participation <- scores$incentive_2_fin_literacy_module_online_participation == 1
+scores$ea_participation <- scores$incentive_1_ea_lesson_activities_participation == 1
+
+scores$participation_group <- ifelse(
+  !scores$online_participation & !scores$ea_participation,
+  "Financial education only",
+  ifelse(
+    scores$online_participation & !scores$ea_participation,
+    "Financial education + online curriculum",
+    ifelse(
+      !scores$online_participation & scores$ea_participation,
+      "Financial education + Economics Arkansas activities",
+      "Financial education + online curriculum + Economics Arkansas activities"
+    )
+  )
+)
+
+participation_levels <- c(
+  "Financial education only",
+  "Financial education + online curriculum",
+  "Financial education + Economics Arkansas activities",
+  "Financial education + online curriculum + Economics Arkansas activities"
+)
+
+participation_labels <- c(
+  "Financial\neducation\nonly",
+  "Financial education\n+ online\ncurriculum",
+  "Financial education\n+ Economics Arkansas\nactivities",
+  "Financial education\n+ online curriculum\n+ Economics Arkansas\nactivities"
+)
+
+scores$participation_group <- factor(scores$participation_group, levels = participation_levels)
+```
+
+## Helper functions for paired mean differences and t-tests
+
+Cells with zero students have no mean difference. Cells with one student can have an observed difference, but the standard error, confidence interval, t-statistic, and p-value cannot be estimated from a single paired observation.
+
+```{r helper-functions}
+mean_ci <- function(x) {
+  x <- x[!is.na(x)]
+  n <- length(x)
+
+  if (n == 0) {
+    return(data.frame(
+      n = 0,
+      mean_difference = NA_real_,
+      se_difference = NA_real_,
+      t_statistic = NA_real_,
+      p_value = NA_real_,
+      ci_low = NA_real_,
+      ci_high = NA_real_,
+      test_available = FALSE
+    ))
+  }
+
+  mean_difference <- mean(x)
+
+  if (n == 1) {
+    return(data.frame(
+      n = n,
+      mean_difference = mean_difference,
+      se_difference = NA_real_,
+      t_statistic = NA_real_,
+      p_value = NA_real_,
+      ci_low = NA_real_,
+      ci_high = NA_real_,
+      test_available = FALSE
+    ))
+  }
+
+  test_result <- t.test(x, mu = 0)
+
+  data.frame(
+    n = n,
+    mean_difference = mean_difference,
+    se_difference = sd(x) / sqrt(n),
+    t_statistic = unname(test_result$statistic),
+    p_value = test_result$p.value,
+    ci_low = test_result$conf.int[1],
+    ci_high = test_result$conf.int[2],
+    test_available = TRUE
+  )
+}
+
+summarize_group <- function(dat, sample_label) {
+  do.call(
+    rbind,
+    lapply(participation_levels, function(group_label) {
+      group_data <- dat[dat$participation_group == group_label, ]
+      cbind(
+        sample = sample_label,
+        participation_group = group_label,
+        mean_ci(group_data$percent_correct_difference)
+      )
+    })
+  )
+}
+```
+
+## Summarize paired differences by grade and supplemental participation group
+
+```{r summarize-paired-differences}
+summary_by_grade <- do.call(
+  rbind,
+  lapply(levels(scores$grade_label), function(grade_name) {
+    summarize_group(scores[scores$grade_label == grade_name, ], grade_name)
+  })
+)
+
+summary_all <- summarize_group(scores, "All Grades")
+
+plot_data <- rbind(summary_by_grade, summary_all)
+plot_data$sample <- factor(plot_data$sample, levels = c("Grade 3", "Grade 4", "Grade 5", "All Grades"))
+plot_data$participation_group <- factor(plot_data$participation_group, levels = participation_levels, labels = participation_labels)
+plot_data$plot_status <- ifelse(plot_data$test_available, "95% CI available", "Insufficient paired observations")
+plot_data$label_y <- ifelse(is.na(plot_data$mean_difference), 0, plot_data$mean_difference)
+
+plot_data
+```
+
+## Table 4-style paired t-test results
+
+```{r table-four-results}
+table4 <- plot_data
+
+table4$mean_difference_display <- ifelse(
+  is.na(table4$mean_difference),
+  "—",
+  sprintf("%.2f", table4$mean_difference)
+)
+
+table4$se_difference_display <- ifelse(
+  is.na(table4$se_difference),
+  "—",
+  sprintf("%.2f", table4$se_difference)
+)
+
+table4$t_statistic_display <- ifelse(
+  is.na(table4$t_statistic),
+  "—",
+  sprintf("%.2f", table4$t_statistic)
+)
+
+table4$p_value_display <- ifelse(
+  is.na(table4$p_value),
+  "—",
+  sprintf("%.3f", table4$p_value)
+)
+
+table4[, c(
+  "sample",
+  "participation_group",
+  "n",
+  "mean_difference_display",
+  "se_difference_display",
+  "t_statistic_display",
+  "p_value_display"
+)]
+```
+
+## Visualization: mean percent-correct differences with 95% confidence intervals
+
+```{r percent-correct-participation-plot, fig.width=12, fig.height=8}
+ggplot(plot_data, aes(x = participation_group, y = mean_difference, color = plot_status)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray45") +
+  geom_errorbar(
+    data = plot_data[plot_data$test_available, ],
+    aes(ymin = ci_low, ymax = ci_high),
+    width = 0.18,
+    size = 0.8
+  ) +
+  geom_point(size = 3) +
+  geom_text(
+    aes(y = label_y, label = ifelse(is.na(mean_difference), "N = 0", sprintf("%.2f", mean_difference))),
+    nudge_y = 2.2,
+    size = 3.2,
+    show.legend = FALSE
+  ) +
+  facet_wrap(~ sample, ncol = 2) +
+  scale_color_manual(
+    values = c(
+      "95% CI available" = "#1f78b4",
+      "Insufficient paired observations" = "#b2b2b2"
+    )
+  ) +
+  labs(
+    title = "Pre-Post Percent-Correct Changes by Supplemental Participation Group",
+    subtitle = "Points show mean paired differences; bars show 95% confidence intervals where at least two paired observations are available",
+    x = NULL,
+    y = "Mean difference in percent correct, post-test minus pre-test",
+    color = NULL,
+    caption = "Dashes in Table 4 correspond to cells with no observations or insufficient paired observations to estimate standard errors, confidence intervals, and paired t-tests."
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 25, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
+```
+
+## Interpretation
+
+The visualization summarizes the same paired-samples logic as Table 4. Each point is the average within-student percent-correct change for a grade-by-participation group, and each confidence interval shows the uncertainty around that average change. Confidence intervals that cross zero indicate that the observed mean changes are not statistically distinguishable from zero at the conventional five percent level. Cells with no students or only one paired observation are retained in the plot for transparency, but they are marked as having insufficient paired observations because a paired t-test and 95% confidence interval cannot be estimated for those cells.
