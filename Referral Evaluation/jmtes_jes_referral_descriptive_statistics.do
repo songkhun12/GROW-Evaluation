@@ -1,0 +1,136 @@
+/****************************************************************************************
+  Tables 5 and 6. Descriptive Statistics for Attendance and Referral Outcomes
+
+  Assumption:
+    The combined 6.15.26 at-risk referral file is already open in Stata. The open dataset
+    must contain school plus the attendance, school-referral, and bus-referral variables
+    listed below.
+
+  Example command to open the prepared combined file before running this do-file:
+    import delimited using "Referral Evaluation/jmtes_jes_at_risk_report_6_15_26_combined.csv", clear varnames(1)
+
+  Run after opening the data:
+    do "Referral Evaluation/jmtes_jes_referral_descriptive_statistics.do"
+****************************************************************************************/
+
+version 17.0
+set more off
+
+local attendance_vars unexcused_absence_pct excused_absence_pct total_absence_pct
+local school_referral_vars total_school_referrals school_l1_referrals school_l2_referrals school_l3_referrals school_l4_referrals
+local bus_referral_vars total_bus_referrals bus_l1_referrals bus_l2_referrals bus_l3_referrals
+
+foreach var in school `attendance_vars' `school_referral_vars' `bus_referral_vars' {
+    capture confirm variable `var'
+    if _rc {
+        di as error "Required variable `var' is not in the open dataset."
+        exit 111
+    }
+}
+
+label variable unexcused_absence_pct "Unexcused absence %"
+label variable excused_absence_pct   "Excused absence %"
+label variable total_absence_pct     "Total absence %"
+label variable total_school_referrals "Total school referrals"
+label variable school_l1_referrals    "School Level I referrals"
+label variable school_l2_referrals    "School Level II referrals"
+label variable school_l3_referrals    "School Level III referrals"
+label variable school_l4_referrals    "School Level IV referrals"
+label variable total_bus_referrals    "Total bus referrals"
+label variable bus_l1_referrals       "Bus Level I referrals"
+label variable bus_l2_referrals       "Bus Level II referrals"
+label variable bus_l3_referrals       "Bus Level III referrals"
+
+* Table 5 attendance outcomes.
+di as text _newline "Table 5: Descriptive Statistics for Attendance Outcomes"
+tabstat `attendance_vars', by(school) statistics(mean sd median n) columns(statistics) format(%9.3f)
+
+* Table 5 school-based referral outcomes.
+di as text _newline "Table 5: Descriptive Statistics for School-Based Referral Outcomes"
+tabstat `school_referral_vars', by(school) statistics(mean sd median n) columns(statistics) format(%9.3f)
+
+* Table 6 bus referral outcomes.
+di as text _newline "Table 6: Descriptive Statistics for Bus Referral Outcomes"
+tabstat `bus_referral_vars', by(school) statistics(mean sd median n) columns(statistics) format(%9.3f)
+
+* Compact difference-in-means checks for the reported tables.
+preserve
+    collapse ///
+        (mean) m_unex=unexcused_absence_pct m_ex=excused_absence_pct m_totabs=total_absence_pct ///
+               m_schtot=total_school_referrals m_schl1=school_l1_referrals m_schl2=school_l2_referrals m_schl3=school_l3_referrals m_schl4=school_l4_referrals ///
+               m_bustot=total_bus_referrals m_busl1=bus_l1_referrals m_busl2=bus_l2_referrals m_busl3=bus_l3_referrals ///
+        (sd)   sd_unex=unexcused_absence_pct sd_ex=excused_absence_pct sd_totabs=total_absence_pct ///
+               sd_schtot=total_school_referrals sd_schl1=school_l1_referrals sd_schl2=school_l2_referrals sd_schl3=school_l3_referrals sd_schl4=school_l4_referrals ///
+               sd_bustot=total_bus_referrals sd_busl1=bus_l1_referrals sd_busl2=bus_l2_referrals sd_busl3=bus_l3_referrals ///
+        (p50)  p_unex=unexcused_absence_pct p_ex=excused_absence_pct p_totabs=total_absence_pct ///
+               p_schtot=total_school_referrals p_schl1=school_l1_referrals p_schl2=school_l2_referrals p_schl3=school_l3_referrals p_schl4=school_l4_referrals ///
+               p_bustot=total_bus_referrals p_busl1=bus_l1_referrals p_busl2=bus_l2_referrals p_busl3=bus_l3_referrals ///
+        (count) n=unexcused_absence_pct, by(school)
+
+    gen one = 1
+    reshape wide m_* sd_* p_* n, i(one) j(school) string
+    local obs_jmtes = nJMTES[1]
+    local obs_jes = nJES[1]
+
+    tempfile compact_checks
+    postfile compact str12 table str28 outcome ///
+        double jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median ///
+        using `compact_checks', replace
+
+    post compact ("Attendance") ("Unexcused absence %") ///
+        (m_unexJMTES[1]) (sd_unexJMTES[1]) (m_unexJES[1]) (sd_unexJES[1]) ///
+        (m_unexJMTES[1] - m_unexJES[1]) (p_unexJMTES[1]) (p_unexJES[1])
+    post compact ("Attendance") ("Excused absence %") ///
+        (m_exJMTES[1]) (sd_exJMTES[1]) (m_exJES[1]) (sd_exJES[1]) ///
+        (m_exJMTES[1] - m_exJES[1]) (p_exJMTES[1]) (p_exJES[1])
+    post compact ("Attendance") ("Total absence %") ///
+        (m_totabsJMTES[1]) (sd_totabsJMTES[1]) (m_totabsJES[1]) (sd_totabsJES[1]) ///
+        (m_totabsJMTES[1] - m_totabsJES[1]) (p_totabsJMTES[1]) (p_totabsJES[1])
+
+    post compact ("School") ("Total school referrals") ///
+        (m_schtotJMTES[1]) (sd_schtotJMTES[1]) (m_schtotJES[1]) (sd_schtotJES[1]) ///
+        (m_schtotJMTES[1] - m_schtotJES[1]) (p_schtotJMTES[1]) (p_schtotJES[1])
+    post compact ("School") ("School Level I") ///
+        (m_schl1JMTES[1]) (sd_schl1JMTES[1]) (m_schl1JES[1]) (sd_schl1JES[1]) ///
+        (m_schl1JMTES[1] - m_schl1JES[1]) (p_schl1JMTES[1]) (p_schl1JES[1])
+    post compact ("School") ("School Level II") ///
+        (m_schl2JMTES[1]) (sd_schl2JMTES[1]) (m_schl2JES[1]) (sd_schl2JES[1]) ///
+        (m_schl2JMTES[1] - m_schl2JES[1]) (p_schl2JMTES[1]) (p_schl2JES[1])
+    post compact ("School") ("School Level III") ///
+        (m_schl3JMTES[1]) (sd_schl3JMTES[1]) (m_schl3JES[1]) (sd_schl3JES[1]) ///
+        (m_schl3JMTES[1] - m_schl3JES[1]) (p_schl3JMTES[1]) (p_schl3JES[1])
+    post compact ("School") ("School Level IV") ///
+        (m_schl4JMTES[1]) (sd_schl4JMTES[1]) (m_schl4JES[1]) (sd_schl4JES[1]) ///
+        (m_schl4JMTES[1] - m_schl4JES[1]) (p_schl4JMTES[1]) (p_schl4JES[1])
+
+    post compact ("Bus") ("Total bus referrals") ///
+        (m_bustotJMTES[1]) (sd_bustotJMTES[1]) (m_bustotJES[1]) (sd_bustotJES[1]) ///
+        (m_bustotJMTES[1] - m_bustotJES[1]) (p_bustotJMTES[1]) (p_bustotJES[1])
+    post compact ("Bus") ("Bus Level I") ///
+        (m_busl1JMTES[1]) (sd_busl1JMTES[1]) (m_busl1JES[1]) (sd_busl1JES[1]) ///
+        (m_busl1JMTES[1] - m_busl1JES[1]) (p_busl1JMTES[1]) (p_busl1JES[1])
+    post compact ("Bus") ("Bus Level II") ///
+        (m_busl2JMTES[1]) (sd_busl2JMTES[1]) (m_busl2JES[1]) (sd_busl2JES[1]) ///
+        (m_busl2JMTES[1] - m_busl2JES[1]) (p_busl2JMTES[1]) (p_busl2JES[1])
+    post compact ("Bus") ("Bus Level III") ///
+        (m_busl3JMTES[1]) (sd_busl3JMTES[1]) (m_busl3JES[1]) (sd_busl3JES[1]) ///
+        (m_busl3JMTES[1] - m_busl3JES[1]) (p_busl3JMTES[1]) (p_busl3JES[1])
+    postclose compact
+
+    use `compact_checks', clear
+    format jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median %9.3f
+
+    di as text _newline "Compact attendance check"
+    list outcome jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median ///
+        if table == "Attendance", noobs abbreviate(24) separator(0)
+
+    di as text _newline "Compact school-referral check"
+    list outcome jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median ///
+        if table == "School", noobs abbreviate(24) separator(0)
+
+    di as text _newline "Compact bus-referral check"
+    list outcome jmtes_mean jmtes_sd jes_mean jes_sd difference jmtes_median jes_median ///
+        if table == "Bus", noobs abbreviate(24) separator(0)
+
+    di as text _newline "Observations: JMTES=" %9.0f `obs_jmtes' " JES=" %9.0f `obs_jes'
+restore
