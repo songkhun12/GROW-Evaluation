@@ -9,7 +9,7 @@ This AER-style table reports a pre-post difference-in-differences specification 
 | Post × Activities | 11.95 | (17.95) |
 | Post × Online × Activities | Omitted | — |
 | Student fixed effects | Yes |  |
-| Grade controls | Absorbed |  |
+| Grade 4 and Grade 5 indicators | Absorbed; Grade 3 reference |  |
 | Observations | 114 |  |
 | Students | 57 |  |
 
