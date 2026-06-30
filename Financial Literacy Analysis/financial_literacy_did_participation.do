@@ -83,4 +83,4 @@ quietly generate percent_gain = post_percent_correct - pre_percent_correct if !m
 quietly generate online_activities = online * activities
 label variable percent_gain "Post-pre difference in percent correct"
 label variable online_activities "Online curriculum x Economics Arkansas activities"
-regress percent_gain online activities online_activities
+regress percent_gain online activities online_activities, vce(robust)
