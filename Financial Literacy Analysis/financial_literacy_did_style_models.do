@@ -102,7 +102,7 @@ label variable score "Financial literacy score: percent correct"
 label variable post  "Post-test indicator"
 
 * Model 1: unadjusted DiD-style model with a student-level random intercept.
-mixed score i.post##i.online##i.activities || student_panel_id:, mle vce(robust)
+mixed score i.post##i.online##i.activities || student_panel_id:, mle
 estimates store did_model_1
 
 * Model 2: adjusted DiD-style model with grade and student-level covariates.
@@ -111,7 +111,7 @@ mixed score i.post##i.online##i.activities i.grade ///
     c.at_risk_student_age i.meal_status_id i.entry_code_id ///
     c.at_risk_school_referral_severity_points_170 ///
     c.at_risk_bus_referral_severity_points_170 ///
-    || student_panel_id:, mle vce(robust)
+    || student_panel_id:, mle
 estimates store did_model_2
 
 restore
