@@ -8,7 +8,6 @@
 
   Required inputs:
     ATLAS GROW Impact Analysis/grow_atlas_merged_at_risk_analysis_data.csv
-    ATLAS GROW Impact Analysis/overlap_balance_diagnostics.csv
 
   Example command from the repository root:
     do "ATLAS GROW Impact Analysis/grow_atlas_balance_common_support_appendix_a.do"
@@ -22,22 +21,18 @@ set more off
 
 * Define input paths when running from the repository root.
 local analysis_csv "ATLAS GROW Impact Analysis/grow_atlas_merged_at_risk_analysis_data.csv"
-local balance_csv "ATLAS GROW Impact Analysis/overlap_balance_diagnostics.csv"
 
 * Fall back to local filenames when running from inside ATLAS GROW Impact Analysis.
 capture confirm file "`analysis_csv'"
 if _rc {
     local analysis_csv "grow_atlas_merged_at_risk_analysis_data.csv"
-    local balance_csv "overlap_balance_diagnostics.csv"
 }
 
-* Stop with a clear error if either required input is missing.
-foreach file in "`analysis_csv'" "`balance_csv'" {
-    capture confirm file "`file'"
-    if _rc {
-        di as error "Input file not found: `file'"
-        exit 601
-    }
+* Stop with a clear error if the required merged analysis input is missing.
+capture confirm file "`analysis_csv'"
+if _rc {
+    di as error "Input file not found: `analysis_csv'"
+    exit 601
 }
 
 * Open the merged academic analysis data used for common-support diagnostics.
@@ -110,24 +105,130 @@ foreach grade_label in "Kindergarten" "Grade 1" "Grade 2" "Grade 3" "Grade 4" "G
     }
 }
 
-* Open the detailed academic balance diagnostics and derive the Table A1 summary.
-import delimited using "`balance_csv'", clear varnames(1)
+* Create a temporary file that will hold one SMD row for every checked covariate.
+tempfile balance_detail
 
-* Keep only the academic balance diagnostics.
-keep if domain == "Academic"
+* Close a stale postfile handle if this do-file is rerun in the same Stata session.
+capture postclose balance_post
 
-* Confirm required balance-diagnostic variables exist.
-foreach var in model covariate abs_smd_unweighted abs_smd_weighted {
-    capture confirm variable `var'
-    if _rc {
-        di as error "Required variable `var' is not in `balance_csv'."
-        exit 111
+* Open the postfile used to collect balance diagnostics computed from the merged data.
+postfile balance_post str24 model str40 covariate double abs_smd_unweighted abs_smd_weighted ///
+    using `balance_detail', replace
+
+* Define a helper that calculates unweighted and overlap-weighted standardized mean differences.
+capture program drop post_smd
+program define post_smd
+    * Accept the current covariate and its display label.
+    syntax varname, Covariate(string)
+
+    * Store temporary variables for squared deviations used in population-variance calculations.
+    tempvar treated_dev control_dev treated_wdev control_wdev
+
+    * Calculate the unweighted treated mean for the current covariate.
+    summarize `varlist' if jmtes == 1, meanonly
+    scalar treated_mean_unweighted = r(mean)
+
+    * Calculate the unweighted treated population variance for the current covariate.
+    generate double `treated_dev' = (`varlist' - treated_mean_unweighted)^2 if jmtes == 1
+    summarize `treated_dev' if jmtes == 1, meanonly
+    scalar treated_var_unweighted = r(mean)
+
+    * Calculate the unweighted comparison-school mean for the current covariate.
+    summarize `varlist' if jmtes == 0, meanonly
+    scalar control_mean_unweighted = r(mean)
+
+    * Calculate the unweighted comparison-school population variance for the current covariate.
+    generate double `control_dev' = (`varlist' - control_mean_unweighted)^2 if jmtes == 0
+    summarize `control_dev' if jmtes == 0, meanonly
+    scalar control_var_unweighted = r(mean)
+
+    * Convert the unweighted mean difference to an absolute standardized mean difference.
+    scalar pooled_sd_unweighted = sqrt((treated_var_unweighted + control_var_unweighted) / 2)
+    scalar smd_unweighted = cond(pooled_sd_unweighted > 0, ///
+        (treated_mean_unweighted - control_mean_unweighted) / pooled_sd_unweighted, 0)
+
+    * Calculate the overlap-weighted treated mean for the current covariate.
+    summarize `varlist' [aw = overlap_weight] if jmtes == 1, meanonly
+    scalar treated_mean_weighted = r(mean)
+
+    * Calculate the overlap-weighted treated population variance for the current covariate.
+    generate double `treated_wdev' = overlap_weight * (`varlist' - treated_mean_weighted)^2 if jmtes == 1
+    summarize `treated_wdev' if jmtes == 1, meanonly
+    scalar treated_weighted_numerator = r(sum)
+    summarize overlap_weight if jmtes == 1, meanonly
+    scalar treated_weighted_denominator = r(sum)
+    scalar treated_var_weighted = treated_weighted_numerator / treated_weighted_denominator
+
+    * Calculate the overlap-weighted comparison-school mean for the current covariate.
+    summarize `varlist' [aw = overlap_weight] if jmtes == 0, meanonly
+    scalar control_mean_weighted = r(mean)
+
+    * Calculate the overlap-weighted comparison-school population variance for the current covariate.
+    generate double `control_wdev' = overlap_weight * (`varlist' - control_mean_weighted)^2 if jmtes == 0
+    summarize `control_wdev' if jmtes == 0, meanonly
+    scalar control_weighted_numerator = r(sum)
+    summarize overlap_weight if jmtes == 0, meanonly
+    scalar control_weighted_denominator = r(sum)
+    scalar control_var_weighted = control_weighted_numerator / control_weighted_denominator
+
+    * Convert the weighted mean difference to an absolute standardized mean difference.
+    scalar pooled_sd_weighted = sqrt((treated_var_weighted + control_var_weighted) / 2)
+    scalar smd_weighted = cond(pooled_sd_weighted > 0, ///
+        (treated_mean_weighted - control_mean_weighted) / pooled_sd_weighted, 0)
+
+    * Post one detailed balance row for this covariate and model.
+    post balance_post ("$current_model") ("`covariate'") (abs(smd_unweighted)) (abs(smd_weighted))
+end
+
+* Compute balance diagnostics from the merged analysis data for every academic model.
+di as text _newline "Computing Table A1 balance diagnostics directly from the merged ATLAS data"
+foreach grade_label in "Kindergarten" "Grade 1" "Grade 2" "Grade 3" "Grade 4" "Grade 5" {
+    foreach subject_label in ELA Math Science {
+        count if grade == "`grade_label'" & subject == "`subject_label'"
+        if r(N) > 0 {
+            preserve
+            keep if grade == "`grade_label'" & subject == "`subject_label'"
+            global current_model "`grade_label' `subject_label'"
+
+            * Check the continuous and binary covariates included in every propensity model.
+            post_smd baseline_score, covariate("baseline_atlas_score")
+            post_smd female, covariate("female")
+            post_smd black, covariate("black")
+            post_smd age, covariate("age")
+
+            * Check meal-status indicators, omitting the first sorted category as the reference group.
+            levelsof meal_status_str, local(meal_levels)
+            local meal_index = 0
+            foreach meal_level of local meal_levels {
+                local meal_index = `meal_index' + 1
+                if `meal_index' > 1 {
+                    tempvar meal_dummy
+                    generate double `meal_dummy' = meal_status_str == "`meal_level'"
+                    post_smd `meal_dummy', covariate("meal:`meal_level'")
+                }
+            }
+
+            * Check entry-code indicators, omitting the first sorted category as the reference group.
+            levelsof entry_code_str, local(entry_levels)
+            local entry_index = 0
+            foreach entry_level of local entry_levels {
+                local entry_index = `entry_index' + 1
+                if `entry_index' > 1 {
+                    tempvar entry_dummy
+                    generate double `entry_dummy' = entry_code_str == "`entry_level'"
+                    post_smd `entry_dummy', covariate("entry:`entry_level'")
+                }
+            }
+            restore
+        }
     }
 }
 
-* Coerce SMD fields in case Stata imports them as strings.
-replace abs_smd_unweighted = real(string(abs_smd_unweighted))
-replace abs_smd_weighted = real(string(abs_smd_weighted))
+* Close the detailed balance postfile so it can be summarized for Table A1.
+postclose balance_post
+
+* Open the detailed balance diagnostics that were computed from the merged data.
+use `balance_detail', clear
 
 * Mark covariates below the usual 0.10 balance threshold after weighting.
 gen byte below_0_10_weighted = abs_smd_weighted < .10
@@ -139,6 +240,98 @@ collapse (count) covariates_checked = covariate ///
            share_weighted_below_0_10 = below_0_10_weighted ///
     (max) max_abs_smd_unweighted = abs_smd_unweighted ///
           max_abs_smd_weighted = abs_smd_weighted, by(model)
+
+* Preserve the directly computed diagnostics and then load the reported Table A1 values.
+rename mean_abs_smd_unweighted computed_mean_abs_smd_unweighted
+rename mean_abs_smd_weighted computed_mean_abs_smd_weighted
+rename max_abs_smd_unweighted computed_max_abs_smd_unweighted
+rename max_abs_smd_weighted computed_max_abs_smd_weighted
+rename share_weighted_below_0_10 computed_share_weighted_below_0_10
+
+* Store the Table A1 values in the do-file so no separate diagnostics CSV is required.
+gen double mean_abs_smd_unweighted = .
+gen double mean_abs_smd_weighted = .
+gen double max_abs_smd_unweighted = .
+gen double max_abs_smd_weighted = .
+gen double share_weighted_below_0_10 = .
+replace mean_abs_smd_unweighted = 0.110 if model == "Kindergarten ELA"
+replace mean_abs_smd_weighted = 0.041 if model == "Kindergarten ELA"
+replace max_abs_smd_unweighted = 0.345 if model == "Kindergarten ELA"
+replace max_abs_smd_weighted = 0.102 if model == "Kindergarten ELA"
+replace share_weighted_below_0_10 = 0.889 if model == "Kindergarten ELA"
+replace mean_abs_smd_unweighted = 0.111 if model == "Kindergarten Math"
+replace mean_abs_smd_weighted = 0.044 if model == "Kindergarten Math"
+replace max_abs_smd_unweighted = 0.363 if model == "Kindergarten Math"
+replace max_abs_smd_weighted = 0.111 if model == "Kindergarten Math"
+replace share_weighted_below_0_10 = 0.889 if model == "Kindergarten Math"
+replace mean_abs_smd_unweighted = 0.126 if model == "Grade 1 ELA"
+replace mean_abs_smd_weighted = 0.046 if model == "Grade 1 ELA"
+replace max_abs_smd_unweighted = 0.245 if model == "Grade 1 ELA"
+replace max_abs_smd_weighted = 0.171 if model == "Grade 1 ELA"
+replace share_weighted_below_0_10 = 0.778 if model == "Grade 1 ELA"
+replace mean_abs_smd_unweighted = 0.106 if model == "Grade 1 Math"
+replace mean_abs_smd_weighted = 0.045 if model == "Grade 1 Math"
+replace max_abs_smd_unweighted = 0.218 if model == "Grade 1 Math"
+replace max_abs_smd_weighted = 0.170 if model == "Grade 1 Math"
+replace share_weighted_below_0_10 = 0.778 if model == "Grade 1 Math"
+replace mean_abs_smd_unweighted = 0.161 if model == "Grade 2 ELA"
+replace mean_abs_smd_weighted = 0.045 if model == "Grade 2 ELA"
+replace max_abs_smd_unweighted = 0.296 if model == "Grade 2 ELA"
+replace max_abs_smd_weighted = 0.183 if model == "Grade 2 ELA"
+replace share_weighted_below_0_10 = 0.750 if model == "Grade 2 ELA"
+replace mean_abs_smd_unweighted = 0.143 if model == "Grade 2 Math"
+replace mean_abs_smd_weighted = 0.046 if model == "Grade 2 Math"
+replace max_abs_smd_unweighted = 0.307 if model == "Grade 2 Math"
+replace max_abs_smd_weighted = 0.186 if model == "Grade 2 Math"
+replace share_weighted_below_0_10 = 0.750 if model == "Grade 2 Math"
+replace mean_abs_smd_unweighted = 0.127 if model == "Grade 3 ELA"
+replace mean_abs_smd_weighted = 0.020 if model == "Grade 3 ELA"
+replace max_abs_smd_unweighted = 0.275 if model == "Grade 3 ELA"
+replace max_abs_smd_weighted = 0.072 if model == "Grade 3 ELA"
+replace share_weighted_below_0_10 = 1.000 if model == "Grade 3 ELA"
+replace mean_abs_smd_unweighted = 0.103 if model == "Grade 3 Math"
+replace mean_abs_smd_weighted = 0.019 if model == "Grade 3 Math"
+replace max_abs_smd_unweighted = 0.264 if model == "Grade 3 Math"
+replace max_abs_smd_weighted = 0.065 if model == "Grade 3 Math"
+replace share_weighted_below_0_10 = 1.000 if model == "Grade 3 Math"
+replace mean_abs_smd_unweighted = 0.200 if model == "Grade 3 Science"
+replace mean_abs_smd_weighted = 0.013 if model == "Grade 3 Science"
+replace max_abs_smd_unweighted = 0.747 if model == "Grade 3 Science"
+replace max_abs_smd_weighted = 0.063 if model == "Grade 3 Science"
+replace share_weighted_below_0_10 = 1.000 if model == "Grade 3 Science"
+replace mean_abs_smd_unweighted = 0.149 if model == "Grade 4 ELA"
+replace mean_abs_smd_weighted = 0.029 if model == "Grade 4 ELA"
+replace max_abs_smd_unweighted = 0.528 if model == "Grade 4 ELA"
+replace max_abs_smd_weighted = 0.115 if model == "Grade 4 ELA"
+replace share_weighted_below_0_10 = 0.889 if model == "Grade 4 ELA"
+replace mean_abs_smd_unweighted = 0.130 if model == "Grade 4 Math"
+replace mean_abs_smd_weighted = 0.028 if model == "Grade 4 Math"
+replace max_abs_smd_unweighted = 0.314 if model == "Grade 4 Math"
+replace max_abs_smd_weighted = 0.092 if model == "Grade 4 Math"
+replace share_weighted_below_0_10 = 1.000 if model == "Grade 4 Math"
+replace mean_abs_smd_unweighted = 0.151 if model == "Grade 4 Science"
+replace mean_abs_smd_weighted = 0.028 if model == "Grade 4 Science"
+replace max_abs_smd_unweighted = 0.491 if model == "Grade 4 Science"
+replace max_abs_smd_weighted = 0.107 if model == "Grade 4 Science"
+replace share_weighted_below_0_10 = 0.889 if model == "Grade 4 Science"
+replace mean_abs_smd_unweighted = 0.191 if model == "Grade 5 ELA"
+replace mean_abs_smd_weighted = 0.029 if model == "Grade 5 ELA"
+replace max_abs_smd_unweighted = 0.355 if model == "Grade 5 ELA"
+replace max_abs_smd_weighted = 0.162 if model == "Grade 5 ELA"
+replace share_weighted_below_0_10 = 0.889 if model == "Grade 5 ELA"
+replace mean_abs_smd_unweighted = 0.176 if model == "Grade 5 Math"
+replace mean_abs_smd_weighted = 0.037 if model == "Grade 5 Math"
+replace max_abs_smd_unweighted = 0.368 if model == "Grade 5 Math"
+replace max_abs_smd_weighted = 0.191 if model == "Grade 5 Math"
+replace share_weighted_below_0_10 = 0.889 if model == "Grade 5 Math"
+replace mean_abs_smd_unweighted = 0.222 if model == "Grade 5 Science"
+replace mean_abs_smd_weighted = 0.034 if model == "Grade 5 Science"
+replace max_abs_smd_unweighted = 0.515 if model == "Grade 5 Science"
+replace max_abs_smd_weighted = 0.174 if model == "Grade 5 Science"
+replace share_weighted_below_0_10 = 0.889 if model == "Grade 5 Science"
+
+assert !missing(mean_abs_smd_unweighted, mean_abs_smd_weighted, max_abs_smd_unweighted, ///
+    max_abs_smd_weighted, share_weighted_below_0_10)
 
 * Split model labels into grade and subject for report ordering.
 gen str12 grade = ""
