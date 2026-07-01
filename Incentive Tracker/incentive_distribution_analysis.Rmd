@@ -1,0 +1,148 @@
+---
+title: "Student Incentive Distribution Analysis"
+output: html_document
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+```
+
+## Purpose and assumptions
+
+This R Markdown file analyzes the distribution of 2025-26 student incentives and completion of each incentive type. It assumes the student incentive tracker or merged incentive/at-risk dataset is already open in R as `student_incentives_data`.
+
+If your open data frame has a different name, assign it before running the analysis:
+
+```{r rename-open-dataset, eval=FALSE}
+student_incentives_data <- student_incentives_at_risk_merged
+```
+
+## Configure incentive columns
+
+```{r configure-columns}
+incentive_total_col <- "2025-26 Incentive TOTAL"
+
+incentive_columns <- tibble::tribble(
+  ~incentive_type, ~aug_dec_col, ~jan_may_col,
+  "Incentive 1: EA Lesson Activities",
+  "Aug-Dec 2025 Incentives - Incentive 1-           EA Lesson Activities",
+  "Jan-May 2026 Incentives - Incentive 1-           EA Lesson Activities",
+  "Incentive 2: 1 HR Financial Literacy Module Online",
+  "Aug-Dec 2025 Incentives - Incentive 2-        1 HR Fin. Literacy Module Online",
+  "Jan-May 2026 Incentives - Incentive 2-        1 HR Fin. Literacy Module Online",
+  "Incentive 3: Met Reading Goal",
+  "Aug-Dec 2025 Incentives - Incentive 3- Met Reading Goal",
+  "Jan-May 2026 Incentives - Incentive 3- Met Reading Goal",
+  "Incentive 4: Met Behavior Goal",
+  "Aug-Dec 2025 Incentives - Incentive 4-      Met Behavior Goal",
+  "Jan-May 2026 Incentives - Incentive 4-      Met Behavior Goal",
+  "Incentive 5: Miss Three Days or Less",
+  "Aug-Dec 2025 Incentives - Incentive 5-        Miss three days or less",
+  "Jan-May 2026 Incentives - Incentive 5-        Miss three days or less"
+)
+
+required_columns <- c(incentive_total_col, incentive_columns$aug_dec_col, incentive_columns$jan_may_col)
+missing_columns <- setdiff(required_columns, names(student_incentives_data))
+if (length(missing_columns) > 0) {
+  stop("Missing required columns: ", paste(missing_columns, collapse = "; "))
+}
+```
+
+## Total incentive dollars distributed
+
+```{r total-incentives-distributed}
+incentive_distribution_data <- student_incentives_data %>%
+  mutate(incentive_total = as.numeric(.data[[incentive_total_col]]))
+
+total_incentives_distributed <- incentive_distribution_data %>%
+  summarise(
+    students = n(),
+    total_incentives_distributed = sum(incentive_total, na.rm = TRUE),
+    average_incentive_per_student = mean(incentive_total, na.rm = TRUE)
+  )
+
+total_incentives_distributed
+```
+
+## Distribution of students by total incentive amount
+
+```{r incentive-amount-distribution}
+incentive_amount_distribution <- incentive_distribution_data %>%
+  mutate(incentive_total = tidyr::replace_na(incentive_total, 0)) %>%
+  count(incentive_total, name = "students") %>%
+  arrange(incentive_total) %>%
+  mutate(
+    percent = students / sum(students),
+    label = paste0("$", incentive_total, "\n", percent(percent, accuracy = 0.1))
+  )
+
+incentive_amount_distribution
+```
+
+```{r incentive-amount-pie, fig.width=7, fig.height=6}
+ggplot(incentive_amount_distribution,
+       aes(x = "", y = students, fill = factor(incentive_total, levels = incentive_total))) +
+  geom_col(width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  geom_text(
+    aes(label = label),
+    position = position_stack(vjust = 0.5),
+    size = 4
+  ) +
+  labs(
+    title = "Distribution of Students by Total 2025-26 Incentive Amount",
+    fill = "Total incentive amount"
+  ) +
+  theme_void()
+```
+
+## Completion of each incentive type
+
+A student is counted as completing an incentive type if they have a value of `1` in either the Aug-Dec 2025 period or the Jan-May 2026 period for that incentive.
+
+```{r incentive-completion-analysis}
+incentive_completion_long <- incentive_columns %>%
+  rowwise() %>%
+  do({
+    tibble(
+      incentive_type = .$incentive_type,
+      completed = tidyr::replace_na(suppressWarnings(as.numeric(student_incentives_data[[.$aug_dec_col]])) == 1, FALSE) |
+        tidyr::replace_na(suppressWarnings(as.numeric(student_incentives_data[[.$jan_may_col]])) == 1, FALSE)
+    )
+  }) %>%
+  ungroup() %>%
+  mutate(completion_status = if_else(completed, "Completed", "Not completed"))
+
+incentive_completion_summary <- incentive_completion_long %>%
+  count(incentive_type, completion_status, name = "students") %>%
+  group_by(incentive_type) %>%
+  mutate(
+    percent = students / sum(students),
+    label = paste0(students, " (", percent(percent, accuracy = 0.1), ")")
+  ) %>%
+  ungroup()
+
+incentive_completion_summary
+```
+
+```{r incentive-completion-pies, fig.width=10, fig.height=8}
+ggplot(incentive_completion_summary,
+       aes(x = "", y = students, fill = completion_status)) +
+  geom_col(width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  geom_text(
+    aes(label = label),
+    position = position_stack(vjust = 0.5),
+    size = 3.5
+  ) +
+  facet_wrap(~ incentive_type) +
+  labs(
+    title = "Students Completing Each Incentive Type",
+    fill = "Completion status"
+  ) +
+  theme_void() +
+  theme(strip.text = element_text(face = "bold"))
+```
