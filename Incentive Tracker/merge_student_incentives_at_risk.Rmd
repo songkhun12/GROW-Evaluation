@@ -1,0 +1,132 @@
+---
+title: "Merge Student Incentive Tracker with At-Risk Report"
+output: html_document
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(stringr)
+library(lubridate)
+```
+
+## Purpose
+
+This script merges the student incentive tracker to the at-risk report by Student ID. It keeps only students in the student incentive tracker and brings in all columns from the at-risk report. It also creates attendance and referral measures standardized for students who entered after the first school day.
+
+## Assumptions
+
+The two source datasets are already open in R as:
+
+- `student_incentives`: the student incentive tracker.
+- `at_risk_report`: the at-risk report.
+
+If your objects have different names, rename them before running the merge code:
+
+```{r example-object-renaming, eval=FALSE}
+student_incentives <- `2025_26 Student Incentive Tracker`
+at_risk_report <- `JMTES At Risk Report`
+```
+
+## Merge and derived measures
+
+```{r merge-incentives-at-risk}
+# ---- User-adjustable school year assumptions ----
+# The denominator is 170 school days for students enrolled on the first school day.
+# For students who entered later, enrolled days are prorated from entry date through
+# the assumed last day of the measured school year. Update school_year_end if the
+# at-risk report covers a different end date.
+school_year_start <- as.Date("2025-08-18")
+school_year_end <- as.Date("2026-05-22")
+full_year_school_days <- 170
+
+# ---- Helper functions ----
+clean_student_id <- function(x) {
+  x <- as.character(x)
+  x <- str_trim(x)
+  x <- if_else(str_detect(x, "[Ee]"),
+               format(as.numeric(x), scientific = FALSE, trim = TRUE),
+               x)
+  str_replace_all(x, "[^0-9]", "")
+}
+
+parse_entry_date <- function(x) {
+  if (inherits(x, "Date")) return(x)
+  if (inherits(x, "POSIXct") || inherits(x, "POSIXt")) return(as.Date(x))
+
+  x_chr <- str_trim(as.character(x))
+  parsed <- suppressWarnings(as.Date(as.numeric(x_chr), origin = "1899-12-30"))
+  parsed[is.na(parsed)] <- suppressWarnings(mdy(x_chr[is.na(parsed)]))
+  parsed[is.na(parsed)] <- suppressWarnings(ymd(x_chr[is.na(parsed)]))
+  parsed
+}
+
+# ---- Clean merge keys ----
+student_incentives_clean <- student_incentives %>%
+  mutate(student_id_clean = clean_student_id(`Student ID`))
+
+at_risk_clean <- at_risk_report %>%
+  mutate(
+    student_id_clean = clean_student_id(`Student Id`),
+    entry_date = parse_entry_date(`Entry Date - E/W`),
+    days_enrolled_denominator = case_when(
+      is.na(entry_date) ~ full_year_school_days,
+      TRUE ~ pmax(
+        1,
+        pmin(
+          full_year_school_days,
+          round(((as.numeric(school_year_end - entry_date) + 1) /
+                   (as.numeric(school_year_end - school_year_start) + 1)) *
+                  full_year_school_days)
+        )
+      )
+    ),
+    excused_absence_percent = as.numeric(Excused) / days_enrolled_denominator,
+    unexcused_absence_percent = as.numeric(Unexcused) / days_enrolled_denominator,
+    total_absence_percent = (as.numeric(Excused) + as.numeric(Unexcused)) /
+      days_enrolled_denominator,
+    school_referrals_all_severity = rowSums(
+      across(c(`L-1`, `L-2`, `L-3`, `L-4`, Local), as.numeric),
+      na.rm = TRUE
+    ),
+    bus_referrals_all_severity = rowSums(
+      across(c(`Transportation 1`, `Transportation 2`, `Transportation 3`), as.numeric),
+      na.rm = TRUE
+    ),
+    total_referrals_all_severity = school_referrals_all_severity + bus_referrals_all_severity,
+    school_referrals_per_170_days = school_referrals_all_severity /
+      days_enrolled_denominator * full_year_school_days,
+    bus_referrals_per_170_days = bus_referrals_all_severity /
+      days_enrolled_denominator * full_year_school_days,
+    total_referrals_per_170_days = total_referrals_all_severity /
+      days_enrolled_denominator * full_year_school_days
+  )
+
+# ---- Merge: keep only students in the student incentive tracker ----
+student_incentives_at_risk_merged <- student_incentives_clean %>%
+  left_join(
+    at_risk_clean,
+    by = "student_id_clean",
+    suffix = c("_incentive", "_at_risk")
+  )
+
+# ---- Quick merge diagnostics ----
+merge_diagnostics <- student_incentives_at_risk_merged %>%
+  summarise(
+    incentive_tracker_students = n(),
+    matched_to_at_risk_report = sum(!is.na(`Student Id`)),
+    unmatched_to_at_risk_report = sum(is.na(`Student Id`)),
+    match_rate = matched_to_at_risk_report / incentive_tracker_students
+  )
+
+merge_diagnostics
+```
+
+## Export merged dataset
+
+```{r export-merged-data, eval=FALSE}
+write.csv(
+  student_incentives_at_risk_merged,
+  "Incentive Tracker/student_incentive_tracker_merged_at_risk.csv",
+  row.names = FALSE
+)
+```
